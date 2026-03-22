@@ -19,7 +19,7 @@ function CenterTabButton({ onPress }: { onPress?: () => void }) {
       activeOpacity={0.8}
     >
       <View style={styles.fabInner}>
-        <Text style={styles.fabIcon}>🐰</Text>
+        <Text style={styles.fabIcon}>🦉</Text>
       </View>
     </TouchableOpacity>
   );

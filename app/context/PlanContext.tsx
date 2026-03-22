@@ -15,6 +15,8 @@ type TopicNotes = Record<string, Record<string, string>>;
 type PlanContextType = {
   examDate: string | null;
   setExamDate: (date: string | null) => void;
+  selectedExam: string | null;
+  setSelectedExam: (id: string | null) => void;
   dailyGoalHours: number;
   setDailyGoalHours: (h: number) => void;
   completedTopics: CompletedTopics;
@@ -44,6 +46,7 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
 
   const [isLoading, setIsLoading] = useState(true);
   const [examDate, setExamDateState] = useState<string | null>(null);
+  const [selectedExam, setSelectedExamState] = useState<string | null>(null);
   const [dailyGoalHours, setDailyGoalHoursState] = useState(4);
   const [completedTopics, setCompletedTopicsState] = useState<CompletedTopics>({});
   const [schedule, setScheduleState] = useState<ScheduleItem[]>([]);
@@ -93,6 +96,7 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
         if (data.hasSeenOnboarding) setHasSeenOnboardingState(data.hasSeenOnboarding);
         if (data.pomodoroCount) setPomodoroCountState(data.pomodoroCount);
         if (data.pomodoroLog && Object.keys(data.pomodoroLog).length) setPomodoroLogState(data.pomodoroLog);
+        if (data.selectedExam) setSelectedExamState(data.selectedExam);
       }
       const today = new Date().toISOString().slice(0, 10);
       const r = await AsyncStorage.getItem(DAILY_STATS_KEY);
@@ -193,8 +197,13 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
 
   const setHasSeenOnboarding = (v: boolean) => {
     setHasSeenOnboardingState(v);
-    const payload = { examDate, dailyGoalHours, completedTopics, schedule, studyLog, topicNotes, hasSeenOnboarding: v, pomodoroCount, pomodoroLog };
+    const payload = { examDate, dailyGoalHours, completedTopics, schedule, studyLog, topicNotes, hasSeenOnboarding: v, pomodoroCount, pomodoroLog, selectedExam };
     useSupabase && userId ? persistToBackend(payload) : persistToLocal(payload);
+  };
+
+  const setSelectedExam = (id: string | null) => {
+    setSelectedExamState(id);
+    persistToLocal({ examDate, dailyGoalHours, completedTopics, schedule, studyLog, topicNotes, hasSeenOnboarding, pomodoroCount, pomodoroLog, selectedExam: id });
   };
 
   const addPomodoro = () => {
@@ -238,6 +247,8 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
         setTopicNote,
         hasSeenOnboarding,
         setHasSeenOnboarding,
+        selectedExam,
+        setSelectedExam,
         pomodoroCount,
         pomodoroLog,
         addPomodoro,

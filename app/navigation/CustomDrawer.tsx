@@ -20,6 +20,7 @@ const MENU_ITEMS = [
   { name: 'Anlık Çözüm', icon: '📷', screen: 'InstantSolution' },
   { name: 'Sohbet', icon: '💬', screen: 'Chat' },
   { name: 'Dönüştürücü', icon: '🔄', screen: 'Converter' },
+  { name: 'Zaman Haritası', icon: '🕐', screen: 'TimeMap' },
   { name: 'Taktik Blog', icon: '📝', screen: 'DailyActivity' },
   { name: 'Ayarlar', icon: '⚙️', screen: 'Settings' },
 ];
@@ -89,8 +90,8 @@ export default function CustomDrawerContent(props: any) {
       </View>
 
       <View style={[styles.proBadge, { backgroundColor: theme.card }]}>
-        <Text style={styles.mascotIcon}>🐰</Text>
-        <Text style={[styles.proBrand, { color: theme.text }]}>Çalışma Asistanı</Text>
+        <Text style={styles.mascotIcon}>🦉</Text>
+        <Text style={[styles.proBrand, { color: theme.text }]}>Bilge Baykuş</Text>
         <View style={[styles.proTag, { backgroundColor: '#fef3c7' }]}>
           <Text style={styles.proTagText}>{isPremium ? 'PRO' : 'ÜCRETSİZ'}</Text>
         </View>

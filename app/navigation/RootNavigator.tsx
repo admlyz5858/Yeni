@@ -38,6 +38,7 @@ import MindMapScreen from '../screens/MindMapScreen';
 import InstantSolutionScreen from '../screens/InstantSolutionScreen';
 import ChatScreen from '../screens/ChatScreen';
 import ConverterScreen from '../screens/ConverterScreen';
+import TimeMapScreen from '../screens/TimeMapScreen';
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -79,6 +80,7 @@ function MainStack() {
       <Stack.Screen name="InstantSolution" component={InstantSolutionScreen} />
       <Stack.Screen name="Chat" component={ChatScreen} />
       <Stack.Screen name="Converter" component={ConverterScreen} />
+      <Stack.Screen name="TimeMap" component={TimeMapScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="Pomodoro" component={PomodoroScreen} />
     </Stack.Navigator>

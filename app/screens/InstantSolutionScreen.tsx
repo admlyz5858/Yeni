@@ -11,7 +11,7 @@ import { useTheme } from '../context/ThemeContext';
 
 const STEPS = [
   { icon: '📷', title: 'Fotoğrafını Çek', sub: 'Soruyu net bir şekilde görüntüle.' },
-  { icon: '✨', title: 'Taktik Tavşan Çözsün', sub: 'Saniyeler içinde detaylı anlatım.' },
+  { icon: '✨', title: 'Bilge Baykuş Çözsün', sub: 'Saniyeler içinde detaylı anlatım.' },
   { icon: '💬', title: 'Anlamadığını Sor', sub: 'Tavşan ile sohbet et.' },
   { icon: '🔖', title: 'Dilersen Soruyu Kaydet', sub: 'İstediğin zaman tekrar bak.' },
 ];
@@ -39,13 +39,13 @@ export default function InstantSolutionScreen({ navigation }: Props) {
           style={styles.heroGradient}
         >
           <View style={[styles.avatarWrap, { backgroundColor: '#fff' }]}>
-            <Text style={styles.avatarEmoji}>🐰</Text>
+            <Text style={styles.avatarEmoji}>🦉</Text>
           </View>
           <Text style={[styles.heroTitle, { color: theme.text }]}>
-            Sorularla Boğuşma, Taktik Tavşan Yanında!
+            Sorularla Boğuşma, Bilge Baykuş Yanında!
           </Text>
           <Text style={[styles.heroSub, { color: theme.textSecondary }]}>
-            Takıldığın sorunun fotoğrafını çek, Taktik Tavşan senin için adım adım çözsün.
+            Takıldığın sorunun fotoğrafını çek, Bilge Baykuş senin için adım adım çözsün.
           </Text>
         </LinearGradient>
       </View>

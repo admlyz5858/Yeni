@@ -62,13 +62,13 @@ export default function ChatScreen({ navigation }: Props) {
           style={styles.introGradient}
         >
           <View style={[styles.mascot, { backgroundColor: '#fff' }]}>
-            <Text style={styles.mascotEmoji}>🐰</Text>
+            <Text style={styles.mascotEmoji}>🦉</Text>
           </View>
           <Text style={[styles.introTitle, { color: theme.text }]}>
-            Koçun Çalışma Tavşanı
+            Koçun Bilge Baykuş
           </Text>
           <Text style={[styles.introSub, { color: theme.textSecondary }]}>
-            Motivasyon, strateji, analiz ve destek... Çalışma Tavşanı sınav yolculuğunda her alanda yanında!
+            Motivasyon, strateji, analiz ve destek... Bilge Baykuş sınav yolculuğunda her alanda yanında!
           </Text>
         </LinearGradient>
       </View>

@@ -11,13 +11,14 @@ import {
   Alert,
   ScrollView,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
-const BG_DARK = '#1e293b';
-const CARD_DARK = '#334155';
-const CARD_BORDER = '#475569';
-const TEXT_WHITE = '#f8fafc';
-const TEXT_MUTED = '#94a3b8';
-const ACCENT = '#059669';
+const CYAN = '#06b6d4';
+const BG_LIGHT = '#e0f7fa';
+const BG_WHITE = '#ffffff';
+const TEXT_DARK = '#0f172a';
+const TEXT_MUTED = '#64748b';
+const BORDER = '#e2e8f0';
 
 type Props = {
   onRegister: (email: string, password: string, name: string) => Promise<{ ok: boolean; error?: string }>;
@@ -56,139 +57,131 @@ export default function RegisterScreen({ onRegister, onGoLogin }: Props) {
   };
 
   return (
-    <KeyboardAvoidingView
-      style={styles.container}
-      behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-    >
-      <ScrollView
-        contentContainerStyle={styles.scrollContent}
-        showsVerticalScrollIndicator={false}
-        keyboardShouldPersistTaps="handled"
+    <LinearGradient colors={[BG_LIGHT, BG_WHITE]} style={styles.gradient}>
+      <KeyboardAvoidingView
+        style={styles.container}
+        behavior={Platform.OS === 'ios' ? 'padding' : undefined}
       >
-        {/* Header */}
-        <View style={styles.header}>
-          <View style={styles.logoRow}>
-            <View style={styles.logoCircle}>
-              <Text style={styles.logoEmoji}>📚</Text>
+        <ScrollView
+          contentContainerStyle={styles.scrollContent}
+          showsVerticalScrollIndicator={false}
+          keyboardShouldPersistTaps="handled"
+        >
+          <View style={styles.header}>
+            <View style={styles.logoCard}>
+              <Text style={styles.logoEmoji}>🦉</Text>
             </View>
-            <Text style={styles.appName}>Çalışma Asistanı</Text>
+            <Text style={styles.welcomeTitle}>Kayıt Ol</Text>
+            <Text style={styles.welcomeSub}>Bilge Baykuş ile çalışmaya başla</Text>
           </View>
-        </View>
 
-        <View style={styles.welcomeCard}>
-          <Text style={styles.welcomeTitle}>Kayıt Ol</Text>
-          <Text style={styles.welcomeSub}>Yeni hesap oluşturun ve çalışmaya başlayın</Text>
-        </View>
+          <View style={styles.card}>
+            <View style={styles.inputWrap}>
+              <Text style={styles.inputIcon}>👤</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Ad Soyad"
+                placeholderTextColor={TEXT_MUTED}
+                value={name}
+                onChangeText={setName}
+              />
+            </View>
+            <View style={styles.inputWrap}>
+              <Text style={styles.inputIcon}>@</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="E-posta"
+                placeholderTextColor={TEXT_MUTED}
+                value={email}
+                onChangeText={setEmail}
+                keyboardType="email-address"
+                autoCapitalize="none"
+              />
+            </View>
+            <View style={styles.inputWrap}>
+              <Text style={styles.inputIcon}>🔒</Text>
+              <TextInput
+                style={styles.input}
+                placeholder="Şifre (min 6 karakter)"
+                placeholderTextColor={TEXT_MUTED}
+                value={password}
+                onChangeText={setPassword}
+                secureTextEntry
+              />
+            </View>
+            <TouchableOpacity
+              style={[styles.registerBtn, loading && styles.btnDisabled]}
+              onPress={handleRegister}
+              disabled={loading}
+            >
+              {loading ? (
+                <ActivityIndicator color="#fff" />
+              ) : (
+                <Text style={styles.registerBtnText}>Kayıt Ol</Text>
+              )}
+            </TouchableOpacity>
+          </View>
 
-        <View style={styles.formCard}>
-          <TextInput
-            style={styles.input}
-            placeholder="Ad Soyad"
-            placeholderTextColor={TEXT_MUTED}
-            value={name}
-            onChangeText={setName}
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="E-posta"
-            placeholderTextColor={TEXT_MUTED}
-            value={email}
-            onChangeText={setEmail}
-            keyboardType="email-address"
-            autoCapitalize="none"
-          />
-          <TextInput
-            style={styles.input}
-            placeholder="Şifre (min 6 karakter)"
-            placeholderTextColor={TEXT_MUTED}
-            value={password}
-            onChangeText={setPassword}
-            secureTextEntry
-          />
-          <TouchableOpacity
-            style={[styles.registerBtn, loading && styles.btnDisabled]}
-            onPress={handleRegister}
-            disabled={loading}
-          >
-            {loading ? (
-              <ActivityIndicator color="#fff" />
-            ) : (
-              <Text style={styles.registerBtnText}>Kayıt Ol</Text>
-            )}
+          <TouchableOpacity style={styles.footer} onPress={onGoLogin}>
+            <Text style={styles.footerText}>Zaten hesabın var mı? </Text>
+            <Text style={styles.footerLink}>Giriş yap</Text>
           </TouchableOpacity>
-        </View>
-
-        <TouchableOpacity style={styles.pill} onPress={onGoLogin}>
-          <Text style={styles.pillIcon}>←</Text>
-          <Text style={styles.pillText}>Zaten hesabınız var? Giriş yapın</Text>
-        </TouchableOpacity>
-      </ScrollView>
-    </KeyboardAvoidingView>
+        </ScrollView>
+      </KeyboardAvoidingView>
+    </LinearGradient>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1, backgroundColor: BG_DARK },
-  scrollContent: { padding: 20, paddingBottom: 40 },
-  header: { marginBottom: 24 },
-  logoRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
-  logoCircle: {
-    width: 48,
-    height: 48,
-    borderRadius: 24,
-    backgroundColor: ACCENT,
+  gradient: { flex: 1 },
+  container: { flex: 1 },
+  scrollContent: { padding: 24, paddingBottom: 40 },
+  header: { alignItems: 'center', marginBottom: 32 },
+  logoCard: {
+    width: 80,
+    height: 80,
+    borderRadius: 20,
+    backgroundColor: '#0e7490',
     alignItems: 'center',
     justifyContent: 'center',
+    marginBottom: 24,
   },
-  logoEmoji: { fontSize: 24 },
-  appName: { fontSize: 22, fontWeight: '600', color: TEXT_WHITE },
-  welcomeCard: {
-    backgroundColor: CARD_DARK,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: CARD_BORDER,
+  logoEmoji: { fontSize: 44 },
+  welcomeTitle: { fontSize: 28, fontWeight: 'bold', color: TEXT_DARK, marginBottom: 8 },
+  welcomeSub: { fontSize: 15, color: TEXT_MUTED },
+  card: {
+    backgroundColor: BG_WHITE,
+    borderRadius: 24,
+    padding: 24,
+    marginBottom: 24,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.08,
+    shadowRadius: 12,
+    elevation: 4,
   },
-  welcomeTitle: { fontSize: 20, fontWeight: 'bold', color: TEXT_WHITE, marginBottom: 4 },
-  welcomeSub: { fontSize: 14, color: TEXT_MUTED },
-  formCard: {
-    backgroundColor: CARD_DARK,
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 20,
-    borderWidth: 1,
-    borderColor: CARD_BORDER,
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: CARD_BORDER,
-    borderRadius: 12,
-    padding: 16,
-    fontSize: 16,
+  inputWrap: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#f1f5f9',
+    borderRadius: 14,
+    paddingHorizontal: 16,
     marginBottom: 16,
-    backgroundColor: '#1e293b',
-    color: TEXT_WHITE,
+    borderWidth: 1,
+    borderColor: BORDER,
   },
+  inputIcon: { fontSize: 18, marginRight: 12, color: TEXT_MUTED },
+  input: { flex: 1, paddingVertical: 16, fontSize: 16, color: TEXT_DARK },
   registerBtn: {
-    backgroundColor: ACCENT,
-    borderRadius: 12,
+    backgroundColor: CYAN,
+    borderRadius: 14,
     padding: 18,
     alignItems: 'center',
+    marginTop: 8,
   },
   registerBtnText: { color: '#fff', fontSize: 17, fontWeight: '600' },
   btnDisabled: { opacity: 0.7 },
-  pill: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    backgroundColor: CARD_DARK,
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 24,
-    borderWidth: 1,
-    borderColor: CARD_BORDER,
-    gap: 8,
-  },
-  pillIcon: { fontSize: 16, color: TEXT_WHITE },
-  pillText: { fontSize: 14, color: TEXT_WHITE, fontWeight: '500' },
+  footer: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', gap: 4 },
+  footerText: { fontSize: 15, color: TEXT_MUTED },
+  footerLink: { fontSize: 15, color: CYAN, fontWeight: '600' },
 });

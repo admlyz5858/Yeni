@@ -6,74 +6,124 @@ import {
   TouchableOpacity,
   Dimensions,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
+const CYAN = '#06b6d4';
+const GREEN = '#10b981';
 
 const SLIDES = [
   {
-    title: 'Çalışma Asistanı',
-    desc: 'Her sınava hazırlanın. Kendi ders ve konularınızı ekleyin, hedeflerinizi belirleyin.',
-    icon: '📚',
+    id: 'intro',
+    title: 'Selam! Ben Bilge Baykuş',
+    desc: 'Sınav maratonunda sadece bir uygulama değil, seni başarıya taşıyacak yol arkadaşınım. Zirveye giden yolda motivasyonun ve stratejin benden sorulur!',
+    icon: '🦉',
+    gradient: ['#e0e7ff', '#f5f3ff'] as [string, string],
   },
   {
-    title: 'Pomodoro Zamanlayıcı',
-    desc: '25 dakika odaklanma, 5 dakika mola. Verimli çalışma seansları.',
-    icon: '⏱️',
-  },
-  {
-    title: 'Çalışma Günlüğü',
-    desc: 'Her gün çalıştığınız saatleri kaydedin. Serinizi kırma!',
-    icon: '📊',
+    id: 'plan',
+    title: 'Haftalık Plan',
+    desc: 'Senin hızına, eksiklerine ve boş günlerine göre hazırlanan nokta atışı ders programı. Neyi ne zaman çalışacağını dert etme, rotanı ben çizerim.',
+    icon: '📅',
+    gradient: ['#e0f2f1', '#b2dfdb'] as [string, string],
   },
 ];
 
 type Props = {
   onComplete: () => void;
+  onExamSelect?: (examId: string) => void;
+  examSelectionStep?: React.ReactNode;
 };
 
-export default function OnboardingScreen({ onComplete }: Props) {
+export default function OnboardingScreen({
+  onComplete,
+  onExamSelect,
+  examSelectionStep,
+}: Props) {
   const [index, setIndex] = useState(0);
-  const slide = SLIDES[index];
+  const [showExamStep, setShowExamStep] = useState(false);
+
+  const totalSteps = examSelectionStep ? SLIDES.length + 1 : SLIDES.length;
+  const isExamStep = examSelectionStep && index === SLIDES.length;
+
+  const handleNext = () => {
+    if (isExamStep) {
+      onComplete();
+      return;
+    }
+    if (examSelectionStep && index === SLIDES.length - 1) {
+      setShowExamStep(true);
+      setIndex(SLIDES.length);
+      return;
+    }
+    if (index < SLIDES.length - 1) {
+      setIndex((i) => i + 1);
+    } else {
+      onComplete();
+    }
+  };
+
+  const handleSkip = () => {
+    if (showExamStep) {
+      onComplete();
+    } else {
+      setIndex(0);
+      onComplete();
+    }
+  };
+
+  const currentSlide = SLIDES[index];
+  const isLastSlide = index === SLIDES.length - 1 && !examSelectionStep;
+  const isLastBeforeExam = examSelectionStep && index === SLIDES.length - 1;
 
   return (
     <View style={styles.container}>
-      <View style={styles.slide}>
-        <Text style={styles.icon}>{slide.icon}</Text>
-        <Text style={styles.title}>{slide.title}</Text>
-        <Text style={styles.desc}>{slide.desc}</Text>
-      </View>
+      <TouchableOpacity style={styles.skipBtn} onPress={handleSkip}>
+        <Text style={styles.skipText}>Atla</Text>
+      </TouchableOpacity>
+
+      {isExamStep && examSelectionStep ? (
+        <View style={styles.examStep}>
+          {examSelectionStep}
+        </View>
+      ) : currentSlide ? (
+        <View style={styles.slide}>
+          <LinearGradient
+            colors={currentSlide.gradient}
+            style={styles.card}
+          >
+            <Text style={styles.icon}>{currentSlide.icon}</Text>
+          </LinearGradient>
+          <Text style={styles.title}>{currentSlide.title}</Text>
+          <Text style={styles.desc}>{currentSlide.desc}</Text>
+        </View>
+      ) : null}
 
       <View style={styles.dots}>
-        {SLIDES.map((_, i) => (
+        {Array.from({ length: totalSteps }).map((_, i) => (
           <View
             key={i}
-            style={[styles.dot, i === index && styles.dotActive]}
+            style={[
+              styles.dot,
+              i === index ? (isExamStep ? styles.dotGreen : styles.dotActive) : undefined,
+            ]}
           />
         ))}
       </View>
 
-      <View style={styles.buttons}>
-        {index < SLIDES.length - 1 ? (
-          <>
-            <TouchableOpacity
-              style={styles.skipBtn}
-              onPress={onComplete}
-            >
-              <Text style={styles.skipText}>Atla</Text>
-            </TouchableOpacity>
-            <TouchableOpacity
-              style={styles.nextBtn}
-              onPress={() => setIndex((i) => i + 1)}
-            >
-              <Text style={styles.nextText}>İleri</Text>
-            </TouchableOpacity>
-          </>
-        ) : (
-          <TouchableOpacity style={styles.startBtn} onPress={onComplete}>
-            <Text style={styles.startText}>Başla</Text>
-          </TouchableOpacity>
-        )}
-      </View>
+      {!isExamStep && (
+        <TouchableOpacity
+          style={[
+            styles.nextBtn,
+            (isLastSlide || isLastBeforeExam) ? styles.nextBtnGreen : undefined,
+          ]}
+          onPress={handleNext}
+        >
+          <Text style={styles.nextText}>
+            {isLastBeforeExam ? 'Devam Et' : isLastSlide ? 'Hazırım! →' : 'Devam Et →'}
+          </Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -82,31 +132,60 @@ const styles = StyleSheet.create({
   container: {
     flex: 1,
     backgroundColor: '#f8fafc',
-    justifyContent: 'center',
     padding: 24,
+    paddingTop: 48,
   },
-  slide: { alignItems: 'center', marginBottom: 48 },
-  icon: { fontSize: 80, marginBottom: 24 },
-  title: { fontSize: 28, fontWeight: 'bold', color: '#0f172a', textAlign: 'center', marginBottom: 16 },
-  desc: { fontSize: 17, color: '#64748b', textAlign: 'center', lineHeight: 26, paddingHorizontal: 16 },
-  dots: { flexDirection: 'row', justifyContent: 'center', gap: 8, marginBottom: 48 },
-  dot: { width: 8, height: 8, borderRadius: 4, backgroundColor: '#cbd5e1' },
-  dotActive: { backgroundColor: '#2563eb', width: 24 },
-  buttons: { gap: 12 },
-  skipBtn: { padding: 16, alignItems: 'center' },
+  skipBtn: { alignSelf: 'flex-end', padding: 16, marginBottom: 24 },
   skipText: { color: '#64748b', fontSize: 16 },
+  slide: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  card: {
+    width: width * 0.75,
+    height: width * 0.75,
+    borderRadius: 32,
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginBottom: 32,
+  },
+  icon: { fontSize: 100 },
+  title: {
+    fontSize: 26,
+    fontWeight: 'bold',
+    color: '#0f172a',
+    textAlign: 'center',
+    marginBottom: 16,
+    paddingHorizontal: 16,
+  },
+  desc: {
+    fontSize: 16,
+    color: '#64748b',
+    textAlign: 'center',
+    lineHeight: 26,
+    paddingHorizontal: 24,
+  },
+  dots: {
+    flexDirection: 'row',
+    justifyContent: 'center',
+    gap: 8,
+    marginBottom: 32,
+  },
+  dot: {
+    width: 8,
+    height: 8,
+    borderRadius: 4,
+    backgroundColor: '#cbd5e1',
+  },
+  dotActive: {
+    width: 24,
+    backgroundColor: CYAN,
+  },
+  dotGreen: { backgroundColor: GREEN },
   nextBtn: {
-    backgroundColor: '#2563eb',
+    backgroundColor: CYAN,
     borderRadius: 16,
     padding: 18,
     alignItems: 'center',
   },
+  nextBtnGreen: { backgroundColor: GREEN },
   nextText: { color: '#fff', fontSize: 18, fontWeight: '600' },
-  startBtn: {
-    backgroundColor: '#059669',
-    borderRadius: 16,
-    padding: 18,
-    alignItems: 'center',
-  },
-  startText: { color: '#fff', fontSize: 18, fontWeight: '600' },
+  examStep: { flex: 1 },
 });

@@ -37,6 +37,7 @@ import AboutScreen from './screens/AboutScreen';
 import CustomQuotesScreen from './screens/CustomQuotesScreen';
 import ConfigRequiredScreen from './screens/ConfigRequiredScreen';
 import ForgotPasswordScreen from './screens/ForgotPasswordScreen';
+import ExamSelectionScreen from './screens/ExamSelectionScreen';
 import RootNavigator from './navigation/RootNavigator';
 
 const Stack = createNativeStackNavigator();
@@ -128,7 +129,7 @@ function AuthScreens() {
 
 function AppContent() {
   const { user, isLoading, hasBackend } = useAuth();
-  const { hasSeenOnboarding, setHasSeenOnboarding } = usePlan();
+  const { hasSeenOnboarding, setHasSeenOnboarding, setSelectedExam } = usePlan();
 
   if (isLoading) {
     return (
@@ -159,6 +160,15 @@ function AppContent() {
     return (
       <OnboardingScreen
         onComplete={() => setHasSeenOnboarding(true)}
+        examSelectionStep={
+          <ExamSelectionScreen
+            progress={0.85}
+            onSelect={(examId) => {
+              setSelectedExam(examId);
+              setHasSeenOnboarding(true);
+            }}
+          />
+        }
       />
     );
   }

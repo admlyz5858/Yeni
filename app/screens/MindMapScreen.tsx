@@ -39,7 +39,7 @@ export default function MindMapScreen({ navigation }: Props) {
           <Text style={styles.brainEmoji}>🧠</Text>
         </View>
         <Text style={[styles.introText, { color: theme.textSecondary }]}>
-          Karmaşık konuları görselleştir. Listeden bir konu seç, Çalışma Asistanı senin için dallara ayırsın.
+          Karmaşık konuları görselleştir. Listeden bir konu seç, Bilge Baykuş senin için dallara ayırsın.
         </Text>
       </View>
 

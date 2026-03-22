@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   Text,
@@ -6,19 +6,25 @@ import {
   TouchableOpacity,
   ScrollView,
   Dimensions,
+  Modal,
 } from 'react-native';
+import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
 const CARD_WIDTH = width * 0.42;
+const MAIN_GAME_WIDTH = width * 0.35;
 const CARD_GAP = 12;
+
+const MAIN_GAMES = [
+  { id: 'yazim', name: 'Yazım Yanlışları', icon: '✏️', color: '#2ecc71', footer: 'Oyna →' },
+  { id: 'yazar', name: 'Yazar-Eser', icon: '📖', color: '#9b59b6', footer: 'Oyna →' },
+  { id: 'islem', name: 'Dört İşlem', icon: '➕', color: '#3498db', footer: 'Oyna →' },
+];
 
 const CATEGORIES = [
   { id: 'turkce', name: 'Türkçe (Genel Yetenek)', icon: '📖', color: '#e74c3c' },
   { id: 'matematik', name: 'Matematik (Genel Yetenek)', icon: '∑', color: '#9b59b6' },
   { id: 'tarih', name: 'Tarih (Genel Kültür)', icon: '📜', color: '#3498db' },
-  { id: 'cografya', name: 'Coğrafya (Genel Kültür)', icon: '🌍', color: '#2ecc71' },
-  { id: 'vatandaslik', name: 'Vatandaşlık (Genel Kültür)', icon: '⚖️', color: '#f39c12' },
-  { id: 'guncel', name: 'Güncel Bilgiler', icon: '📰', color: '#e67e22' },
 ];
 
 const SAMPLE_TOPICS: Record<string, { title: string; locked?: boolean }[]> = {
@@ -37,24 +43,75 @@ const SAMPLE_TOPICS: Record<string, { title: string; locked?: boolean }[]> = {
     { title: 'İlk Müslüman Türk Devletleri' },
     { title: 'Osmanlı Devleti Siyasi Tarihi', locked: true },
   ],
-  cografya: [
-    { title: "Türkiye'nin Coğrafi Konumu" },
-    { title: "Türkiye'nin Yer Şekilleri" },
-    { title: "Türkiye'nin Su Varlığı", locked: true },
-  ],
-  vatandaslik: [
-    { title: 'Temel Hukuk Kavramları' },
-    { title: 'Devlet Biçimleri ve Hükümet Sistemi' },
-    { title: 'Anayasa Hukukuna Giriş', locked: true },
-  ],
-  guncel: [
-    { title: 'Güncel Olaylar' },
-    { title: 'Haberler' },
-    { title: 'Önemli Gündem', locked: true },
-  ],
 };
 
 type Props = { navigation: any };
+
+function InviteModal({ visible, onClose }: { visible: boolean; onClose: () => void }) {
+  const [inviteCount] = useState(0);
+  return (
+    <Modal visible={visible} transparent animationType="slide">
+      <View style={styles.modalOverlay}>
+        <View style={styles.modalContent}>
+          <View style={styles.modalHeader}>
+            <View style={styles.modalTitleRow}>
+              <Text style={styles.modalGift}>🎁</Text>
+              <View>
+                <Text style={styles.modalTitle}>Arkadaşını Davet Et</Text>
+                <Text style={styles.modalSub}>3 davet → Oyunlara sınırsız erişim</Text>
+              </View>
+            </View>
+            <TouchableOpacity onPress={onClose} style={styles.modalClose}>
+              <Text style={styles.modalCloseText}>✕</Text>
+            </TouchableOpacity>
+          </View>
+          <View style={styles.inviteStatus}>
+            <Text style={styles.inviteStatusLabel}>Davet Durumu</Text>
+            <View style={styles.inviteBadge}>
+              <Text style={styles.inviteBadgeText}>{inviteCount} / 3</Text>
+            </View>
+          </View>
+          <View style={styles.progressRow}>
+            <View style={styles.progressLine} />
+            <View style={styles.progressDots}>
+              {[1, 2, 3].map((i) => (
+                <View key={i} style={styles.progressDot}>
+                  <Text style={styles.dotIcon}>👤+</Text>
+                  <Text style={styles.dotLabel}>{i}. Davet</Text>
+                </View>
+              ))}
+            </View>
+          </View>
+          <TouchableOpacity style={styles.inviteBtn}>
+            <Text style={styles.inviteBtnIcon}>✨</Text>
+            <Text style={styles.inviteBtnText}>Davet Kodunu Oluştur</Text>
+          </TouchableOpacity>
+          <View style={styles.infoBox}>
+            <Text style={styles.infoIcon}>ℹ️</Text>
+            <Text style={styles.infoText}>
+              Davet ettiğin kişi oyunlara 7 gün ücretsiz erişim kazanır!
+            </Text>
+          </View>
+          <View style={styles.orRow}>
+            <View style={styles.orLine} />
+            <Text style={styles.orText}>ya da</Text>
+            <View style={styles.orLine} />
+          </View>
+          <TouchableOpacity style={styles.proBtn} onPress={onClose}>
+            <LinearGradient
+              colors={['#f97316', '#a855f7']}
+              start={{ x: 0, y: 0 }}
+              end={{ x: 1, y: 0 }}
+              style={styles.proBtnGradient}
+            >
+              <Text style={styles.proBtnText}>PRO'ya Geç ›</Text>
+            </LinearGradient>
+          </TouchableOpacity>
+        </View>
+      </View>
+    </Modal>
+  );
+}
 
 function CategoryCard({
   title,
@@ -89,6 +146,8 @@ function CategoryCard({
 }
 
 export default function GamesScreen({ navigation }: Props) {
+  const [inviteModal, setInviteModal] = useState(false);
+
   return (
     <ScrollView
       style={styles.container}
@@ -102,33 +161,62 @@ export default function GamesScreen({ navigation }: Props) {
         >
           <Text style={styles.backText}>☰</Text>
         </TouchableOpacity>
-        <Text style={styles.title}>Odak Oyunları</Text>
-        <TouchableOpacity style={styles.giftBtn}>
+        <Text style={styles.title}>Taktik Oyunları</Text>
+        <TouchableOpacity style={styles.giftBtn} onPress={() => setInviteModal(true)}>
           <Text style={styles.giftIcon}>🎁</Text>
         </TouchableOpacity>
       </View>
 
-      <View style={styles.subtitleWrap}>
+      {/* Hero Card - Öğrenmeyi oyuna dök */}
+      <View style={styles.heroCard}>
+        <View style={styles.heroAccent} />
+        <View style={styles.heroContent}>
+          <Text style={styles.heroTitle}>Öğrenmeyi oyuna dök</Text>
+          <Text style={styles.heroSub}>Sınav konularını mini oyunlarla pekiştir</Text>
+        </View>
+      </View>
+
+      {/* Ana Oyunlar */}
+      <Text style={styles.sectionLabel}>✦ Ana Oyunlar</Text>
+      <ScrollView
+        horizontal
+        showsHorizontalScrollIndicator={false}
+        contentContainerStyle={styles.mainGamesRow}
+      >
+        {MAIN_GAMES.map((g) => (
+          <TouchableOpacity
+            key={g.id}
+            style={[styles.mainGameCard, { backgroundColor: g.color }]}
+          >
+            <Text style={styles.mainGameIcon}>{g.icon}</Text>
+            <Text style={styles.mainGameTitle}>{g.name}</Text>
+            <Text style={styles.mainGameFooter}>{g.footer}</Text>
+          </TouchableOpacity>
+        ))}
+      </ScrollView>
+
+      {/* KPSS LİSANS OYUNLARI divider */}
+      <View style={styles.dividerWrap}>
         <View style={styles.goldLine} />
-        <Text style={styles.subtitle}>ÇALIŞMA OYUNLARI</Text>
+        <Text style={styles.dividerText}>ÇALIŞMA OYUNLARI</Text>
         <View style={styles.goldLine} />
       </View>
 
-      <TouchableOpacity style={styles.featuredCard}>
-        <View style={styles.featuredIcon}>
-          <Text style={styles.featuredIconText}>⊞</Text>
+      {/* Karma Sınav */}
+      <TouchableOpacity style={styles.karmaCard}>
+        <View style={styles.karmaIcon}>
+          <Text style={styles.karmaIconText}>⊞</Text>
         </View>
-        <View style={styles.featuredContent}>
-          <Text style={styles.featuredTitle}>Karma Sınav</Text>
-          <Text style={styles.featuredSub}>
-            Tüm derslerden karma sorularla kendini dene.
-          </Text>
+        <View style={styles.karmaContent}>
+          <Text style={styles.karmaTitle}>Karma Sınav</Text>
+          <Text style={styles.karmaSub}>Tüm derslerden karma sorularla kendini dene.</Text>
         </View>
-        <View style={styles.featuredLock}>
+        <View style={styles.karmaLock}>
           <Text>🔒</Text>
         </View>
       </TouchableOpacity>
 
+      {/* Subject sections */}
       {CATEGORIES.map((cat) => (
         <View key={cat.id} style={styles.section}>
           <View style={styles.sectionHeader}>
@@ -137,9 +225,9 @@ export default function GamesScreen({ navigation }: Props) {
             </View>
             <Text style={[styles.catName, { color: cat.color }]}>{cat.name}</Text>
             <TouchableOpacity style={styles.karmaBtn}>
-              <Text style={styles.karmaLock}>🔒</Text>
-              <Text style={styles.karmaText}>Karma</Text>
-              <Text style={styles.karmaArrow}>›</Text>
+              <Text style={styles.karmaBtnLock}>🔒</Text>
+              <Text style={styles.karmaBtnText}>Karma</Text>
+              <Text style={styles.karmaBtnArrow}>›</Text>
             </TouchableOpacity>
           </View>
           <ScrollView
@@ -159,6 +247,8 @@ export default function GamesScreen({ navigation }: Props) {
           </ScrollView>
         </View>
       ))}
+
+      <InviteModal visible={inviteModal} onClose={() => setInviteModal(false)} />
     </ScrollView>
   );
 }
@@ -170,22 +260,49 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    marginBottom: 16,
+    marginBottom: 20,
   },
   backBtn: {},
   backText: { fontSize: 16, color: '#2563eb', fontWeight: '500' },
   title: { fontSize: 22, fontWeight: 'bold', color: '#0f172a' },
   giftBtn: { padding: 8 },
   giftIcon: { fontSize: 24 },
-  subtitleWrap: {
+  heroCard: {
+    flexDirection: 'row',
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    marginBottom: 24,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  heroAccent: {
+    width: 6,
+    backgroundColor: '#3b82f6',
+  },
+  heroContent: { flex: 1, padding: 20 },
+  heroTitle: { fontSize: 18, fontWeight: 'bold', color: '#0f172a' },
+  heroSub: { fontSize: 14, color: '#64748b', marginTop: 4 },
+  sectionLabel: { fontSize: 16, fontWeight: '600', color: '#0f172a', marginBottom: 12 },
+  mainGamesRow: { flexDirection: 'row', gap: 12, marginBottom: 24 },
+  mainGameCard: {
+    width: MAIN_GAME_WIDTH,
+    padding: 20,
+    borderRadius: 20,
+    justifyContent: 'space-between',
+  },
+  mainGameIcon: { fontSize: 36, color: '#fff' },
+  mainGameTitle: { fontSize: 15, fontWeight: 'bold', color: '#fff' },
+  mainGameFooter: { fontSize: 13, color: 'rgba(255,255,255,0.9)' },
+  dividerWrap: {
     flexDirection: 'row',
     alignItems: 'center',
-    marginBottom: 24,
+    marginBottom: 20,
     gap: 12,
   },
   goldLine: { flex: 1, height: 1, backgroundColor: '#f59e0b' },
-  subtitle: { fontSize: 12, fontWeight: '700', color: '#f59e0b', letterSpacing: 1 },
-  featuredCard: {
+  dividerText: { fontSize: 12, fontWeight: '700', color: '#f59e0b', letterSpacing: 1 },
+  karmaCard: {
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: '#fff',
@@ -194,13 +311,8 @@ const styles = StyleSheet.create({
     marginBottom: 28,
     borderWidth: 1,
     borderColor: '#e2e8f0',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.06,
-    shadowRadius: 8,
-    elevation: 4,
   },
-  featuredIcon: {
+  karmaIcon: {
     width: 48,
     height: 48,
     borderRadius: 12,
@@ -209,11 +321,11 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginRight: 16,
   },
-  featuredIconText: { fontSize: 24, color: '#64748b' },
-  featuredContent: { flex: 1 },
-  featuredTitle: { fontSize: 18, fontWeight: 'bold', color: '#0f172a' },
-  featuredSub: { fontSize: 14, color: '#64748b', marginTop: 4 },
-  featuredLock: { padding: 8 },
+  karmaIconText: { fontSize: 24, color: '#64748b' },
+  karmaContent: { flex: 1 },
+  karmaTitle: { fontSize: 18, fontWeight: 'bold', color: '#0f172a' },
+  karmaSub: { fontSize: 14, color: '#64748b', marginTop: 4 },
+  karmaLock: { padding: 8 },
   section: { marginBottom: 28 },
   sectionHeader: {
     flexDirection: 'row',
@@ -239,9 +351,9 @@ const styles = StyleSheet.create({
     borderRadius: 20,
     gap: 6,
   },
-  karmaLock: { fontSize: 12 },
-  karmaText: { fontSize: 13, color: '#64748b', fontWeight: '600' },
-  karmaArrow: { fontSize: 16, color: '#64748b' },
+  karmaBtnLock: { fontSize: 12 },
+  karmaBtnText: { fontSize: 13, color: '#64748b', fontWeight: '600' },
+  karmaBtnArrow: { fontSize: 16, color: '#64748b' },
   cardRow: { flexDirection: 'row', gap: CARD_GAP },
   topicCard: {
     width: CARD_WIDTH,
@@ -249,11 +361,6 @@ const styles = StyleSheet.create({
     borderRadius: 16,
     padding: 16,
     borderWidth: 2,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 2 },
-    shadowOpacity: 0.05,
-    shadowRadius: 6,
-    elevation: 3,
   },
   topicCardLocked: { opacity: 0.6 },
   topicIconBg: {
@@ -269,4 +376,79 @@ const styles = StyleSheet.create({
   topicTitleLocked: { color: '#94a3b8' },
   lockBadge: { position: 'absolute', top: 12, right: 12 },
   lockIcon: { fontSize: 14 },
+  // Modal
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'flex-end',
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderTopLeftRadius: 24,
+    borderTopRightRadius: 24,
+    padding: 24,
+    paddingBottom: 40,
+  },
+  modalHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 24 },
+  modalTitleRow: { flexDirection: 'row', alignItems: 'center', gap: 12 },
+  modalGift: { fontSize: 40 },
+  modalTitle: { fontSize: 20, fontWeight: 'bold', color: '#0f172a' },
+  modalSub: { fontSize: 14, color: '#64748b', marginTop: 4 },
+  modalClose: { padding: 8 },
+  modalCloseText: { fontSize: 18, color: '#64748b' },
+  inviteStatus: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 16,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    borderColor: '#e2e8f0',
+  },
+  inviteStatusLabel: { fontSize: 15, fontWeight: '600', color: '#0f172a' },
+  inviteBadge: { backgroundColor: '#a855f7', paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 },
+  inviteBadgeText: { color: '#fff', fontSize: 14, fontWeight: '600' },
+  progressRow: { marginBottom: 24 },
+  progressLine: {
+    height: 4,
+    backgroundColor: '#e2e8f0',
+    borderRadius: 2,
+    marginBottom: 16,
+  },
+  progressDots: { flexDirection: 'row', justifyContent: 'space-between' },
+  progressDot: { alignItems: 'center' },
+  dotIcon: { fontSize: 20, marginBottom: 4 },
+  dotLabel: { fontSize: 12, color: '#64748b' },
+  inviteBtn: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    backgroundColor: '#a855f7',
+    padding: 18,
+    borderRadius: 16,
+    gap: 8,
+    marginBottom: 16,
+  },
+  inviteBtnIcon: { fontSize: 18 },
+  inviteBtnText: { color: '#fff', fontSize: 16, fontWeight: '600' },
+  infoBox: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 16,
+    borderRadius: 12,
+    backgroundColor: '#eff6ff',
+    borderWidth: 1,
+    borderColor: '#3b82f6',
+    gap: 12,
+    marginBottom: 24,
+  },
+  infoIcon: { fontSize: 20 },
+  infoText: { flex: 1, fontSize: 14, color: '#1e40af' },
+  orRow: { flexDirection: 'row', alignItems: 'center', marginBottom: 24, gap: 12 },
+  orLine: { flex: 1, height: 1, backgroundColor: '#e2e8f0' },
+  orText: { fontSize: 14, color: '#64748b' },
+  proBtn: { overflow: 'hidden', borderRadius: 16 },
+  proBtnGradient: { padding: 18, alignItems: 'center' },
+  proBtnText: { color: '#fff', fontSize: 16, fontWeight: '700' },
 });

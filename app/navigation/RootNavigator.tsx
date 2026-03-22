@@ -34,6 +34,10 @@ import ContactScreen from '../screens/ContactScreen';
 import TermsScreen from '../screens/TermsScreen';
 import ChangePasswordScreen from '../screens/ChangePasswordScreen';
 import DeleteAccountScreen from '../screens/DeleteAccountScreen';
+import MindMapScreen from '../screens/MindMapScreen';
+import InstantSolutionScreen from '../screens/InstantSolutionScreen';
+import ChatScreen from '../screens/ChatScreen';
+import ConverterScreen from '../screens/ConverterScreen';
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -71,6 +75,10 @@ function MainStack() {
       <Stack.Screen name="Terms" component={TermsScreen} />
       <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
       <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
+      <Stack.Screen name="MindMap" component={MindMapScreen} />
+      <Stack.Screen name="InstantSolution" component={InstantSolutionScreen} />
+      <Stack.Screen name="Chat" component={ChatScreen} />
+      <Stack.Screen name="Converter" component={ConverterScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="Pomodoro" component={PomodoroScreen} />
     </Stack.Navigator>

@@ -16,6 +16,10 @@ const MENU_ITEMS = [
   { name: 'Konu Netlerim', icon: '🎓', screen: 'Plan' },
   { name: 'Kart Arşivi', icon: '📇', screen: 'Flashcards' },
   { name: 'Soru Kutusu', icon: '📥', screen: 'Goals' },
+  { name: 'Zihin Haritası', icon: '🧠', screen: 'MindMap' },
+  { name: 'Anlık Çözüm', icon: '📷', screen: 'InstantSolution' },
+  { name: 'Sohbet', icon: '💬', screen: 'Chat' },
+  { name: 'Dönüştürücü', icon: '🔄', screen: 'Converter' },
   { name: 'Taktik Blog', icon: '📝', screen: 'DailyActivity' },
   { name: 'Ayarlar', icon: '⚙️', screen: 'Settings' },
 ];

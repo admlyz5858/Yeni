@@ -28,11 +28,13 @@ import { FlashcardProvider } from './context/FlashcardContext';
 import { PremiumProvider } from './context/PremiumContext';
 import { SubjectsProvider } from './context/SubjectsContext';
 import { GameProvider } from './context/GameContext';
+import { SettingsProvider } from './context/SettingsContext';
 import SubjectsScreen from './screens/SubjectsScreen';
 import LeaderboardScreen from './screens/LeaderboardScreen';
 import StudyGroupsScreen from './screens/StudyGroupsScreen';
 import FocusScreen from './screens/FocusScreen';
 import AboutScreen from './screens/AboutScreen';
+import CustomQuotesScreen from './screens/CustomQuotesScreen';
 import ConfigRequiredScreen from './screens/ConfigRequiredScreen';
 import ForgotPasswordScreen from './screens/ForgotPasswordScreen';
 
@@ -68,6 +70,7 @@ function MemberNavigator() {
         <Stack.Screen name="StudyGroups" component={StudyGroupsScreen} />
         <Stack.Screen name="Focus" component={FocusScreen} />
         <Stack.Screen name="About" component={AboutScreen} />
+        <Stack.Screen name="CustomQuotes" component={CustomQuotesScreen} />
       </Stack.Navigator>
     </>
   );
@@ -175,9 +178,11 @@ export default function App() {
             <PremiumProvider>
               <SubjectsProvider>
                 <GameProvider>
-                  <FlashcardProvider>
-                    <AppContent />
-                  </FlashcardProvider>
+                  <SettingsProvider>
+                    <FlashcardProvider>
+                      <AppContent />
+                    </FlashcardProvider>
+                  </SettingsProvider>
                 </GameProvider>
               </SubjectsProvider>
             </PremiumProvider>

@@ -160,6 +160,14 @@ export async function saveSettings(userId: string, themeMode: string) {
   await supabase.from('user_settings').upsert({ user_id: userId, theme_mode: themeMode, updated_at: new Date().toISOString() }, { onConflict: 'user_id' });
 }
 
+export async function saveAppPreferences(userId: string, prefs: Record<string, unknown>) {
+  if (!hasSupabase || !supabase) return;
+  await supabase.from('user_settings').upsert(
+    { user_id: userId, app_preferences: prefs, updated_at: new Date().toISOString() },
+    { onConflict: 'user_id' }
+  );
+}
+
 export async function fetchDaily(userId: string, date: string) {
   if (!hasSupabase || !supabase) return null;
   const { data } = await supabase.from('user_daily').select('*').eq('user_id', userId).eq('date', date).single();

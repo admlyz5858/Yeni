@@ -7,12 +7,15 @@ import {
   Animated,
   Easing,
   ScrollView,
+  AppState,
 } from 'react-native';
 import { BlurView } from 'expo-blur';
 import { LinearGradient } from 'expo-linear-gradient';
+import * as KeepAwake from 'expo-keep-awake';
 import Svg, { Circle, Line } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 import { usePlan } from '../context/PlanContext';
+import { useSettings } from '../context/SettingsContext';
 import {
   playAmbient,
   stopAmbient,
@@ -38,6 +41,7 @@ type Props = { navigation: any };
 
 export default function PomodoroScreen({ navigation }: Props) {
   const { addPomodoro } = usePlan();
+  const { keepScreenOn, strictMode, soundEffects } = useSettings();
   const [modeIndex, setModeIndex] = useState(0);
   const mode = MODES[modeIndex];
   const [phase, setPhase] = useState<'work' | 'break'>('work');
@@ -102,11 +106,28 @@ export default function PomodoroScreen({ navigation }: Props) {
   }, [isRunning]);
 
   useEffect(() => {
+    if (keepScreenOn && isRunning) {
+      KeepAwake.activateKeepAwakeAsync();
+      return () => {
+        KeepAwake.deactivateKeepAwake();
+      };
+    }
+  }, [keepScreenOn, isRunning]);
+
+  useEffect(() => {
+    if (!strictMode || !isRunning) return;
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'background') setIsRunning(false);
+    });
+    return () => sub.remove();
+  }, [strictMode, isRunning]);
+
+  useEffect(() => {
     if (isRunning) {
       intervalRef.current = setInterval(() => {
         setSecondsLeft((s) => {
           if (s <= 1) {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+            if (soundEffects) Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             if (phase === 'work') {
               addPomodoro();
               setPhase('break');

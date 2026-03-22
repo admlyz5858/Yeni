@@ -13,6 +13,7 @@ import { useGamification } from '../context/GamificationContext';
 import { useFlashcards } from '../context/FlashcardContext';
 import { useSubjects } from '../context/SubjectsContext';
 import { useGame } from '../context/GameContext';
+import { useSettings } from '../context/SettingsContext';
 import LevelUpModal from '../components/LevelUpModal';
 
 const { width } = Dimensions.get('window');
@@ -68,6 +69,7 @@ export default function HomeScreen({ navigation }: Props) {
   const { getDueCards } = useFlashcards();
   const { subjects } = useSubjects();
   const { checkLevelUp, levelUpModal, setLevelUpModal } = useGame();
+  const { customQuotes } = useSettings();
 
   const [tab, setTab] = useState<'quote' | 'tip' | 'motivation'>('quote');
   const totalTopics = subjects.reduce((acc, s) => acc + s.topics.length, 0);
@@ -124,7 +126,9 @@ export default function HomeScreen({ navigation }: Props) {
   }, [todayHours, todayTopicCompletions, todayPomodoro]);
 
   const daySeed = new Date().getDate() % 3;
-  const quote = QUOTES[daySeed];
+  const defaultQuotes = QUOTES;
+  const allQuotes = customQuotes.length > 0 ? customQuotes : defaultQuotes;
+  const quote = allQuotes[daySeed % allQuotes.length];
   const tip = TIPS[daySeed];
   const activeIndex = 4; // Bugün kartı vurgulu
 

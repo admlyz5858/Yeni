@@ -14,6 +14,8 @@ import { useFlashcards } from '../context/FlashcardContext';
 import { useSubjects } from '../context/SubjectsContext';
 import { useGame } from '../context/GameContext';
 import { useSettings } from '../context/SettingsContext';
+import { useAuth } from '../context/AuthContext';
+import { usePremium } from '../context/PremiumContext';
 import LevelUpModal from '../components/LevelUpModal';
 
 const { width } = Dimensions.get('window');
@@ -68,10 +70,20 @@ export default function HomeScreen({ navigation }: Props) {
     useGamification();
   const { getDueCards } = useFlashcards();
   const { subjects } = useSubjects();
-  const { checkLevelUp, levelUpModal, setLevelUpModal } = useGame();
+  const { checkLevelUp, levelUpModal, setLevelUpModal, weeklyQuests, weeklyCompleted } = useGame();
   const { customQuotes } = useSettings();
+  const { user } = useAuth();
+  const { isPremium } = usePremium();
 
   const [tab, setTab] = useState<'quote' | 'tip' | 'motivation'>('quote');
+  const greeting = (() => {
+    const h = new Date().getHours();
+    if (h < 12) return 'İyi Sabahlar';
+    if (h < 18) return 'İyi Öğlenler';
+    return 'İyi Akşamlar';
+  })();
+  const completedQuests = Object.values(weeklyCompleted || {}).filter(Boolean).length;
+  const totalQuests = weeklyQuests?.length ?? 4;
   const totalTopics = subjects.reduce((acc, s) => acc + s.topics.length, 0);
   const doneCount = Object.values(completedTopics).reduce(
     (acc, subj) => acc + Object.values(subj).filter(Boolean).length,
@@ -181,13 +193,120 @@ export default function HomeScreen({ navigation }: Props) {
               <Text style={styles.iconBtnText}>☰</Text>
             </TouchableOpacity>
             <TouchableOpacity onPress={() => navigation.navigate('DailyActivity')} style={styles.iconBtn}>
-              <Text style={styles.iconBtnText}>📰</Text>
-            </TouchableOpacity>
-            <TouchableOpacity onPress={() => navigation.navigate('Settings')} style={styles.iconBtn}>
-              <Text style={styles.iconBtnText}>⚙️</Text>
+              <Text style={styles.iconBtnText}>🔔</Text>
             </TouchableOpacity>
           </View>
         </View>
+
+        {/* Greeting + License */}
+        <View style={styles.greetingRow}>
+          <View style={styles.greetingLeft}>
+            <Text style={styles.greetingText}>
+              {greeting} {user?.name?.split(' ')[0] || 'Kullanıcı'} 👋
+            </Text>
+          </View>
+          <View style={[styles.licenseBadge, isPremium ? styles.licensePro : styles.licenseFree]}>
+            <Text style={styles.licenseText}>{isPremium ? 'Lisans 167 gün' : 'Ücretsiz'}</Text>
+          </View>
+        </View>
+
+        {/* Rütbe + Görevler */}
+        <View style={styles.rankRow}>
+          <View style={[styles.rankCard, { backgroundColor: CARD_DARK, borderColor: CARD_BORDER }]}>
+            <Text style={styles.rankLabel}>Rütbe</Text>
+            <Text style={styles.rankVal}>Acemi Kâşif</Text>
+            <Text style={styles.rankXp}>{xp} TP</Text>
+            <View style={styles.rankBarBg}>
+              <View style={[styles.rankBarFill, { width: `${Math.min(100, (xp / 500) * 100)}%` }]} />
+            </View>
+          </View>
+          <View style={[styles.rankCard, { backgroundColor: CARD_DARK, borderColor: CARD_BORDER }]}>
+            <Text style={styles.rankLabel}>Görevler</Text>
+            <Text style={styles.rankVal}>{completedQuests}/{totalQuests}</Text>
+            <Text style={styles.rankXp}>⏱ {Math.round(remainMins / 60)} sa</Text>
+          </View>
+        </View>
+
+        {/* Genel Bakış */}
+        <View style={[styles.genelBakis, { backgroundColor: CARD_DARK, borderColor: CARD_BORDER }]}>
+          <View style={styles.genelItem}>
+            <Text style={styles.genelNum}>0</Text>
+            <Text style={styles.genelLabel}>DENEME</Text>
+          </View>
+          <View style={styles.genelItem}>
+            <Text style={styles.genelNum}>0</Text>
+            <Text style={styles.genelLabel}>EN İYİ</Text>
+          </View>
+          <View style={styles.genelItem}>
+            <Text style={styles.genelNum}>0</Text>
+            <Text style={styles.genelLabel}>SON NET</Text>
+          </View>
+        </View>
+
+        {/* Hızlı Aksiyonlar */}
+        <Text style={styles.sectionTitle}>🚀 Hızlı Aksiyonlar</Text>
+        <View style={styles.hizliRow}>
+          <TouchableOpacity
+            style={[styles.hizliBtn, { backgroundColor: '#3b82f6' }]}
+            onPress={() => navigation.navigate('InstantSolution')}
+          >
+            <Text style={styles.hizliIcon}>📷</Text>
+            <Text style={styles.hizliText}>Soru Çözdür</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.hizliBtn, { backgroundColor: '#38bdf8' }]}
+            onPress={() => navigation.navigate('Converter')}
+          >
+            <Text style={styles.hizliIcon}>✨</Text>
+            <Text style={styles.hizliText}>Dönüştür</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.hizliBtn, { backgroundColor: '#8b5cf6' }]}
+            onPress={() => navigation.navigate('SmartAnalysis')}
+          >
+            <Text style={styles.hizliIcon}>📊</Text>
+            <Text style={styles.hizliText}>Deneme Ekle</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.hizliBtn, { backgroundColor: '#14b8a6' }]}
+            onPress={() => navigation.navigate('Goals')}
+          >
+            <Text style={styles.hizliIcon}>📋</Text>
+            <Text style={styles.hizliText}>Test Ekle</Text>
+          </TouchableOpacity>
+        </View>
+
+        {/* Bilge Baykuş Card */}
+        <TouchableOpacity
+          style={[styles.bilgeCard, { backgroundColor: CARD_DARK, borderColor: CARD_BORDER }]}
+          onPress={() => navigation.navigate('Chat')}
+        >
+          <View style={styles.bilgeCardLeft}>
+            <View style={styles.bilgeMascot}>
+              <Text style={styles.bilgeMascotIcon}>🦉</Text>
+            </View>
+            <View>
+              <Text style={styles.bilgeCardTitle}>Bilge Baykuş</Text>
+              <View style={styles.bilgeActive}>
+                <Text style={styles.bilgeActiveText}>AKTİF</Text>
+              </View>
+              <Text style={styles.bilgeCardDesc}>Son denemeni birlikte inceleyelim.</Text>
+            </View>
+          </View>
+        </TouchableOpacity>
+
+        {/* Bilge Üssü Card */}
+        <TouchableOpacity
+          style={[styles.ussuCard, { backgroundColor: CARD_DARK, borderColor: CARD_BORDER }]}
+          onPress={() => navigation.navigate('BilgeUssu')}
+        >
+          <Text style={styles.ussuIcon}>🦉</Text>
+          <View style={styles.ussuContent}>
+            <Text style={styles.ussuTitle}>Bilge Üssü</Text>
+            <Text style={styles.ussuDesc}>Tüm araçlara tek yerden eriş</Text>
+          </View>
+          <Text style={styles.ussuArrow}>›</Text>
+        </TouchableOpacity>
 
         {/* Top Featured Card */}
         <TouchableOpacity
@@ -378,11 +497,11 @@ export default function HomeScreen({ navigation }: Props) {
 
       {/* FAB */}
       <TouchableOpacity
-        style={styles.fab}
+        style={[styles.fab, styles.fabGlow]}
         onPress={() => navigation.navigate('Pomodoro')}
       >
-        <Text style={styles.fabIcon}>▶</Text>
-        <Text style={styles.fabText}>Pomodoro</Text>
+        <Text style={styles.fabIcon}>🦉</Text>
+        <Text style={styles.fabText}>Odaklan</Text>
       </TouchableOpacity>
 
       <LevelUpModal
@@ -419,6 +538,83 @@ const styles = StyleSheet.create({
   headerIcons: { flexDirection: 'row', gap: 12 },
   iconBtn: { padding: 8 },
   iconBtnText: { fontSize: 22 },
+  greetingRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
+  greetingLeft: { flex: 1 },
+  greetingText: { fontSize: 18, fontWeight: '600', color: TEXT_WHITE },
+  licenseBadge: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 16 },
+  licensePro: { backgroundColor: '#22c55e' },
+  licenseFree: { backgroundColor: CARD_BORDER },
+  licenseText: { fontSize: 12, fontWeight: '700', color: TEXT_WHITE },
+  rankRow: { flexDirection: 'row', gap: 12, marginBottom: 16 },
+  rankCard: {
+    flex: 1,
+    borderRadius: 16,
+    padding: 16,
+    borderWidth: 1,
+  },
+  rankLabel: { fontSize: 12, color: TEXT_MUTED, marginBottom: 4 },
+  rankVal: { fontSize: 16, fontWeight: 'bold', color: TEXT_WHITE },
+  rankXp: { fontSize: 12, color: TEXT_MUTED, marginTop: 4 },
+  rankBarBg: { height: 4, backgroundColor: CARD_BORDER, borderRadius: 2, marginTop: 8, overflow: 'hidden' },
+  rankBarFill: { height: '100%', backgroundColor: '#22c55e', borderRadius: 2 },
+  genelBakis: {
+    flexDirection: 'row',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 20,
+    borderWidth: 1,
+    justifyContent: 'space-around',
+  },
+  genelItem: { alignItems: 'center' },
+  genelNum: { fontSize: 24, fontWeight: 'bold', color: TEXT_WHITE },
+  genelLabel: { fontSize: 11, color: TEXT_MUTED, marginTop: 4 },
+  sectionTitle: { fontSize: 14, fontWeight: '600', color: TEXT_MUTED, marginBottom: 12 },
+  hizliRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 10, marginBottom: 20 },
+  hizliBtn: {
+    width: (width - 40 - 30) / 4,
+    borderRadius: 16,
+    padding: 14,
+    alignItems: 'center',
+  },
+  hizliIcon: { fontSize: 24, marginBottom: 6 },
+  hizliText: { fontSize: 11, color: '#fff', fontWeight: '600', textAlign: 'center' },
+  bilgeCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 20,
+    padding: 20,
+    marginBottom: 16,
+    borderWidth: 1,
+  },
+  bilgeCardLeft: { flexDirection: 'row', alignItems: 'center', gap: 16 },
+  bilgeMascot: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    backgroundColor: '#374151',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  bilgeMascotIcon: { fontSize: 32 },
+  bilgeCardTitle: { fontSize: 18, fontWeight: 'bold', color: TEXT_WHITE },
+  bilgeActive: { alignSelf: 'flex-start', backgroundColor: '#22c55e', paddingHorizontal: 8, paddingVertical: 2, borderRadius: 8, marginTop: 4 },
+  bilgeActiveText: { fontSize: 10, fontWeight: '700', color: '#fff' },
+  bilgeCardDesc: { fontSize: 14, color: TEXT_MUTED, marginTop: 6 },
+  ussuCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    borderRadius: 16,
+    padding: 18,
+    marginBottom: 20,
+    borderWidth: 1,
+    borderColor: CARD_BORDER,
+    backgroundColor: CARD_DARK,
+  },
+  ussuIcon: { fontSize: 32, marginRight: 14 },
+  ussuContent: { flex: 1 },
+  ussuTitle: { fontSize: 16, fontWeight: 'bold', color: TEXT_WHITE },
+  ussuDesc: { fontSize: 13, color: TEXT_MUTED, marginTop: 2 },
+  ussuArrow: { fontSize: 24, color: TEXT_MUTED },
   featuredCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -593,8 +789,12 @@ const styles = StyleSheet.create({
     elevation: 8,
     shadowColor: '#000',
     shadowOffset: { width: 0, height: 4 },
-    shadowOpacity: 0.3,
-    shadowRadius: 8,
+  },
+  fabGlow: {
+    shadowColor: '#3b82f6',
+    shadowOpacity: 0.5,
+    shadowRadius: 12,
+    shadowOffset: { width: 0, height: 2 },
   },
   fabIcon: { fontSize: 18, color: '#fff' },
   fabText: { fontSize: 15, fontWeight: '700', color: '#fff' },

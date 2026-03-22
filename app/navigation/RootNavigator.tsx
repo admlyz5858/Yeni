@@ -41,6 +41,7 @@ import ConverterScreen from '../screens/ConverterScreen';
 import TimeMapScreen from '../screens/TimeMapScreen';
 import StudyRoomScreen from '../screens/StudyRoomScreen';
 import SmartAnalysisScreen from '../screens/SmartAnalysisScreen';
+import BilgeUssuScreen from '../screens/BilgeUssuScreen';
 
 const Drawer = createDrawerNavigator();
 const Stack = createNativeStackNavigator();
@@ -85,6 +86,7 @@ function MainStack() {
       <Stack.Screen name="TimeMap" component={TimeMapScreen} />
       <Stack.Screen name="StudyRoom" component={StudyRoomScreen} />
       <Stack.Screen name="SmartAnalysis" component={SmartAnalysisScreen} />
+      <Stack.Screen name="BilgeUssu" component={BilgeUssuScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
       <Stack.Screen name="Pomodoro" component={PomodoroScreen} />
     </Stack.Navigator>

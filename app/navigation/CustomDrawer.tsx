@@ -9,6 +9,7 @@ import { useAuth } from '../context/AuthContext';
 import { usePremium } from '../context/PremiumContext';
 
 const MENU_ITEMS = [
+  { name: 'Bilge Üssü', icon: '🦉', screen: 'BilgeUssu' },
   { name: 'Odaklan', icon: '⏱️', screen: 'Pomodoro' },
   { name: 'Çalışma Gelişimi', icon: '📊', screen: 'StudyLog' },
   { name: 'Genel Bakış', icon: '📈', screen: 'Tabs' },

@@ -21,8 +21,11 @@ export default function LeaderboardScreen({ navigation }: Props) {
 
   return (
     <ScrollView style={styles.container} contentContainerStyle={styles.content}>
-      <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-        <Text style={styles.backBtnText}>← Geri</Text>
+      <TouchableOpacity
+        style={styles.backBtn}
+        onPress={() => (navigation.getParent() as any)?.getParent()?.openDrawer?.() || navigation.goBack()}
+      >
+        <Text style={styles.backBtnText}>☰</Text>
       </TouchableOpacity>
 
       <Text style={styles.title}>🏆 Haftalık Sıralama</Text>

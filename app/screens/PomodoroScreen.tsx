@@ -213,7 +213,7 @@ export default function PomodoroScreen({ navigation }: Props) {
       {/* Menu button */}
       <TouchableOpacity
         style={styles.menuBtn}
-        onPress={() => navigation.goBack()}
+        onPress={() => (navigation.getParent() as any)?.getParent()?.openDrawer?.() || navigation.goBack()}
       >
         <BlurView intensity={60} tint="dark" style={styles.menuBtnBlur}>
           <Text style={styles.menuIcon}>☰</Text>

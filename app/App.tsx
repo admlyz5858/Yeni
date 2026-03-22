@@ -37,6 +37,7 @@ import AboutScreen from './screens/AboutScreen';
 import CustomQuotesScreen from './screens/CustomQuotesScreen';
 import ConfigRequiredScreen from './screens/ConfigRequiredScreen';
 import ForgotPasswordScreen from './screens/ForgotPasswordScreen';
+import RootNavigator from './navigation/RootNavigator';
 
 const Stack = createNativeStackNavigator();
 
@@ -164,7 +165,7 @@ function AppContent() {
 
   return (
     <NavigationContainer>
-      <MemberNavigator />
+      <RootNavigator />
     </NavigationContainer>
   );
 }

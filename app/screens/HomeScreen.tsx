@@ -136,7 +136,7 @@ export default function HomeScreen({ navigation }: Props) {
     { icon: '📋', label: 'Plan', nav: 'Plan' },
     { icon: '🍅', label: 'Pomodoro', nav: 'Pomodoro' },
     { icon: '📇', label: 'Kartlar', nav: 'Flashcards' },
-    { icon: '🏆', label: 'Sıralama', nav: 'Leaderboard' },
+    { icon: '🏆', label: 'Sıralama', nav: 'LeaderboardTab' },
     { icon: '📚', label: 'Dersler', nav: 'Subjects' },
     { icon: '📌', label: 'Günlük', nav: 'DailyActivity' },
     { icon: '🌟', label: 'Rozetler', nav: 'Achievements' },
@@ -167,6 +167,12 @@ export default function HomeScreen({ navigation }: Props) {
             <Text style={styles.appName}>Çalışma Asistanı</Text>
           </View>
           <View style={styles.headerIcons}>
+            <TouchableOpacity
+              style={styles.iconBtn}
+              onPress={() => (navigation.getParent() as any)?.getParent()?.openDrawer?.()}
+            >
+              <Text style={styles.iconBtnText}>☰</Text>
+            </TouchableOpacity>
             <TouchableOpacity onPress={() => navigation.navigate('DailyActivity')} style={styles.iconBtn}>
               <Text style={styles.iconBtnText}>📰</Text>
             </TouchableOpacity>

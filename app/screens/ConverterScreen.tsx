@@ -85,6 +85,14 @@ export default function ConverterScreen({ navigation }: Props) {
         <Text style={styles.convertIcon}>✨ ✨</Text>
         <Text style={[styles.convertText, { color: theme.textSecondary }]}>Dönüştür</Text>
       </TouchableOpacity>
+
+      <TouchableOpacity
+        style={[styles.notebookLink, { borderColor: theme.cardBorder }]}
+        onPress={() => navigation.navigate('NotebookChat')}
+      >
+        <Text style={styles.notebookLinkIcon}>📓</Text>
+        <Text style={[styles.notebookLinkText, { color: theme.accent }]}>Bilge Not Defteri'ne metin ekle</Text>
+      </TouchableOpacity>
     </View>
   );
 }
@@ -155,4 +163,16 @@ const styles = StyleSheet.create({
   },
   convertIcon: { fontSize: 18 },
   convertText: { fontSize: 16, fontWeight: '600' },
+  notebookLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginTop: 20,
+    padding: 16,
+    borderRadius: 12,
+    borderWidth: 1,
+    gap: 8,
+  },
+  notebookLinkIcon: { fontSize: 20 },
+  notebookLinkText: { fontSize: 14, fontWeight: '600' },
 });

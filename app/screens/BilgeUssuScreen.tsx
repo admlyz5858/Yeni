@@ -22,7 +22,7 @@ const FEATURE_CARDS = [
     title: 'Bilge Baykuş',
     desc: 'Sınav stresini yöneten koçun.',
     icon: '🦉',
-    nav: 'Chat',
+    nav: 'NotebookChat',
     locked: false,
   },
   {

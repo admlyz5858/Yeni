@@ -22,6 +22,7 @@ type AuthContextType = {
   logout: () => Promise<void>;
   getUsers: () => Promise<{ id: string; email: string; name: string; role: UserRole }[]>;
   resetPassword: (email: string) => Promise<{ ok: boolean; error?: string }>;
+  getSessionToken: () => Promise<string | null>;
 };
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -168,6 +169,12 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
     return { ok: true };
   };
 
+  const getSessionToken = async (): Promise<string | null> => {
+    if (!hasSupabase || !supabase) return null;
+    const { data: { session } } = await supabase.auth.getSession();
+    return session?.access_token ?? null;
+  };
+
   return (
     <AuthContext.Provider value={{
       user,
@@ -178,6 +185,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       logout,
       getUsers,
       resetPassword,
+      getSessionToken,
     }}>
       {children}
     </AuthContext.Provider>

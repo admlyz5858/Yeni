@@ -10,6 +10,7 @@ import { usePremium } from '../context/PremiumContext';
 
 const MENU_ITEMS = [
   { name: 'Bilge Üssü', icon: '🦉', screen: 'BilgeUssu' },
+  { name: 'Bilge Not Defteri', icon: '📓', screen: 'NotebookChat' },
   { name: 'Odaklan', icon: '⏱️', screen: 'Pomodoro' },
   { name: 'Çalışma Gelişimi', icon: '📊', screen: 'StudyLog' },
   { name: 'Genel Bakış', icon: '📈', screen: 'Tabs' },

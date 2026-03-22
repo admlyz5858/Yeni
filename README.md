@@ -1,6 +1,6 @@
-# KPSS Çalışma Uygulaması
+# KPSS Planlama Uygulaması
 
-KPSS sınavına hazırlık için test çözme uygulaması. Türkçe, Matematik, Tarih, Coğrafya, Vatandaşlık ve Güncel Konular kategorilerinde sorular içerir.
+KPSS sınavına hazırlık için planlama odaklı uygulama. Sınav geri sayımı, konu ilerleme takibi, haftalık program ve hedef belirleme özellikleri.
 
 Expo (React Native) ile oluşturulmuş cross-platform mobil uygulama. iOS ve Android'de çalışır.
 
@@ -38,9 +38,11 @@ APK dosyası: `app/android/app/build/outputs/apk/release/app-release.apk`
 ```
 app/
 ├── App.tsx           # Ana uygulama + navigasyon
-├── screens/          # Ana Sayfa, Quiz, Sonuç ekranları
+├── context/
+│   └── PlanContext   # Sınav tarihi, hedefler, ilerleme state
+├── screens/          # Ana Sayfa, Plan, Program, Hedefler
 ├── data/
-│   └── questions.ts  # KPSS soruları (kategorilere göre)
+│   └── subjects.ts   # KPSS konuları (kategorilere göre)
 ├── app.json          # Expo yapılandırması
 ├── assets/           # Görseller ve ikonlar
 ├── eas.json          # EAS Build yapılandırması

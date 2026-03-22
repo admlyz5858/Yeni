@@ -22,6 +22,7 @@ type FlashcardContextType = {
   deleteCard: (id: string) => void;
   getDueCards: () => Flashcard[];
   getCardsByTopic: (subjectId: string, topic: string) => Flashcard[];
+  cardsCount: number;
 };
 
 const Context = createContext<FlashcardContextType | undefined>(undefined);
@@ -95,7 +96,7 @@ export function FlashcardProvider({ children }: { children: React.ReactNode }) {
     cards.filter((c) => c.subjectId === subjectId && c.topic === topic);
 
   return (
-    <Context.Provider value={{ cards, addCard, updateCard, deleteCard, getDueCards, getCardsByTopic }}>
+    <Context.Provider value={{ cards, addCard, updateCard, deleteCard, getDueCards, getCardsByTopic, cardsCount: cards.length }}>
       {children}
     </Context.Provider>
   );

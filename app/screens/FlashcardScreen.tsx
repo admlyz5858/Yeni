@@ -7,9 +7,11 @@ import {
   ScrollView,
   Modal,
   TextInput,
+  Alert,
 } from 'react-native';
 import { useFocusEffect } from '@react-navigation/native';
 import { useFlashcards } from '../context/FlashcardContext';
+import { usePremium } from '../context/PremiumContext';
 import { SUBJECTS } from '../data/subjects';
 import type { Flashcard } from '../context/FlashcardContext';
 
@@ -17,8 +19,11 @@ type Props = {
   navigation: any;
 };
 
+const FREE_FLASHCARD_LIMIT = 20;
+
 export default function FlashcardScreen({ navigation }: Props) {
-  const { getDueCards, updateCard, addCard } = useFlashcards();
+  const { getDueCards, updateCard, addCard, cardsCount } = useFlashcards();
+  const { hasFeature } = usePremium();
   const [dueCards, setDueCards] = useState<Flashcard[]>([]);
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
@@ -52,6 +57,10 @@ export default function FlashcardScreen({ navigation }: Props) {
 
   const handleAdd = () => {
     if (front.trim() && back.trim()) {
+      if (!hasFeature('unlimited_flashcards') && cardsCount >= FREE_FLASHCARD_LIMIT) {
+        Alert.alert('Limit', `Ücretsiz kullanıcılar ${FREE_FLASHCARD_LIMIT} karta kadar ekleyebilir. Premium ile sınırsız kart!`);
+        return;
+      }
       addCard(addSubject, addTopic, front.trim(), back.trim());
       setFront('');
       setBack('');
@@ -72,7 +81,9 @@ export default function FlashcardScreen({ navigation }: Props) {
           <Text style={styles.emptySub}>Tüm kartlarınızı tekrarladınız.</Text>
         </View>
         <TouchableOpacity style={styles.addCardBtn} onPress={() => setAddModal(true)}>
-          <Text style={styles.addCardBtnText}>+ Yeni Kart Ekle</Text>
+          <Text style={styles.addCardBtnText}>
+            + Yeni Kart Ekle {!hasFeature('unlimited_flashcards') ? `(${cardsCount}/${FREE_FLASHCARD_LIMIT})` : ''}
+          </Text>
         </TouchableOpacity>
         <Modal visible={addModal} transparent animationType="slide">
           <View style={styles.modalOverlay}>

@@ -16,6 +16,11 @@ KPSS sınavına hazırlık için gelişmiş planlama uygulaması.
 - **🤖 Akıllı Plan:** Hedeflere göre otomatik program
 - **📇 Flashcards:** Aralıklı tekrar (SM-2 algoritması)
 - **🔔 Bildirimler:** Günlük çalışma hatırlatması
+- **👑 Premium:** 5000 XP ile kilidi aç, 9 premium özellik
+- **📌 Günlük Aktivite:** Günün görevi, söz, ipucu, giriş bonusu
+- **38 Rozet:** Geniş başarı sistemi
+- **⏱️ 3 Zamanlayıcı:** 25/5, 50/10, 90/20 dakika
+- **Ücretsiz 20 kart** limiti, premium'da sınırsız
 
 **Admin Paneli:**
 - 📊 Dashboard (üye sayısı, konu/çalışma istatistikleri)

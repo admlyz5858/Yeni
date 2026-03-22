@@ -2,6 +2,7 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
 const STORAGE_KEY = '@kpss_plan_data';
+const DAILY_STATS_KEY = '@kpss_daily_stats';
 
 type CompletedTopics = Record<string, Record<string, boolean>>;
 type ScheduleItem = { day: string; subjectId: string; hours: number };
@@ -26,6 +27,8 @@ type PlanContextType = {
   setHasSeenOnboarding: (v: boolean) => void;
   pomodoroCount: number;
   addPomodoro: () => void;
+  todayTopicCompletions: number;
+  todayPomodoro: number;
   isLoading: boolean;
 };
 
@@ -55,6 +58,8 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
   const [topicNotes, setTopicNotesState] = useState<TopicNotes>({});
   const [hasSeenOnboarding, setHasSeenOnboardingState] = useState(false);
   const [pomodoroCount, setPomodoroCountState] = useState(0);
+  const [todayPomodoro, setTodayPomodoroState] = useState(0);
+  const [todayTopicCompletions, setTodayTopicCompletionsState] = useState(0);
 
   useEffect(() => {
     loadData().then((data) => {
@@ -66,9 +71,25 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
       if (data.topicNotes && Object.keys(data.topicNotes).length) setTopicNotesState(data.topicNotes);
       if (data.hasSeenOnboarding) setHasSeenOnboardingState(data.hasSeenOnboarding);
       if (data.pomodoroCount) setPomodoroCountState(data.pomodoroCount);
+      const today = new Date().toISOString().slice(0, 10);
+      AsyncStorage.getItem(DAILY_STATS_KEY).then((r) => {
+        if (r) {
+          const d = JSON.parse(r);
+          if (d.date === today) {
+            setTodayTopicCompletionsState(d.todayTopics || 0);
+            setTodayPomodoroState(d.todayPomodoro || 0);
+          }
+        }
+      });
       setIsLoading(false);
     });
   }, []);
+
+  useEffect(() => {
+    const today = new Date().toISOString().slice(0, 10);
+    AsyncStorage.setItem(DAILY_STATS_KEY, JSON.stringify({ date: today, todayTopics: todayTopicCompletions, todayPomodoro }));
+  }, [todayTopicCompletions, todayPomodoro]);
+
 
   const persist = (updates: Partial<{
     examDate: string | null;
@@ -104,6 +125,8 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
 
   const toggleTopic = (subjectId: string, topic: string) => {
     setCompletedTopicsState((prev) => {
+      const wasDone = prev[subjectId]?.[topic] ?? false;
+      if (!wasDone) setTodayTopicCompletionsState((p) => p + 1);
       const next = {
         ...prev,
         [subjectId]: {
@@ -152,6 +175,7 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
       saveData({ examDate, dailyGoalHours, completedTopics, schedule, studyLog, topicNotes, hasSeenOnboarding, pomodoroCount: next });
       return next;
     });
+    setTodayPomodoroState((prev) => prev + 1);
   };
 
   const logStudy = (date: string, hours: number) => {
@@ -190,6 +214,8 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
         setHasSeenOnboarding,
         pomodoroCount,
         addPomodoro,
+        todayTopicCompletions,
+        todayPomodoro,
         isLoading,
       }}
     >

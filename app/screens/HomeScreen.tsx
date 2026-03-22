@@ -55,10 +55,10 @@ function getStreak(studyLog: Record<string, number>): number {
 }
 
 export default function HomeScreen({ navigation }: Props) {
-  const { examDate, completedTopics, studyLog, isLoading, topicNotes, pomodoroCount } = usePlan();
+  const { examDate, completedTopics, studyLog, isLoading, topicNotes, pomodoroCount, todayTopicCompletions, todayPomodoro } = usePlan();
   const { theme } = useTheme();
-  const { level, xp, checkAchievements } = useGamification();
-  const { getDueCards } = useFlashcards();
+  const { level, xp, checkAchievements, updateDailyChallengeFromStats, dailyLoginBonus } = useGamification();
+  const { getDueCards, cards, cardsCount } = useFlashcards();
 
   const totalTopics = SUBJECTS.reduce((acc, s) => acc + s.topics.length, 0);
   const doneCount = Object.values(completedTopics).reduce(
@@ -66,8 +66,12 @@ export default function HomeScreen({ navigation }: Props) {
     0
   );
   const hasNotes = Object.values(topicNotes).some((subj) => Object.values(subj).some((n) => n?.trim()));
+  const noteCount = Object.values(topicNotes).reduce((a, subj) => a + Object.values(subj).filter((n) => n?.trim()).length, 0);
   const streak = getStreak(studyLog);
   const totalStudyHours = Object.values(studyLog).reduce((a, b) => a + b, 0);
+  const today = new Date().toISOString().slice(0, 10);
+  const todayHours = studyLog[today] || 0;
+  const before8am = false;
 
   useEffect(() => {
     checkAchievements({
@@ -77,16 +81,27 @@ export default function HomeScreen({ navigation }: Props) {
       totalTopics,
       pomodoroCompleted: pomodoroCount,
       hasNotes,
+      noteCount,
+      flashcardCount: cardsCount,
       studyLog,
     });
-  }, [doneCount, streak, pomodoroCount, totalStudyHours, hasNotes]);
+  }, [doneCount, streak, pomodoroCount, totalStudyHours, hasNotes, noteCount, cardsCount]);
+
+  useEffect(() => {
+    updateDailyChallengeFromStats({
+      todayHours,
+      todayTopics: todayTopicCompletions,
+      todayPomodoro,
+      todayFlashcards: 0,
+      todayNotes: noteCount,
+      before8am,
+    });
+  }, [todayHours, todayTopicCompletions, todayPomodoro, noteCount]);
 
   const daysRemaining = getDaysRemaining(examDate);
   const progressPercent = totalTopics > 0 ? Math.round((doneCount / totalTopics) * 100) : 0;
   const weekDates = getWeekDates();
   const weekHours = weekDates.reduce((acc, d) => acc + (studyLog[d] || 0), 0);
-  const today = new Date().toISOString().slice(0, 10);
-  const todayHours = studyLog[today] || 0;
 
   if (isLoading) {
     return (
@@ -114,13 +129,23 @@ export default function HomeScreen({ navigation }: Props) {
         </Text>
       </View>
 
-      <TouchableOpacity
-        style={[styles.levelBadge, { backgroundColor: theme.card }]}
-        onPress={() => navigation.navigate('Achievements')}
-      >
-        <Text style={styles.levelText}>Seviye {level}</Text>
-        <Text style={[styles.xpText, { color: theme.textSecondary }]}>{xp} XP</Text>
-      </TouchableOpacity>
+      <View style={styles.topBadges}>
+        <TouchableOpacity
+          style={[styles.levelBadge, { backgroundColor: theme.card }]}
+          onPress={() => navigation.navigate('Achievements')}
+        >
+          <Text style={styles.levelText}>Seviye {level}</Text>
+          <Text style={[styles.xpText, { color: theme.textSecondary }]}>{xp} XP</Text>
+        </TouchableOpacity>
+        {(dailyLoginBonus > 0) && (
+          <TouchableOpacity
+            style={styles.loginBonusBtn}
+            onPress={() => navigation.navigate('DailyActivity')}
+          >
+            <Text style={styles.loginBonusBtnText}>🎁 +{dailyLoginBonus}</Text>
+          </TouchableOpacity>
+        )}
+      </View>
 
       {examDate && daysRemaining !== null && (
         <View style={[styles.countdownCard, { backgroundColor: theme.countdownBg }]}>
@@ -248,6 +273,24 @@ export default function HomeScreen({ navigation }: Props) {
           <Text style={[styles.menuTitle, { color: theme.text }]}>Rozetler</Text>
           <Text style={[styles.menuSub, { color: theme.textSecondary }]}>Başarılar ve XP</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.menuCard, { backgroundColor: theme.card }]}
+          onPress={() => navigation.navigate('DailyActivity')}
+        >
+          <Text style={styles.menuIcon}>📌</Text>
+          <Text style={[styles.menuTitle, { color: theme.text }]}>Günlük Aktivite</Text>
+          <Text style={[styles.menuSub, { color: theme.textSecondary }]}>Görev, söz, ipucu</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.menuCard, { backgroundColor: theme.card }]}
+          onPress={() => navigation.navigate('Premium')}
+        >
+          <Text style={styles.menuIcon}>👑</Text>
+          <Text style={[styles.menuTitle, { color: theme.text }]}>Premium</Text>
+          <Text style={[styles.menuSub, { color: theme.textSecondary }]}>5000 XP ile kilidi aç</Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
@@ -274,14 +317,16 @@ const styles = StyleSheet.create({
   countdownLabel: { fontSize: 14, color: '#94a3b8', marginBottom: 4 },
   countdownValue: { fontSize: 48, fontWeight: 'bold', color: '#fff' },
   countdownUnit: { fontSize: 16, color: '#94a3b8' },
+  topBadges: { flexDirection: 'row', gap: 12, marginBottom: 16, alignItems: 'center' },
   levelBadge: {
     flexDirection: 'row',
     alignItems: 'center',
     padding: 12,
     borderRadius: 12,
-    marginBottom: 16,
     gap: 8,
   },
+  loginBonusBtn: { backgroundColor: '#fef3c7', paddingHorizontal: 16, paddingVertical: 10, borderRadius: 12 },
+  loginBonusBtnText: { fontSize: 14, fontWeight: '700', color: '#b45309' },
   levelText: { fontSize: 16, fontWeight: '700', color: '#7c3aed' },
   xpText: { fontSize: 14 },
   heatmapCard: {

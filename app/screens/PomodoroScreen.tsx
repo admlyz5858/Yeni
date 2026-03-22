@@ -9,8 +9,11 @@ import {
 import * as Haptics from 'expo-haptics';
 import { usePlan } from '../context/PlanContext';
 
-const WORK_MIN = 25;
-const BREAK_MIN = 5;
+const PRESETS = [
+  { work: 25, break: 5, label: 'Klasik' },
+  { work: 50, break: 10, label: 'Derin' },
+  { work: 90, break: 20, label: 'Ultra' },
+];
 
 type Props = {
   navigation: any;
@@ -18,8 +21,10 @@ type Props = {
 
 export default function PomodoroScreen({ navigation }: Props) {
   const { addPomodoro } = usePlan();
+  const [presetIndex, setPresetIndex] = useState(0);
+  const preset = PRESETS[presetIndex];
   const [phase, setPhase] = useState<'work' | 'break'>('work');
-  const [secondsLeft, setSecondsLeft] = useState(WORK_MIN * 60);
+  const [secondsLeft, setSecondsLeft] = useState(preset.work * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [rounds, setRounds] = useState(0);
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
@@ -34,10 +39,10 @@ export default function PomodoroScreen({ navigation }: Props) {
               addPomodoro();
               setPhase('break');
               setRounds((r) => r + 1);
-              return BREAK_MIN * 60;
+              return preset.break * 60;
             } else {
               setPhase('work');
-              return WORK_MIN * 60;
+              return preset.work * 60;
             }
           }
           return s - 1;
@@ -49,12 +54,19 @@ export default function PomodoroScreen({ navigation }: Props) {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [isRunning, phase]);
+  }, [isRunning, phase, preset]);
 
   const reset = () => {
     setIsRunning(false);
     setPhase('work');
-    setSecondsLeft(WORK_MIN * 60);
+    setSecondsLeft(preset.work * 60);
+  };
+
+  const changePreset = (i: number) => {
+    if (isRunning) return;
+    setPresetIndex(i);
+    setPhase('work');
+    setSecondsLeft(PRESETS[i].work * 60);
   };
 
   const m = Math.floor(secondsLeft / 60);
@@ -71,9 +83,18 @@ export default function PomodoroScreen({ navigation }: Props) {
           <Text style={styles.backBtnText}>← Geri</Text>
         </TouchableOpacity>
         <Text style={styles.title}>Pomodoro</Text>
-        <Text style={styles.subtitle}>
-          25 dk odaklanma • 5 dk mola
-        </Text>
+        <View style={styles.presetRow}>
+          {PRESETS.map((p, i) => (
+            <TouchableOpacity
+              key={p.label}
+              style={[styles.presetBtn, presetIndex === i && styles.presetBtnActive]}
+              onPress={() => changePreset(i)}
+            >
+              <Text style={[styles.presetLabel, presetIndex === i && styles.presetLabelActive]}>{p.label}</Text>
+              <Text style={[styles.presetTime, presetIndex === i && styles.presetLabelActive]}>{p.work}/{p.break}</Text>
+            </TouchableOpacity>
+          ))}
+        </View>
       </View>
 
       <View style={styles.timerCard}>
@@ -110,8 +131,13 @@ const styles = StyleSheet.create({
   header: { marginBottom: 32 },
   backBtn: { padding: 8, marginBottom: 8 },
   backBtnText: { fontSize: 16, color: '#2563eb', fontWeight: '500' },
-  title: { fontSize: 28, fontWeight: 'bold', color: '#0f172a', marginBottom: 4 },
-  subtitle: { fontSize: 16, color: '#64748b' },
+  title: { fontSize: 28, fontWeight: 'bold', color: '#0f172a', marginBottom: 8 },
+  presetRow: { flexDirection: 'row', gap: 8 },
+  presetBtn: { paddingHorizontal: 16, paddingVertical: 8, borderRadius: 12, backgroundColor: '#f1f5f9' },
+  presetBtnActive: { backgroundColor: '#2563eb' },
+  presetLabel: { fontSize: 14, fontWeight: '600', color: '#64748b' },
+  presetLabelActive: { color: '#fff' },
+  presetTime: { fontSize: 11, color: '#94a3b8' },
   timerCard: {
     backgroundColor: '#fff',
     borderRadius: 24,

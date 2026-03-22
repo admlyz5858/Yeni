@@ -55,11 +55,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               role: profile?.role || 'member',
             });
           }
-        } else {
+        } else if (__DEV__) {
           const raw = await AsyncStorage.getItem(AUTH_KEY);
           if (raw) {
-            const u = JSON.parse(raw);
-            setUserState(u);
+            try {
+              const u = JSON.parse(raw);
+              if (u?.id === 'demo') setUserState(u);
+            } catch {}
           }
         }
       } catch {}
@@ -102,6 +104,13 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { ok: true };
     }
 
+    if (__DEV__ && email === 'demo@calismaasistani.app' && password === 'demo123') {
+      const u: User = { id: 'demo', email, name: 'Demo Kullanıcı', role: 'member' };
+      setUserState(u);
+      await AsyncStorage.setItem(AUTH_KEY, JSON.stringify(u));
+      return { ok: true };
+    }
+
     return { ok: false, error: 'Uygulama henüz yapılandırılmamış. Lütfen geliştirici ile iletişime geçin.' };
   };
 
@@ -134,7 +143,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
 
   const logout = async () => {
     if (hasSupabase && supabase) await supabase.auth.signOut();
-    else await AsyncStorage.removeItem(AUTH_KEY);
+    await AsyncStorage.removeItem(AUTH_KEY);
     setUserState(null);
   };
 

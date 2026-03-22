@@ -1,8 +1,18 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Alert } from 'react-native';
 import { Linking } from 'react-native';
+import { useAuth } from '../context/AuthContext';
 
-export default function ConfigRequiredScreen() {
+type Props = { allowDemo?: boolean };
+
+export default function ConfigRequiredScreen({ allowDemo }: Props) {
+  const { login } = useAuth();
+
+  const handleDemoLogin = async () => {
+    const result = await login('demo@calismaasistani.app', 'demo123');
+    if (!result.ok) Alert.alert('Hata', result.error);
+  };
+
   return (
     <View style={styles.container}>
       <Text style={styles.icon}>⚙️</Text>
@@ -19,6 +29,11 @@ export default function ConfigRequiredScreen() {
       <Text style={styles.link} onPress={() => Linking.openURL('https://github.com/admlyz5858/Yeni#readme')}>
         README'de detaylı kurulum →
       </Text>
+      {allowDemo && (
+        <TouchableOpacity style={styles.demoBtn} onPress={handleDemoLogin}>
+          <Text style={styles.demoBtnText}>🧪 Demo ile Dene (sadece geliştirme)</Text>
+        </TouchableOpacity>
+      )}
     </View>
   );
 }
@@ -31,4 +46,15 @@ const styles = StyleSheet.create({
   steps: { alignSelf: 'stretch', backgroundColor: '#fff', borderRadius: 12, padding: 20, marginBottom: 24, gap: 12 },
   step: { fontSize: 14, color: '#475569', lineHeight: 22 },
   link: { fontSize: 16, color: '#2563eb', fontWeight: '600' },
+  demoBtn: {
+    marginTop: 24,
+    backgroundColor: '#f1f5f9',
+    paddingHorizontal: 20,
+    paddingVertical: 14,
+    borderRadius: 12,
+    borderWidth: 2,
+    borderColor: '#cbd5e1',
+    borderStyle: 'dashed',
+  },
+  demoBtnText: { fontSize: 15, color: '#475569', fontWeight: '600' },
 });

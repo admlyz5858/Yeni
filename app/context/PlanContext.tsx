@@ -7,6 +7,8 @@ type CompletedTopics = Record<string, Record<string, boolean>>;
 type ScheduleItem = { day: string; subjectId: string; hours: number };
 type StudyLog = Record<string, number>; // date "YYYY-MM-DD" -> hours
 
+type TopicNotes = Record<string, Record<string, string>>; // subjectId -> topic -> note
+
 type PlanContextType = {
   examDate: string | null;
   setExamDate: (date: string | null) => void;
@@ -18,6 +20,10 @@ type PlanContextType = {
   setSchedule: (s: ScheduleItem[]) => void;
   studyLog: StudyLog;
   logStudy: (date: string, hours: number) => void;
+  topicNotes: TopicNotes;
+  setTopicNote: (subjectId: string, topic: string, note: string) => void;
+  hasSeenOnboarding: boolean;
+  setHasSeenOnboarding: (v: boolean) => void;
   isLoading: boolean;
 };
 
@@ -44,6 +50,8 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
   const [completedTopics, setCompletedTopicsState] = useState<CompletedTopics>({});
   const [schedule, setScheduleState] = useState<ScheduleItem[]>([]);
   const [studyLog, setStudyLogState] = useState<StudyLog>({});
+  const [topicNotes, setTopicNotesState] = useState<TopicNotes>({});
+  const [hasSeenOnboarding, setHasSeenOnboardingState] = useState(false);
 
   useEffect(() => {
     loadData().then((data) => {
@@ -52,6 +60,8 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
       if (data.completedTopics && Object.keys(data.completedTopics).length) setCompletedTopicsState(data.completedTopics);
       if (data.schedule && Array.isArray(data.schedule)) setScheduleState(data.schedule);
       if (data.studyLog && Object.keys(data.studyLog).length) setStudyLogState(data.studyLog);
+      if (data.topicNotes && Object.keys(data.topicNotes).length) setTopicNotesState(data.topicNotes);
+      if (data.hasSeenOnboarding) setHasSeenOnboardingState(data.hasSeenOnboarding);
       setIsLoading(false);
     });
   }, []);
@@ -62,6 +72,8 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
     completedTopics: CompletedTopics;
     schedule: ScheduleItem[];
     studyLog: StudyLog;
+    topicNotes: TopicNotes;
+    hasSeenOnboarding: boolean;
   }>) => {
     saveData({
       examDate: updates.examDate !== undefined ? updates.examDate : examDate,
@@ -69,6 +81,8 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
       completedTopics: updates.completedTopics !== undefined ? updates.completedTopics : completedTopics,
       schedule: updates.schedule !== undefined ? updates.schedule : schedule,
       studyLog: updates.studyLog !== undefined ? updates.studyLog : studyLog,
+      topicNotes: updates.topicNotes !== undefined ? updates.topicNotes : topicNotes,
+      hasSeenOnboarding: updates.hasSeenOnboarding !== undefined ? updates.hasSeenOnboarding : hasSeenOnboarding,
     });
   };
 
@@ -97,6 +111,8 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
         completedTopics: next,
         schedule,
         studyLog,
+        topicNotes,
+        hasSeenOnboarding,
       });
       return next;
     });
@@ -105,6 +121,22 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
   const setSchedule = (s: ScheduleItem[]) => {
     setScheduleState(s);
     persist({ schedule: s });
+  };
+
+  const setTopicNote = (subjectId: string, topic: string, note: string) => {
+    setTopicNotesState((prev) => {
+      const next = {
+        ...prev,
+        [subjectId]: { ...(prev[subjectId] || {}), [topic]: note },
+      };
+      saveData({ examDate, dailyGoalHours, completedTopics, schedule, studyLog, topicNotes: next, hasSeenOnboarding });
+      return next;
+    });
+  };
+
+  const setHasSeenOnboarding = (v: boolean) => {
+    setHasSeenOnboardingState(v);
+    persist({ hasSeenOnboarding: v });
   };
 
   const logStudy = (date: string, hours: number) => {
@@ -116,6 +148,8 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
         completedTopics,
         schedule,
         studyLog: next,
+        topicNotes,
+        hasSeenOnboarding,
       });
       return next;
     });
@@ -134,6 +168,10 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
         setSchedule,
         studyLog,
         logStudy,
+        topicNotes,
+        setTopicNote,
+        hasSeenOnboarding,
+        setHasSeenOnboarding,
         isLoading,
       }}
     >

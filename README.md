@@ -5,10 +5,14 @@ KPSS sınavına hazırlık için gelişmiş planlama uygulaması.
 **Özellikler:**
 - 📅 Sınav geri sayımı
 - 📊 Çalışma istatistikleri (seri, haftalık/bugünkü saat)
-- 📋 Konu ilerleme takibi (işaretleme)
+- 📋 Konu ilerleme + **konu notları**
 - 📝 Çalışma günlüğü (günlük saat kaydı)
+- ⏱️ **Pomodoro zamanlayıcı** (25 dk odaklanma, 5 dk mola)
 - 📆 Haftalık program (günlere ders ekleme/çıkarma)
 - 🎯 Hedef belirleme (sınav tarihi, günlük hedef)
+- 🌙 **Koyu/Açık tema**
+- 👋 **Hoş geldin ekranı** (onboarding)
+- ⚙️ Ayarlar (tema, onboarding tekrar)
 - 💾 Veriler cihazda saklanır (AsyncStorage)
 
 Expo (React Native) ile oluşturulmuş cross-platform mobil uygulama. iOS ve Android'de çalışır.

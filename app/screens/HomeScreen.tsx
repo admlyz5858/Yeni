@@ -7,6 +7,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { usePlan } from '../context/PlanContext';
+import { useTheme } from '../context/ThemeContext';
 import { SUBJECTS } from '../data/subjects';
 
 type Props = {
@@ -51,7 +52,8 @@ function getStreak(studyLog: Record<string, number>): number {
 }
 
 export default function HomeScreen({ navigation }: Props) {
-  const { examDate, dailyGoalHours, completedTopics, studyLog, isLoading } = usePlan();
+  const { examDate, completedTopics, studyLog, isLoading } = usePlan();
+  const { theme } = useTheme();
 
   const daysRemaining = getDaysRemaining(examDate);
   const totalTopics = SUBJECTS.reduce((acc, s) => acc + s.topics.length, 0);
@@ -76,56 +78,61 @@ export default function HomeScreen({ navigation }: Props) {
 
   return (
     <ScrollView
-      style={styles.container}
+      style={[styles.container, { backgroundColor: theme.bg }]}
       contentContainerStyle={styles.content}
       showsVerticalScrollIndicator={false}
     >
       <View style={styles.header}>
-        <Text style={styles.title}>KPSS Planlama</Text>
-        <Text style={styles.subtitle}>
+        <View style={styles.headerRow}>
+          <Text style={[styles.title, { color: theme.text }]}>KPSS Planlama</Text>
+          <TouchableOpacity onPress={() => navigation.navigate('Settings')} style={styles.settingsBtn}>
+            <Text style={styles.settingsIcon}>⚙️</Text>
+          </TouchableOpacity>
+        </View>
+        <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
           Çalışma planınızı oluşturun ve ilerlemenizi takip edin
         </Text>
       </View>
 
       {examDate && daysRemaining !== null && (
-        <View style={styles.countdownCard}>
-          <Text style={styles.countdownLabel}>Sınava Kalan</Text>
-          <Text style={styles.countdownValue}>{daysRemaining}</Text>
-          <Text style={styles.countdownUnit}>gün</Text>
+        <View style={[styles.countdownCard, { backgroundColor: theme.countdownBg }]}>
+          <Text style={[styles.countdownLabel, { color: theme.textSecondary }]}>Sınava Kalan</Text>
+          <Text style={[styles.countdownValue, { color: theme.countdownText }]}>{daysRemaining}</Text>
+          <Text style={[styles.countdownUnit, { color: theme.textSecondary }]}>gün</Text>
         </View>
       )}
 
       <View style={styles.statsRow}>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{streak}</Text>
-          <Text style={styles.statLabel}>Seri (gün)</Text>
+        <View style={[styles.statCard, { backgroundColor: theme.card }]}>
+          <Text style={[styles.statValue, { color: theme.text }]}>{streak}</Text>
+          <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Seri (gün)</Text>
         </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{weekHours.toFixed(1)}</Text>
-          <Text style={styles.statLabel}>Bu hafta (saat)</Text>
+        <View style={[styles.statCard, { backgroundColor: theme.card }]}>
+          <Text style={[styles.statValue, { color: theme.text }]}>{weekHours.toFixed(1)}</Text>
+          <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Bu hafta (saat)</Text>
         </View>
-        <View style={styles.statCard}>
-          <Text style={styles.statValue}>{todayHours.toFixed(1)}</Text>
-          <Text style={styles.statLabel}>Bugün (saat)</Text>
+        <View style={[styles.statCard, { backgroundColor: theme.card }]}>
+          <Text style={[styles.statValue, { color: theme.text }]}>{todayHours.toFixed(1)}</Text>
+          <Text style={[styles.statLabel, { color: theme.textSecondary }]}>Bugün (saat)</Text>
         </View>
       </View>
 
-      <View style={styles.progressCard}>
+      <View style={[styles.progressCard, { backgroundColor: theme.card }]}>
         <View style={styles.progressHeader}>
-          <Text style={styles.progressTitle}>Konu İlerlemesi</Text>
-          <Text style={styles.progressValue}>{doneCount} / {totalTopics} (%{progressPercent})</Text>
+          <Text style={[styles.progressTitle, { color: theme.text }]}>Konu İlerlemesi</Text>
+          <Text style={[styles.progressValue, { color: theme.accent }]}>{doneCount} / {totalTopics} (%{progressPercent})</Text>
         </View>
-        <View style={styles.progressBar}>
+        <View style={[styles.progressBar, { backgroundColor: theme.cardBorder }]}>
           <View
-            style={[styles.progressFill, { width: `${progressPercent}%` }]}
+            style={[styles.progressFill, { width: `${progressPercent}%`, backgroundColor: theme.accent }]}
           />
         </View>
       </View>
 
-      <TouchableOpacity
-        style={styles.logCard}
-        onPress={() => navigation.navigate('StudyLog')}
-      >
+        <TouchableOpacity
+          style={[styles.logCard, { backgroundColor: theme.success }]}
+          onPress={() => navigation.navigate('StudyLog')}
+        >
         <Text style={styles.logIcon}>📝</Text>
         <View style={styles.logContent}>
           <Text style={styles.logTitle}>Bugün Çalıştım</Text>
@@ -136,39 +143,48 @@ export default function HomeScreen({ navigation }: Props) {
 
       <View style={styles.menu}>
         <TouchableOpacity
-          style={styles.menuCard}
+          style={[styles.menuCard, { backgroundColor: theme.card }]}
           onPress={() => navigation.navigate('Plan')}
         >
           <Text style={styles.menuIcon}>📋</Text>
-          <Text style={styles.menuTitle}>Çalışma Planı</Text>
-          <Text style={styles.menuSub}>Konuları planla ve tamamla</Text>
+          <Text style={[styles.menuTitle, { color: theme.text }]}>Çalışma Planı</Text>
+          <Text style={[styles.menuSub, { color: theme.textSecondary }]}>Konuları planla ve not ekle</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.menuCard}
+          style={[styles.menuCard, { backgroundColor: theme.card }]}
+          onPress={() => navigation.navigate('Pomodoro')}
+        >
+          <Text style={styles.menuIcon}>⏱️</Text>
+          <Text style={[styles.menuTitle, { color: theme.text }]}>Pomodoro</Text>
+          <Text style={[styles.menuSub, { color: theme.textSecondary }]}>25 dk odaklanma zamanlayıcısı</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.menuCard, { backgroundColor: theme.card }]}
           onPress={() => navigation.navigate('Schedule')}
         >
           <Text style={styles.menuIcon}>📅</Text>
-          <Text style={styles.menuTitle}>Haftalık Program</Text>
-          <Text style={styles.menuSub}>Günlük çalışma saatlerini belirle</Text>
+          <Text style={[styles.menuTitle, { color: theme.text }]}>Haftalık Program</Text>
+          <Text style={[styles.menuSub, { color: theme.textSecondary }]}>Günlük çalışma saatlerini belirle</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.menuCard}
+          style={[styles.menuCard, { backgroundColor: theme.card }]}
           onPress={() => navigation.navigate('Goals')}
         >
           <Text style={styles.menuIcon}>🎯</Text>
-          <Text style={styles.menuTitle}>Hedefler</Text>
-          <Text style={styles.menuSub}>Sınav tarihi ve günlük hedef</Text>
+          <Text style={[styles.menuTitle, { color: theme.text }]}>Hedefler</Text>
+          <Text style={[styles.menuSub, { color: theme.textSecondary }]}>Sınav tarihi ve günlük hedef</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
-          style={styles.menuCard}
+          style={[styles.menuCard, { backgroundColor: theme.card }]}
           onPress={() => navigation.navigate('StudyLog')}
         >
           <Text style={styles.menuIcon}>📊</Text>
-          <Text style={styles.menuTitle}>Çalışma Günlüğü</Text>
-          <Text style={styles.menuSub}>Günlük çalışma kayıtları ve istatistikler</Text>
+          <Text style={[styles.menuTitle, { color: theme.text }]}>Çalışma Günlüğü</Text>
+          <Text style={[styles.menuSub, { color: theme.textSecondary }]}>Günlük çalışma kayıtları</Text>
         </TouchableOpacity>
       </View>
     </ScrollView>
@@ -181,8 +197,11 @@ const styles = StyleSheet.create({
   center: { justifyContent: 'center', alignItems: 'center' },
   loadingText: { fontSize: 16, color: '#64748b' },
   header: { marginBottom: 24, paddingTop: 16 },
-  title: { fontSize: 28, fontWeight: 'bold', color: '#0f172a', marginBottom: 8 },
-  subtitle: { fontSize: 16, color: '#64748b', lineHeight: 24 },
+  headerRow: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: 8 },
+  title: { fontSize: 28, fontWeight: 'bold' },
+  settingsBtn: { padding: 8 },
+  settingsIcon: { fontSize: 24 },
+  subtitle: { fontSize: 16, lineHeight: 24 },
   countdownCard: {
     backgroundColor: '#0f172a',
     borderRadius: 20,
@@ -222,8 +241,8 @@ const styles = StyleSheet.create({
   progressHeader: { flexDirection: 'row', justifyContent: 'space-between', marginBottom: 12 },
   progressTitle: { fontSize: 16, fontWeight: '600', color: '#1e293b' },
   progressValue: { fontSize: 14, fontWeight: '600', color: '#2563eb' },
-  progressBar: { height: 10, backgroundColor: '#e2e8f0', borderRadius: 5, overflow: 'hidden' },
-  progressFill: { height: '100%', backgroundColor: '#2563eb', borderRadius: 5 },
+  progressBar: { height: 10, borderRadius: 5, overflow: 'hidden' },
+  progressFill: { height: '100%', borderRadius: 5 },
   logCard: {
     flexDirection: 'row',
     alignItems: 'center',

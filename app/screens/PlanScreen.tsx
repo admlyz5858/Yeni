@@ -1,10 +1,12 @@
-import React from 'react';
+import React, { useState } from 'react';
 import {
   StyleSheet,
   Text,
   View,
   TouchableOpacity,
   ScrollView,
+  Modal,
+  TextInput,
 } from 'react-native';
 import { usePlan } from '../context/PlanContext';
 import { SUBJECTS } from '../data/subjects';
@@ -14,7 +16,18 @@ type Props = {
 };
 
 export default function PlanScreen({ navigation }: Props) {
-  const { completedTopics, toggleTopic } = usePlan();
+  const { completedTopics, toggleTopic, topicNotes, setTopicNote } = usePlan();
+  const [modalVisible, setModalVisible] = useState(false);
+  const [editTopic, setEditTopic] = useState<{ subjectId: string; topic: string } | null>(null);
+
+  const openNote = (subjectId: string, topic: string) => {
+    setEditTopic({ subjectId, topic });
+    setModalVisible(true);
+  };
+
+  const note = editTopic
+    ? topicNotes[editTopic.subjectId]?.[editTopic.topic] || ''
+    : '';
 
   return (
     <ScrollView
@@ -28,7 +41,7 @@ export default function PlanScreen({ navigation }: Props) {
         </TouchableOpacity>
         <Text style={styles.title}>Çalışma Planı</Text>
         <Text style={styles.subtitle}>
-          Konuları tamamladıkça işaretleyin
+          Konuları tamamladıkça işaretleyin • Not eklemek için 📝
         </Text>
       </View>
 
@@ -48,21 +61,58 @@ export default function PlanScreen({ navigation }: Props) {
             <View style={styles.topics}>
               {subject.topics.map((topic) => {
                 const isDone = completedTopics[subject.id]?.[topic] ?? false;
+                const hasNote = !!(topicNotes[subject.id]?.[topic]?.trim());
                 return (
-                  <TouchableOpacity
-                    key={topic}
-                    style={[styles.topicRow, isDone && styles.topicDone]}
-                    onPress={() => toggleTopic(subject.id, topic)}
-                  >
-                    <Text style={styles.checkbox}>{isDone ? '☑' : '☐'}</Text>
-                    <Text style={[styles.topicText, isDone && styles.topicTextDone]}>{topic}</Text>
-                  </TouchableOpacity>
+                  <View key={topic} style={styles.topicRowWrap}>
+                    <TouchableOpacity
+                      style={[styles.topicRow, isDone && styles.topicDone]}
+                      onPress={() => toggleTopic(subject.id, topic)}
+                    >
+                      <Text style={styles.checkbox}>{isDone ? '☑' : '☐'}</Text>
+                      <Text style={[styles.topicText, isDone && styles.topicTextDone]}>{topic}</Text>
+                    </TouchableOpacity>
+                    <TouchableOpacity
+                      style={styles.noteBtn}
+                      onPress={() => openNote(subject.id, topic)}
+                    >
+                      <Text style={styles.noteIcon}>{hasNote ? '📝' : '📄'}</Text>
+                    </TouchableOpacity>
+                  </View>
                 );
               })}
             </View>
           </View>
         );
       })}
+
+      <Modal visible={modalVisible} transparent animationType="fade">
+        <TouchableOpacity
+          style={styles.modalOverlay}
+          activeOpacity={1}
+          onPress={() => setModalVisible(false)}
+        >
+          <View style={styles.modalContent} onStartShouldSetResponder={() => true}>
+            <Text style={styles.modalTitle}>{editTopic?.topic}</Text>
+            <TextInput
+              style={styles.modalInput}
+              placeholder="Bu konu hakkında not yazın..."
+              placeholderTextColor="#94a3b8"
+              value={note}
+              onChangeText={(t) =>
+                editTopic && setTopicNote(editTopic.subjectId, editTopic.topic, t)
+              }
+              multiline
+              numberOfLines={4}
+            />
+            <TouchableOpacity
+              style={styles.modalClose}
+              onPress={() => setModalVisible(false)}
+            >
+              <Text style={styles.modalCloseText}>Kapat</Text>
+            </TouchableOpacity>
+          </View>
+        </TouchableOpacity>
+      </Modal>
     </ScrollView>
   );
 }
@@ -92,10 +142,42 @@ const styles = StyleSheet.create({
   subjectInfo: { flex: 1 },
   subjectName: { fontSize: 18, fontWeight: '600', color: '#1e293b' },
   subjectProgress: { fontSize: 13, color: '#64748b' },
-  topics: { gap: 8 },
-  topicRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: 8 },
+  topics: { gap: 4 },
+  topicRowWrap: { flexDirection: 'row', alignItems: 'center' },
+  topicRow: { flex: 1, flexDirection: 'row', alignItems: 'center', paddingVertical: 8 },
   topicDone: { opacity: 0.7 },
   checkbox: { fontSize: 18, marginRight: 12 },
   topicText: { fontSize: 15, color: '#334155', flex: 1 },
   topicTextDone: { textDecorationLine: 'line-through', color: '#94a3b8' },
+  noteBtn: { padding: 8 },
+  noteIcon: { fontSize: 18 },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: 'rgba(0,0,0,0.5)',
+    justifyContent: 'center',
+    padding: 24,
+  },
+  modalContent: {
+    backgroundColor: '#fff',
+    borderRadius: 20,
+    padding: 24,
+  },
+  modalTitle: { fontSize: 18, fontWeight: '600', color: '#1e293b', marginBottom: 16 },
+  modalInput: {
+    borderWidth: 2,
+    borderColor: '#e2e8f0',
+    borderRadius: 12,
+    padding: 16,
+    fontSize: 16,
+    minHeight: 100,
+    textAlignVertical: 'top',
+  },
+  modalClose: {
+    marginTop: 16,
+    padding: 14,
+    alignItems: 'center',
+    backgroundColor: '#2563eb',
+    borderRadius: 12,
+  },
+  modalCloseText: { color: '#fff', fontWeight: '600' },
 });

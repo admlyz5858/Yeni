@@ -129,15 +129,16 @@ function AuthScreens() {
 }
 
 function AppContent() {
+  const { theme } = useTheme();
   const { user, isLoading, hasBackend } = useAuth();
   const { hasSeenOnboarding, setHasSeenOnboarding, setSelectedExam } = usePlan();
   const [showNotificationModal, setShowNotificationModal] = useState(false);
 
   if (isLoading) {
     return (
-      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: '#1e293b' }}>
-        <ActivityIndicator size="large" color="#3b82f6" />
-        <Text style={{ marginTop: 12, color: '#94a3b8' }}>Yükleniyor...</Text>
+      <View style={{ flex: 1, justifyContent: 'center', alignItems: 'center', backgroundColor: theme.bg }}>
+        <ActivityIndicator size="large" color={theme.accent} />
+        <Text style={{ marginTop: 12, color: theme.textSecondary }}>Yükleniyor...</Text>
       </View>
     );
   }

@@ -65,21 +65,7 @@ function MainStack() {
       <Stack.Screen name="StudyLog" component={StudyLogScreen} />
       <Stack.Screen name="Flashcards" component={FlashcardScreen} />
       <Stack.Screen name="DailyActivity" component={DailyActivityScreen} />
-      <Stack.Screen name="Settings" component={SettingsScreen} />
-      <Stack.Screen name="About" component={AboutScreen} />
-      <Stack.Screen name="CustomQuotes" component={CustomQuotesScreen} />
-      <Stack.Screen name="Premium" component={PremiumScreen} />
-      <Stack.Screen name="Subjects" component={SubjectsScreen} />
-      <Stack.Screen name="StudyGroups" component={StudyGroupsScreen} />
-      <Stack.Screen name="Focus" component={FocusScreen} />
-      <Stack.Screen name="SmartPlan" component={SmartPlanScreen} />
-      <Stack.Screen name="Achievements" component={AchievementsScreen} />
-      <Stack.Screen name="FAQ" component={FAQScreen} />
-      <Stack.Screen name="TacticsGuide" component={TacticsGuideScreen} />
-      <Stack.Screen name="Contact" component={ContactScreen} />
-      <Stack.Screen name="Terms" component={TermsScreen} />
-      <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
-      <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
+      <Stack.Screen name="Pomodoro" component={PomodoroScreen} />
       <Stack.Screen name="MindMap" component={MindMapScreen} />
       <Stack.Screen name="InstantSolution" component={InstantSolutionScreen} />
       <Stack.Screen name="Chat" component={ChatScreen} />
@@ -89,8 +75,22 @@ function MainStack() {
       <Stack.Screen name="SmartAnalysis" component={SmartAnalysisScreen} />
       <Stack.Screen name="BilgeUssu" component={BilgeUssuScreen} />
       <Stack.Screen name="NotebookChat" component={NotebookChatScreen} />
+      <Stack.Screen name="Settings" component={SettingsScreen} />
+      <Stack.Screen name="About" component={AboutScreen} />
+      <Stack.Screen name="CustomQuotes" component={CustomQuotesScreen} />
+      <Stack.Screen name="Premium" component={PremiumScreen} />
+      <Stack.Screen name="Subjects" component={SubjectsScreen} />
+      <Stack.Screen name="StudyGroups" component={StudyGroupsScreen} />
+      <Stack.Screen name="Focus" component={FocusScreen} />
+      <Stack.Screen name="SmartPlan" component={SmartPlanScreen} />
+      <Stack.Screen name="Achievements" component={AchievementsScreen} />
       <Stack.Screen name="Profile" component={ProfileScreen} />
-      <Stack.Screen name="Pomodoro" component={PomodoroScreen} />
+      <Stack.Screen name="FAQ" component={FAQScreen} />
+      <Stack.Screen name="TacticsGuide" component={TacticsGuideScreen} />
+      <Stack.Screen name="Contact" component={ContactScreen} />
+      <Stack.Screen name="Terms" component={TermsScreen} />
+      <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} />
+      <Stack.Screen name="DeleteAccount" component={DeleteAccountScreen} />
     </Stack.Navigator>
   );
 }

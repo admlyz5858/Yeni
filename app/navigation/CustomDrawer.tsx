@@ -8,23 +8,24 @@ import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { usePremium } from '../context/PremiumContext';
 
+/** Menü: Planlama → Çalışma → İçerik → Analiz → Oyun → Ayarlar */
 const MENU_ITEMS = [
+  { name: 'Genel Bakış', icon: '🏠', screen: 'Tabs' },
   { name: 'Bilge Üssü', icon: '🦉', screen: 'BilgeUssu' },
-  { name: 'Bilge Not Defteri', icon: '📓', screen: 'NotebookChat' },
   { name: 'Odaklan', icon: '⏱️', screen: 'Pomodoro' },
-  { name: 'Çalışma Gelişimi', icon: '📊', screen: 'StudyLog' },
-  { name: 'Genel Bakış', icon: '📈', screen: 'Tabs' },
   { name: 'Haftalık Plan', icon: '📅', screen: 'Schedule' },
   { name: 'Konu Netlerim', icon: '🎓', screen: 'Plan' },
-  { name: 'Kart Arşivi', icon: '📇', screen: 'Flashcards' },
-  { name: 'Soru Kutusu', icon: '📥', screen: 'Goals' },
-  { name: 'Zihin Haritası', icon: '🧠', screen: 'MindMap' },
-  { name: 'Anlık Çözüm', icon: '📷', screen: 'InstantSolution' },
-  { name: 'Etüt Odası', icon: '📖', screen: 'StudyRoom' },
-  { name: 'Akıllı Analiz', icon: '📊', screen: 'SmartAnalysis' },
-  { name: 'Sohbet', icon: '💬', screen: 'Chat' },
-  { name: 'Dönüştürücü', icon: '🔄', screen: 'Converter' },
   { name: 'Zaman Haritası', icon: '🕐', screen: 'TimeMap' },
+  { name: 'Etüt Odası', icon: '📖', screen: 'StudyRoom' },
+  { name: 'Anlık Çözüm', icon: '📷', screen: 'InstantSolution' },
+  { name: 'Bilge Not Defteri', icon: '📓', screen: 'NotebookChat' },
+  { name: 'Sohbet', icon: '💬', screen: 'Chat' },
+  { name: 'Kart Arşivi', icon: '📇', screen: 'Flashcards' },
+  { name: 'Dönüştürücü', icon: '🔄', screen: 'Converter' },
+  { name: 'Zihin Haritası', icon: '🧠', screen: 'MindMap' },
+  { name: 'Soru Kutusu', icon: '📥', screen: 'Goals' },
+  { name: 'Akıllı Analiz', icon: '📊', screen: 'SmartAnalysis' },
+  { name: 'Çalışma Gelişimi', icon: '📈', screen: 'StudyLog' },
   { name: 'Taktik Blog', icon: '📝', screen: 'DailyActivity' },
   { name: 'Ayarlar', icon: '⚙️', screen: 'Settings' },
 ];

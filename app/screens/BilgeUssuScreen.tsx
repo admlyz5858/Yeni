@@ -143,17 +143,17 @@ export default function BilgeUssuScreen({ navigation }: Props) {
         </View>
 
         <TouchableOpacity
-          style={styles.premiumBanner}
+          style={[styles.premiumBanner, { backgroundColor: theme.card, borderColor: theme.cardBorder, borderWidth: 1 }]}
           onPress={() => setProModal(true)}
         >
           <View style={styles.premiumStar}>
             <Text style={styles.starIcon}>⭐</Text>
           </View>
           <View style={styles.premiumContent}>
-            <Text style={styles.premiumTitle}>Bilge Baykuş Pro'ya Yükselt</Text>
-            <Text style={styles.premiumDesc}>Tüm araçların kilidini aç, rakiplerini geride bırak.</Text>
+            <Text style={[styles.premiumTitle, { color: theme.text }]}>Bilge Baykuş Pro'ya Yükselt</Text>
+            <Text style={[styles.premiumDesc, { color: theme.textSecondary }]}>Tüm araçların kilidini aç, rakiplerini geride bırak.</Text>
           </View>
-          <Text style={styles.premiumArrow}>›</Text>
+          <Text style={[styles.premiumArrow, { color: theme.textSecondary }]}>›</Text>
         </TouchableOpacity>
       </ScrollView>
 
@@ -228,7 +228,6 @@ const styles = StyleSheet.create({
   premiumBanner: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: '#0f172a',
     borderRadius: 20,
     padding: 20,
     gap: 16,
@@ -243,7 +242,7 @@ const styles = StyleSheet.create({
   },
   starIcon: { fontSize: 24 },
   premiumContent: { flex: 1 },
-  premiumTitle: { fontSize: 16, fontWeight: 'bold', color: '#fff', marginBottom: 4 },
-  premiumDesc: { fontSize: 13, color: '#94a3b8' },
-  premiumArrow: { fontSize: 24, color: '#94a3b8' },
+  premiumTitle: { fontSize: 16, fontWeight: 'bold', marginBottom: 4 },
+  premiumDesc: { fontSize: 13 },
+  premiumArrow: { fontSize: 24 },
 });

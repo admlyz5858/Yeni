@@ -6,6 +6,7 @@ import HomeScreen from './screens/HomeScreen';
 import PlanScreen from './screens/PlanScreen';
 import ScheduleScreen from './screens/ScheduleScreen';
 import GoalsScreen from './screens/GoalsScreen';
+import StudyLogScreen from './screens/StudyLogScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -24,6 +25,7 @@ export default function App() {
           <Stack.Screen name="Plan" component={PlanScreen} />
           <Stack.Screen name="Schedule" component={ScheduleScreen} />
           <Stack.Screen name="Goals" component={GoalsScreen} />
+          <Stack.Screen name="StudyLog" component={StudyLogScreen} />
         </Stack.Navigator>
       </NavigationContainer>
     </PlanProvider>

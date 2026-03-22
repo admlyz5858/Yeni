@@ -1,6 +1,15 @@
 # KPSS Planlama Uygulaması
 
-KPSS sınavına hazırlık için planlama odaklı uygulama. Sınav geri sayımı, konu ilerleme takibi, haftalık program ve hedef belirleme özellikleri.
+KPSS sınavına hazırlık için gelişmiş planlama uygulaması.
+
+**Özellikler:**
+- 📅 Sınav geri sayımı
+- 📊 Çalışma istatistikleri (seri, haftalık/bugünkü saat)
+- 📋 Konu ilerleme takibi (işaretleme)
+- 📝 Çalışma günlüğü (günlük saat kaydı)
+- 📆 Haftalık program (günlere ders ekleme/çıkarma)
+- 🎯 Hedef belirleme (sınav tarihi, günlük hedef)
+- 💾 Veriler cihazda saklanır (AsyncStorage)
 
 Expo (React Native) ile oluşturulmuş cross-platform mobil uygulama. iOS ve Android'de çalışır.
 
@@ -39,12 +48,12 @@ APK dosyası: `app/android/app/build/outputs/apk/release/app-release.apk`
 app/
 ├── App.tsx           # Ana uygulama + navigasyon
 ├── context/
-│   └── PlanContext   # Sınav tarihi, hedefler, ilerleme state
-├── screens/          # Ana Sayfa, Plan, Program, Hedefler
+│   └── PlanContext   # State + AsyncStorage persistence
+├── screens/          # Home, Plan, Schedule, Goals, StudyLog
 ├── data/
-│   └── subjects.ts   # KPSS konuları (kategorilere göre)
+│   └── subjects.ts  # KPSS konuları
 ├── app.json          # Expo yapılandırması
-├── assets/           # Görseller ve ikonlar
-├── eas.json          # EAS Build yapılandırması
+├── assets/           # Görseller
+├── eas.json          # EAS Build
 └── package.json
 ```

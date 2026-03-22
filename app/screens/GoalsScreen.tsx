@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -14,17 +14,15 @@ type Props = {
 };
 
 export default function GoalsScreen({ navigation }: Props) {
-  const {
-    examDate,
-    setExamDate,
-    dailyGoalHours,
-    setDailyGoalHours,
-    schedule,
-    setSchedule,
-  } = usePlan();
+  const { examDate, setExamDate, dailyGoalHours, setDailyGoalHours } = usePlan();
 
   const [dateInput, setDateInput] = useState(examDate || '');
   const [hoursInput, setHoursInput] = useState(String(dailyGoalHours));
+
+  useEffect(() => {
+    setDateInput(examDate || '');
+    setHoursInput(String(dailyGoalHours));
+  }, [examDate, dailyGoalHours]);
 
   const handleSave = () => {
     const date = dateInput.trim() || null;

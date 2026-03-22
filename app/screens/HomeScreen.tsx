@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -8,7 +8,10 @@ import {
 } from 'react-native';
 import { usePlan } from '../context/PlanContext';
 import { useTheme } from '../context/ThemeContext';
+import { useGamification } from '../context/GamificationContext';
+import { useFlashcards } from '../context/FlashcardContext';
 import { SUBJECTS } from '../data/subjects';
+import StudyHeatmap from '../components/StudyHeatmap';
 
 type Props = {
   navigation: any;
@@ -52,17 +55,34 @@ function getStreak(studyLog: Record<string, number>): number {
 }
 
 export default function HomeScreen({ navigation }: Props) {
-  const { examDate, completedTopics, studyLog, isLoading } = usePlan();
+  const { examDate, completedTopics, studyLog, isLoading, topicNotes, pomodoroCount } = usePlan();
   const { theme } = useTheme();
+  const { level, xp, checkAchievements } = useGamification();
+  const { getDueCards } = useFlashcards();
 
-  const daysRemaining = getDaysRemaining(examDate);
   const totalTopics = SUBJECTS.reduce((acc, s) => acc + s.topics.length, 0);
   const doneCount = Object.values(completedTopics).reduce(
     (acc, subj) => acc + Object.values(subj).filter(Boolean).length,
     0
   );
-  const progressPercent = totalTopics > 0 ? Math.round((doneCount / totalTopics) * 100) : 0;
+  const hasNotes = Object.values(topicNotes).some((subj) => Object.values(subj).some((n) => n?.trim()));
   const streak = getStreak(studyLog);
+  const totalStudyHours = Object.values(studyLog).reduce((a, b) => a + b, 0);
+
+  useEffect(() => {
+    checkAchievements({
+      totalStudyHours,
+      streak,
+      topicsDone: doneCount,
+      totalTopics,
+      pomodoroCompleted: pomodoroCount,
+      hasNotes,
+      studyLog,
+    });
+  }, [doneCount, streak, pomodoroCount, totalStudyHours, hasNotes]);
+
+  const daysRemaining = getDaysRemaining(examDate);
+  const progressPercent = totalTopics > 0 ? Math.round((doneCount / totalTopics) * 100) : 0;
   const weekDates = getWeekDates();
   const weekHours = weekDates.reduce((acc, d) => acc + (studyLog[d] || 0), 0);
   const today = new Date().toISOString().slice(0, 10);
@@ -93,6 +113,14 @@ export default function HomeScreen({ navigation }: Props) {
           Çalışma planınızı oluşturun ve ilerlemenizi takip edin
         </Text>
       </View>
+
+      <TouchableOpacity
+        style={[styles.levelBadge, { backgroundColor: theme.card }]}
+        onPress={() => navigation.navigate('Achievements')}
+      >
+        <Text style={styles.levelText}>Seviye {level}</Text>
+        <Text style={[styles.xpText, { color: theme.textSecondary }]}>{xp} XP</Text>
+      </TouchableOpacity>
 
       {examDate && daysRemaining !== null && (
         <View style={[styles.countdownCard, { backgroundColor: theme.countdownBg }]}>
@@ -129,7 +157,12 @@ export default function HomeScreen({ navigation }: Props) {
         </View>
       </View>
 
-        <TouchableOpacity
+      <View style={[styles.heatmapCard, { backgroundColor: theme.card }]}>
+        <Text style={[styles.heatmapTitle, { color: theme.text }]}>Çalışma Aktivitesi</Text>
+        <StudyHeatmap studyLog={studyLog} weeks={12} />
+      </View>
+
+      <TouchableOpacity
           style={[styles.logCard, { backgroundColor: theme.success }]}
           onPress={() => navigation.navigate('StudyLog')}
         >
@@ -186,6 +219,35 @@ export default function HomeScreen({ navigation }: Props) {
           <Text style={[styles.menuTitle, { color: theme.text }]}>Çalışma Günlüğü</Text>
           <Text style={[styles.menuSub, { color: theme.textSecondary }]}>Günlük çalışma kayıtları</Text>
         </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.menuCard, { backgroundColor: theme.card }]}
+          onPress={() => navigation.navigate('SmartPlan')}
+        >
+          <Text style={styles.menuIcon}>🤖</Text>
+          <Text style={[styles.menuTitle, { color: theme.text }]}>Akıllı Plan</Text>
+          <Text style={[styles.menuSub, { color: theme.textSecondary }]}>AI ile otomatik program oluştur</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.menuCard, { backgroundColor: theme.card }]}
+          onPress={() => navigation.navigate('Flashcards')}
+        >
+          <Text style={styles.menuIcon}>📇</Text>
+          <Text style={[styles.menuTitle, { color: theme.text }]}>Kartlar</Text>
+          <Text style={[styles.menuSub, { color: theme.textSecondary }]}>
+            Aralıklı tekrar ({getDueCards().length} bekliyor)
+          </Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.menuCard, { backgroundColor: theme.card }]}
+          onPress={() => navigation.navigate('Achievements')}
+        >
+          <Text style={styles.menuIcon}>🏆</Text>
+          <Text style={[styles.menuTitle, { color: theme.text }]}>Rozetler</Text>
+          <Text style={[styles.menuSub, { color: theme.textSecondary }]}>Başarılar ve XP</Text>
+        </TouchableOpacity>
       </View>
     </ScrollView>
   );
@@ -212,6 +274,22 @@ const styles = StyleSheet.create({
   countdownLabel: { fontSize: 14, color: '#94a3b8', marginBottom: 4 },
   countdownValue: { fontSize: 48, fontWeight: 'bold', color: '#fff' },
   countdownUnit: { fontSize: 16, color: '#94a3b8' },
+  levelBadge: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    padding: 12,
+    borderRadius: 12,
+    marginBottom: 16,
+    gap: 8,
+  },
+  levelText: { fontSize: 16, fontWeight: '700', color: '#7c3aed' },
+  xpText: { fontSize: 14 },
+  heatmapCard: {
+    borderRadius: 16,
+    padding: 16,
+    marginBottom: 16,
+  },
+  heatmapTitle: { fontSize: 16, fontWeight: '600', marginBottom: 8 },
   statsRow: { flexDirection: 'row', gap: 12, marginBottom: 16 },
   statCard: {
     flex: 1,

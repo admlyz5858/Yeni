@@ -7,6 +7,7 @@ import {
   ScrollView,
 } from 'react-native';
 import * as Haptics from 'expo-haptics';
+import { usePlan } from '../context/PlanContext';
 
 const WORK_MIN = 25;
 const BREAK_MIN = 5;
@@ -16,6 +17,7 @@ type Props = {
 };
 
 export default function PomodoroScreen({ navigation }: Props) {
+  const { addPomodoro } = usePlan();
   const [phase, setPhase] = useState<'work' | 'break'>('work');
   const [secondsLeft, setSecondsLeft] = useState(WORK_MIN * 60);
   const [isRunning, setIsRunning] = useState(false);
@@ -29,6 +31,7 @@ export default function PomodoroScreen({ navigation }: Props) {
           if (s <= 1) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
             if (phase === 'work') {
+              addPomodoro();
               setPhase('break');
               setRounds((r) => r + 1);
               return BREAK_MIN * 60;

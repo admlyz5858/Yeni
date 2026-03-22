@@ -11,6 +11,11 @@ KPSS sınavına hazırlık için gelişmiş planlama uygulaması.
 - 📝 Çalışma günlüğü, ⏱️ Pomodoro
 - 📆 Haftalık program, 🎯 Hedefler
 - 🌙 Koyu/Açık tema
+- **🏆 Gamification:** XP, seviye, 12 rozet
+- **📊 Study Heatmap:** GitHub tarzı çalışma aktivitesi
+- **🤖 Akıllı Plan:** Hedeflere göre otomatik program
+- **📇 Flashcards:** Aralıklı tekrar (SM-2 algoritması)
+- **🔔 Bildirimler:** Günlük çalışma hatırlatması
 
 **Admin Paneli:**
 - 📊 Dashboard (üye sayısı, konu/çalışma istatistikleri)

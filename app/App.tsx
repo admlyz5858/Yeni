@@ -16,8 +16,13 @@ import GoalsScreen from './screens/GoalsScreen';
 import StudyLogScreen from './screens/StudyLogScreen';
 import PomodoroScreen from './screens/PomodoroScreen';
 import SettingsScreen from './screens/SettingsScreen';
+import SmartPlanScreen from './screens/SmartPlanScreen';
+import FlashcardScreen from './screens/FlashcardScreen';
+import AchievementsScreen from './screens/AchievementsScreen';
 import AdminDashboard from './screens/admin/AdminDashboard';
 import AdminUsersScreen from './screens/admin/AdminUsersScreen';
+import { GamificationProvider } from './context/GamificationContext';
+import { FlashcardProvider } from './context/FlashcardContext';
 
 const Stack = createNativeStackNavigator();
 
@@ -39,6 +44,9 @@ function MemberNavigator() {
         <Stack.Screen name="StudyLog" component={StudyLogScreen} />
         <Stack.Screen name="Pomodoro" component={PomodoroScreen} />
         <Stack.Screen name="Settings" component={SettingsScreen} />
+        <Stack.Screen name="SmartPlan" component={SmartPlanScreen} />
+        <Stack.Screen name="Flashcards" component={FlashcardScreen} />
+        <Stack.Screen name="Achievements" component={AchievementsScreen} />
       </Stack.Navigator>
     </>
   );
@@ -127,7 +135,11 @@ export default function App() {
     <ThemeProvider>
       <AuthProvider>
         <PlanProvider>
-          <AppContent />
+          <GamificationProvider>
+            <FlashcardProvider>
+              <AppContent />
+            </FlashcardProvider>
+          </GamificationProvider>
         </PlanProvider>
       </AuthProvider>
     </ThemeProvider>

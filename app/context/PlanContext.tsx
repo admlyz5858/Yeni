@@ -24,6 +24,8 @@ type PlanContextType = {
   setTopicNote: (subjectId: string, topic: string, note: string) => void;
   hasSeenOnboarding: boolean;
   setHasSeenOnboarding: (v: boolean) => void;
+  pomodoroCount: number;
+  addPomodoro: () => void;
   isLoading: boolean;
 };
 
@@ -52,6 +54,7 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
   const [studyLog, setStudyLogState] = useState<StudyLog>({});
   const [topicNotes, setTopicNotesState] = useState<TopicNotes>({});
   const [hasSeenOnboarding, setHasSeenOnboardingState] = useState(false);
+  const [pomodoroCount, setPomodoroCountState] = useState(0);
 
   useEffect(() => {
     loadData().then((data) => {
@@ -62,6 +65,7 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
       if (data.studyLog && Object.keys(data.studyLog).length) setStudyLogState(data.studyLog);
       if (data.topicNotes && Object.keys(data.topicNotes).length) setTopicNotesState(data.topicNotes);
       if (data.hasSeenOnboarding) setHasSeenOnboardingState(data.hasSeenOnboarding);
+      if (data.pomodoroCount) setPomodoroCountState(data.pomodoroCount);
       setIsLoading(false);
     });
   }, []);
@@ -74,6 +78,7 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
     studyLog: StudyLog;
     topicNotes: TopicNotes;
     hasSeenOnboarding: boolean;
+    pomodoroCount: number;
   }>) => {
     saveData({
       examDate: updates.examDate !== undefined ? updates.examDate : examDate,
@@ -83,6 +88,7 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
       studyLog: updates.studyLog !== undefined ? updates.studyLog : studyLog,
       topicNotes: updates.topicNotes !== undefined ? updates.topicNotes : topicNotes,
       hasSeenOnboarding: updates.hasSeenOnboarding !== undefined ? updates.hasSeenOnboarding : hasSeenOnboarding,
+      pomodoroCount: updates.pomodoroCount !== undefined ? updates.pomodoroCount : pomodoroCount,
     });
   };
 
@@ -113,6 +119,7 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
         studyLog,
         topicNotes,
         hasSeenOnboarding,
+        pomodoroCount,
       });
       return next;
     });
@@ -129,7 +136,7 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
         ...prev,
         [subjectId]: { ...(prev[subjectId] || {}), [topic]: note },
       };
-      saveData({ examDate, dailyGoalHours, completedTopics, schedule, studyLog, topicNotes: next, hasSeenOnboarding });
+      saveData({ examDate, dailyGoalHours, completedTopics, schedule, studyLog, topicNotes: next, hasSeenOnboarding, pomodoroCount });
       return next;
     });
   };
@@ -137,6 +144,14 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
   const setHasSeenOnboarding = (v: boolean) => {
     setHasSeenOnboardingState(v);
     persist({ hasSeenOnboarding: v });
+  };
+
+  const addPomodoro = () => {
+    setPomodoroCountState((prev) => {
+      const next = prev + 1;
+      saveData({ examDate, dailyGoalHours, completedTopics, schedule, studyLog, topicNotes, hasSeenOnboarding, pomodoroCount: next });
+      return next;
+    });
   };
 
   const logStudy = (date: string, hours: number) => {
@@ -150,6 +165,7 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
         studyLog: next,
         topicNotes,
         hasSeenOnboarding,
+        pomodoroCount,
       });
       return next;
     });
@@ -172,6 +188,8 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
         setTopicNote,
         hasSeenOnboarding,
         setHasSeenOnboarding,
+        pomodoroCount,
+        addPomodoro,
         isLoading,
       }}
     >

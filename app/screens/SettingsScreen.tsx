@@ -10,6 +10,7 @@ import {
 import { useTheme } from '../context/ThemeContext';
 import { usePlan } from '../context/PlanContext';
 import { useAuth } from '../context/AuthContext';
+import { requestNotificationPermissions, scheduleStudyReminder } from '../services/notifications';
 
 type Props = {
   navigation: any;
@@ -68,6 +69,20 @@ export default function SettingsScreen({ navigation }: Props) {
           onPress={() => setHasSeenOnboarding(false)}
         >
           <Text style={[styles.settingLabel, { color: theme.text }]}>Hoş geldin ekranını tekrar göster</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.settingRow}
+          onPress={async () => {
+            const ok = await requestNotificationPermissions();
+            if (ok) {
+              await scheduleStudyReminder(9, 0);
+              Alert.alert('Tamam', 'Her gün saat 09:00\'da çalışma hatırlatması alacaksınız.');
+            } else {
+              Alert.alert('İzin Gerekli', 'Bildirimleri açmak için ayarlardan izin verin.');
+            }
+          }}
+        >
+          <Text style={[styles.settingLabel, { color: theme.text }]}>🔔 Günlük çalışma hatırlatması (09:00)</Text>
         </TouchableOpacity>
       </View>
 

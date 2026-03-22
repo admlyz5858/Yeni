@@ -55,7 +55,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
               role: profile?.role || 'member',
             });
           }
-        } else if (__DEV__) {
+        } else {
           const raw = await AsyncStorage.getItem(AUTH_KEY);
           if (raw) {
             try {
@@ -104,7 +104,7 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
       return { ok: true };
     }
 
-    if (__DEV__ && email === 'demo@calismaasistani.app' && password === 'demo123') {
+    if (email === 'demo@calismaasistani.app' && password === 'demo123') {
       const u: User = { id: 'demo', email, name: 'Demo Kullanıcı', role: 'member' };
       setUserState(u);
       await AsyncStorage.setItem(AUTH_KEY, JSON.stringify(u));

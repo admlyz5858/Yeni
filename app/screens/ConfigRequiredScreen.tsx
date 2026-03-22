@@ -30,7 +30,7 @@ export default function ConfigRequiredScreen({ allowDemo }: Props) {
       </Text>
       {allowDemo && (
         <TouchableOpacity style={styles.demoBtn} onPress={handleDemoLogin}>
-          <Text style={styles.demoBtnText}>🧪 Demo ile Dene (sadece geliştirme)</Text>
+          <Text style={styles.demoBtnText}>Demo modunda devam et</Text>
         </TouchableOpacity>
       )}
     </View>

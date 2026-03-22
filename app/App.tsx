@@ -132,10 +132,7 @@ function AppContent() {
   }
 
   if (!hasBackend && !user) {
-    if (__DEV__) {
-      return <ConfigRequiredScreen allowDemo />;
-    }
-    return <ConfigRequiredScreen />;
+    return <ConfigRequiredScreen allowDemo />;
   }
 
   if (!user) {

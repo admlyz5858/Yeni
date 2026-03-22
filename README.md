@@ -63,7 +63,17 @@ npm run build:apk
 
 APK dosyası: `app/android/app/build/outputs/apk/release/app-release.apk`
 
+**Play Store için AAB:** `npm run build:aab` → `android/app/build/outputs/bundle/release/app-release.aab`
+
 **Gereksinimler:** Android SDK (ANDROID_HOME) ve Java 17+
+
+## Google Play Store
+
+Uygulama mağaza yayınına hazırdır:
+- **Hakkında ekranı:** Sürüm, puanla, paylaş, gizlilik politikası, geri bildirim
+- **In-app review:** Uygulamayı Puanla (native Store Review API)
+- **Gizlilik politikası:** [PRIVACY_POLICY.md](PRIVACY_POLICY.md)
+- **Mağaza listeleme rehberi:** [STORE_LISTING.md](STORE_LISTING.md)
 
 ## Proje Yapısı
 

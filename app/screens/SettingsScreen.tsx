@@ -72,6 +72,12 @@ export default function SettingsScreen({ navigation }: Props) {
         </TouchableOpacity>
         <TouchableOpacity
           style={styles.settingRow}
+          onPress={() => navigation.navigate('About')}
+        >
+          <Text style={[styles.settingLabel, { color: theme.text }]}>ℹ️ Hakkında</Text>
+        </TouchableOpacity>
+        <TouchableOpacity
+          style={styles.settingRow}
           onPress={async () => {
             const ok = await requestNotificationPermissions();
             if (ok) {

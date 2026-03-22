@@ -32,6 +32,7 @@ import SubjectsScreen from './screens/SubjectsScreen';
 import LeaderboardScreen from './screens/LeaderboardScreen';
 import StudyGroupsScreen from './screens/StudyGroupsScreen';
 import FocusScreen from './screens/FocusScreen';
+import AboutScreen from './screens/AboutScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -62,6 +63,7 @@ function MemberNavigator() {
         <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
         <Stack.Screen name="StudyGroups" component={StudyGroupsScreen} />
         <Stack.Screen name="Focus" component={FocusScreen} />
+        <Stack.Screen name="About" component={AboutScreen} />
       </Stack.Navigator>
     </>
   );

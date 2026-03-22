@@ -20,6 +20,17 @@ Ardından:
 - Android Studio (Android emulator için) veya fiziksel cihaz
 - Expo Go uygulaması (fiziksel cihazda test için)
 
+## APK Derleme
+
+```bash
+cd app
+npm run build:apk
+```
+
+APK dosyası: `app/android/app/build/outputs/apk/release/app-release.apk`
+
+**Gereksinimler:** Android SDK (ANDROID_HOME) ve Java 17+
+
 ## Proje Yapısı
 
 ```
@@ -27,5 +38,6 @@ app/
 ├── App.tsx      # Ana uygulama bileşeni
 ├── app.json     # Expo yapılandırması
 ├── assets/      # Görseller ve ikonlar
+├── eas.json     # EAS Build yapılandırması (eas build için)
 └── package.json
 ```

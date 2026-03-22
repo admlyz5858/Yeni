@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect } from 'react';
 import {
   StyleSheet,
   Text,
@@ -12,7 +12,6 @@ import { useGamification } from '../context/GamificationContext';
 import { useFlashcards } from '../context/FlashcardContext';
 import { useSubjects } from '../context/SubjectsContext';
 import { useGame } from '../context/GameContext';
-import { useSettings } from '../context/SettingsContext';
 import { useAuth } from '../context/AuthContext';
 import { usePremium } from '../context/PremiumContext';
 import { useTheme } from '../context/ThemeContext';
@@ -20,19 +19,10 @@ import LevelUpModal from '../components/LevelUpModal';
 
 const { width } = Dimensions.get('window');
 const CARD_GAP = 8;
-const GRID_COLS = 4;
-const CIRCLE_SIZE = (width - 40 - CARD_GAP * (GRID_COLS - 1)) / GRID_COLS - 4;
+const GRID_COLS = 2;
+const CIRCLE_SIZE = (width - 40 - CARD_GAP) / 2 - 24;
 
-const QUOTES = [
-  'Başarı, küçük çabaların günlük tekrarıdır.',
-  'Bugün yapacağın çalışma, yarının başarının temelidir.',
-  'Odaklanmak, sıradanı olağanüstü yapar.',
-];
-const TIPS = [
-  'Her gün 25 dakika odaklanma ile başlayın.',
-  'Konuları küçük parçalara bölün.',
-  'Düzenli tekrar, kalıcı öğrenmenin anahtarıdır.',
-];
+const QUOTE = 'Başarı, küçük çabaların günlük tekrarıdır.';
 
 type Props = { navigation: any };
 
@@ -59,24 +49,20 @@ export default function HomeScreen({ navigation }: Props) {
     isLoading,
     completedTopics,
   } = usePlan();
-  const { level, xp, checkAchievements, updateDailyChallengeFromStats, dailyLoginBonus } =
+  const { level, xp, checkAchievements, updateDailyChallengeFromStats } =
     useGamification();
   const { getDueCards } = useFlashcards();
   const { subjects } = useSubjects();
-  const { checkLevelUp, levelUpModal, setLevelUpModal, weeklyQuests, weeklyCompleted } = useGame();
-  const { customQuotes } = useSettings();
+  const { checkLevelUp, levelUpModal, setLevelUpModal } = useGame();
   const { user } = useAuth();
   const { isPremium } = usePremium();
 
-  const [tab, setTab] = useState<'quote' | 'tip' | 'motivation'>('quote');
   const greeting = (() => {
     const h = new Date().getHours();
     if (h < 12) return 'İyi Sabahlar';
     if (h < 18) return 'İyi Öğlenler';
     return 'İyi Akşamlar';
   })();
-  const completedQuests = Object.values(weeklyCompleted || {}).filter(Boolean).length;
-  const totalQuests = weeklyQuests?.length ?? 4;
   const totalTopics = subjects.reduce((acc, s) => acc + s.topics.length, 0);
   const doneCount = Object.values(completedTopics).reduce(
     (acc, subj) => acc + Object.values(subj).filter(Boolean).length,
@@ -98,22 +84,10 @@ export default function HomeScreen({ navigation }: Props) {
     }
     return sum;
   })();
-  const remainGoal = Math.max(0, dailyGoalHours - todayHours);
-  const activeIndex = 4;
-  const daySeed = new Date().getDate() % 3;
-  const defaultQuotes = QUOTES;
-  const allQuotes = customQuotes.length > 0 ? customQuotes : defaultQuotes;
-  const quote = allQuotes[daySeed % allQuotes.length];
-  const tip = TIPS[daySeed];
-
   const gridItems = [
-    { icon: '📋', label: 'Plan', nav: 'Plan' },
-    { icon: '🍅', label: 'Pomodoro', nav: 'Pomodoro' },
+    { icon: '📅', label: 'Plan', nav: 'Schedule' },
     { icon: '📇', label: 'Kartlar', nav: 'Flashcards' },
-    { icon: '🏆', label: 'Sıralama', nav: 'LeaderboardTab' },
     { icon: '📚', label: 'Dersler', nav: 'Subjects' },
-    { icon: '📌', label: 'Günlük', nav: 'DailyActivity' },
-    { icon: '🌟', label: 'Rozetler', nav: 'Achievements' },
     { icon: '⚙️', label: 'Ayarlar', nav: 'Settings' },
   ];
 
@@ -169,7 +143,7 @@ export default function HomeScreen({ navigation }: Props) {
           <Text style={styles.logoEmoji}>🦉</Text>
           <Text style={[styles.appName, { color: theme.text }]}>Bilge Baykuş</Text>
         </View>
-        <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('DailyActivity')}>
+        <TouchableOpacity style={styles.iconBtn} onPress={() => navigation.navigate('Settings')}>
           <Text style={[styles.iconBtnText, { color: theme.accent }]}>🔔</Text>
         </TouchableOpacity>
       </View>
@@ -203,13 +177,11 @@ export default function HomeScreen({ navigation }: Props) {
       {/* Stats row */}
       <View style={[styles.statsRow, { borderBottomColor: theme.cardBorder }]}>
         {[
+          { label: 'Bugün', val: `${todayHours.toFixed(1)}h` },
+          { label: 'Hafta', val: `${weekHours.toFixed(1)}h` },
+          { label: 'Seri', val: `${streak} gün` },
           { label: 'Hedef', val: `${dailyGoalHours}h` },
-          { label: 'Seri', val: `${streak}` },
-          { label: 'XP', val: `${xp}` },
-          { label: 'Seviye', val: `${level}` },
-          { label: 'Bugün', val: `${todayHours.toFixed(1)}` },
-          { label: 'Hafta', val: `${weekHours.toFixed(1)}` },
-        ].map((item, i) => (
+        ].map((item) => (
           <View key={item.label} style={styles.statItem}>
             <Text style={[styles.statVal, { color: theme.text }]}>{item.val}</Text>
             <Text style={[styles.statLabel, { color: theme.textSecondary }]}>{item.label}</Text>
@@ -233,58 +205,9 @@ export default function HomeScreen({ navigation }: Props) {
         ))}
       </View>
 
-      {/* Quote/Tip bar */}
-      <View style={[styles.quoteBar, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}>
-        <TouchableOpacity
-          style={[styles.quoteTab, tab === 'quote' && { backgroundColor: theme.accent }]}
-          onPress={() => setTab('quote')}
-        >
-          <Text style={[styles.quoteTabText, tab === 'quote' && { color: '#fff' }, { color: theme.textSecondary }]}>
-            Söz
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.quoteTab, tab === 'tip' && { backgroundColor: theme.accent }]}
-          onPress={() => setTab('tip')}
-        >
-          <Text style={[styles.quoteTabText, tab === 'tip' && { color: '#fff' }, { color: theme.textSecondary }]}>
-            İpucu
-          </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          style={[styles.quoteTab, tab === 'motivation' && { backgroundColor: theme.accent }]}
-          onPress={() => setTab('motivation')}
-        >
-          <Text style={[styles.quoteTabText, tab === 'motivation' && { color: '#fff' }, { color: theme.textSecondary }]}>
-            Motivasyon
-          </Text>
-        </TouchableOpacity>
-      </View>
-      <Text style={[styles.quoteText, { color: theme.text }]} numberOfLines={2}>
-        {tab === 'quote' && `"${quote}"`}
-        {tab === 'tip' && `💡 ${tip}`}
-        {tab === 'motivation' &&
-          (remainGoal > 0
-            ? `Bugün ${remainGoal.toFixed(1)} saat daha çalış! 💪`
-            : 'Bugünkü hedefe ulaştın! 🎉')}
+      <Text style={[styles.quoteText, { color: theme.textSecondary }]} numberOfLines={2}>
+        "{QUOTE}"
       </Text>
-
-      {dailyLoginBonus > 0 && (
-        <TouchableOpacity
-          style={styles.loginBonusBtn}
-          onPress={() => navigation.navigate('DailyActivity')}
-        >
-          <Text style={styles.loginBonusText}>🎁 +{dailyLoginBonus} XP</Text>
-        </TouchableOpacity>
-      )}
-
-      <TouchableOpacity
-        style={[styles.fab, { backgroundColor: theme.accent }]}
-        onPress={() => navigation.navigate('Pomodoro')}
-      >
-        <Text style={styles.fabIcon}>🦉</Text>
-        <Text style={styles.fabText}>Odaklan</Text>
-      </TouchableOpacity>
 
       <LevelUpModal
         visible={levelUpModal}
@@ -361,7 +284,7 @@ const styles = StyleSheet.create({
     padding: 16,
     gap: CARD_GAP,
   },
-  gridItem: { width: (width - 32 - CARD_GAP * 3) / 4, alignItems: 'center' },
+  gridItem: { width: (width - 32 - CARD_GAP) / 2, alignItems: 'center' },
   circleIcon: {
     width: CIRCLE_SIZE,
     height: CIRCLE_SIZE,
@@ -373,43 +296,10 @@ const styles = StyleSheet.create({
   },
   circleEmoji: { fontSize: CIRCLE_SIZE * 0.4 },
   circleLabel: { fontSize: 11, textAlign: 'center' },
-  quoteBar: {
-    flexDirection: 'row',
-    marginHorizontal: 16,
-    marginTop: 8,
-    padding: 8,
-    borderRadius: 12,
-    borderWidth: 1,
-    gap: 8,
-  },
-  quoteTab: { flex: 1, alignItems: 'center', paddingVertical: 6, borderRadius: 8 },
-  quoteTabText: { fontSize: 12, fontWeight: '600' },
   quoteText: {
     fontSize: 13,
     fontStyle: 'italic',
     marginHorizontal: 16,
-    marginTop: 8,
+    marginTop: 16,
   },
-  loginBonusBtn: {
-    alignSelf: 'center',
-    marginTop: 12,
-    paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 12,
-    backgroundColor: '#fef3c7',
-  },
-  loginBonusText: { fontSize: 13, fontWeight: '700', color: '#b45309' },
-  fab: {
-    position: 'absolute',
-    bottom: 24,
-    right: 20,
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 18,
-    paddingVertical: 12,
-    borderRadius: 24,
-    gap: 8,
-  },
-  fabIcon: { fontSize: 20 },
-  fabText: { color: '#fff', fontSize: 14, fontWeight: '600' },
 });

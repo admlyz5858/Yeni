@@ -1,39 +1,21 @@
 import React from 'react';
 import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import {
-  DrawerContentScrollView,
-  DrawerItemList,
-} from '@react-navigation/drawer';
+import { DrawerContentScrollView } from '@react-navigation/drawer';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
-import { usePremium } from '../context/PremiumContext';
 
-/** Menü: Planlama → Çalışma → İçerik → Analiz → Oyun → Ayarlar */
 const MENU_ITEMS = [
-  { name: 'Genel Bakış', icon: '🏠', screen: 'Tabs' },
-  { name: 'Bilge Üssü', icon: '🦉', screen: 'BilgeUssu' },
+  { name: 'Ana Sayfa', icon: '🏠', screen: 'Tabs' },
   { name: 'Odaklan', icon: '⏱️', screen: 'Pomodoro' },
   { name: 'Haftalık Plan', icon: '📅', screen: 'Schedule' },
-  { name: 'Konu Netlerim', icon: '🎓', screen: 'Plan' },
-  { name: 'Zaman Haritası', icon: '🕐', screen: 'TimeMap' },
-  { name: 'Etüt Odası', icon: '📖', screen: 'StudyRoom' },
-  { name: 'Anlık Çözüm', icon: '📷', screen: 'InstantSolution' },
-  { name: 'Bilge Not Defteri', icon: '📓', screen: 'NotebookChat' },
-  { name: 'Sohbet', icon: '💬', screen: 'Chat' },
-  { name: 'Kart Arşivi', icon: '📇', screen: 'Flashcards' },
-  { name: 'Dönüştürücü', icon: '🔄', screen: 'Converter' },
-  { name: 'Zihin Haritası', icon: '🧠', screen: 'MindMap' },
-  { name: 'Soru Kutusu', icon: '📥', screen: 'Goals' },
-  { name: 'Akıllı Analiz', icon: '📊', screen: 'SmartAnalysis' },
-  { name: 'Çalışma Gelişimi', icon: '📈', screen: 'StudyLog' },
-  { name: 'Taktik Blog', icon: '📝', screen: 'DailyActivity' },
+  { name: 'Konular', icon: '🎓', screen: 'Plan' },
+  { name: 'Kartlar', icon: '📇', screen: 'Flashcards' },
   { name: 'Ayarlar', icon: '⚙️', screen: 'Settings' },
 ];
 
 export default function CustomDrawerContent(props: any) {
   const { theme } = useTheme();
   const { user } = useAuth();
-  const { isPremium } = usePremium();
   const { navigation } = props;
 
   return (
@@ -77,30 +59,6 @@ export default function CustomDrawerContent(props: any) {
         ))}
       </View>
 
-      <View style={[styles.socialSection, { borderTopColor: theme.cardBorder }]}>
-        <Text style={[styles.socialTitle, { color: theme.textSecondary }]}>BİZİ TAKİP EDİN</Text>
-        <View style={styles.socialIcons}>
-          <TouchableOpacity style={styles.socialBtn}>
-            <Text style={styles.socialIcon}>📱</Text>
-          </TouchableOpacity>
-          <View style={[styles.divider, { backgroundColor: theme.cardBorder }]} />
-          <TouchableOpacity style={styles.socialBtn}>
-            <Text style={styles.socialIcon}>📷</Text>
-          </TouchableOpacity>
-          <View style={[styles.divider, { backgroundColor: theme.cardBorder }]} />
-          <TouchableOpacity style={styles.socialBtn}>
-            <Text style={styles.socialIcon}>🎵</Text>
-          </TouchableOpacity>
-        </View>
-      </View>
-
-      <View style={[styles.proBadge, { backgroundColor: theme.card }]}>
-        <Text style={styles.mascotIcon}>🦉</Text>
-        <Text style={[styles.proBrand, { color: theme.text }]}>Bilge Baykuş</Text>
-        <View style={[styles.proTag, { backgroundColor: '#fef3c7' }]}>
-          <Text style={styles.proTagText}>{isPremium ? 'PRO' : 'ÜCRETSİZ'}</Text>
-        </View>
-      </View>
     </DrawerContentScrollView>
   );
 }
@@ -134,24 +92,4 @@ const styles = StyleSheet.create({
   },
   menuIcon: { fontSize: 22 },
   menuLabel: { fontSize: 16 },
-  socialSection: { marginTop: 24, paddingTop: 24, borderTopWidth: 1, paddingHorizontal: 24 },
-  socialTitle: { fontSize: 11, fontWeight: '700', marginBottom: 12, letterSpacing: 0.5 },
-  socialIcons: { flexDirection: 'row', alignItems: 'center' },
-  socialBtn: { padding: 12 },
-  socialIcon: { fontSize: 24 },
-  divider: { width: 1, height: 20 },
-  proBadge: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginHorizontal: 16,
-    marginTop: 24,
-    marginBottom: 24,
-    padding: 16,
-    borderRadius: 16,
-    gap: 12,
-  },
-  mascotIcon: { fontSize: 32 },
-  proBrand: { flex: 1, fontSize: 16, fontWeight: 'bold' },
-  proTag: { paddingHorizontal: 12, paddingVertical: 6, borderRadius: 12 },
-  proTagText: { fontSize: 12, fontWeight: '700', color: '#b45309' },
 });

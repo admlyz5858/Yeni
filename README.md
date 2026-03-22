@@ -1,10 +1,11 @@
-# KPSS Planlama Uygulaması
+# Çalışma Asistanı
 
-KPSS sınavına hazırlık için gelişmiş planlama uygulaması.
+Her sınava hazırlık için genel çalışma planlama uygulaması.
 
 **Özellikler:**
 
-**Üye Paneli (KPSS Planlama):**
+**Üye Paneli:**
+- 📚 **Derslerim:** Kendi ders ve konularınızı ekleyin/düzenleyin
 - 📅 Sınav geri sayımı
 - 📊 Çalışma istatistikleri (seri, haftalık/bugünkü saat)
 - 📋 Konu ilerleme + konu notları
@@ -70,10 +71,9 @@ APK dosyası: `app/android/app/build/outputs/apk/release/app-release.apk`
 app/
 ├── App.tsx           # Ana uygulama + navigasyon
 ├── context/
-│   └── PlanContext   # State + AsyncStorage persistence
-├── screens/          # Home, Plan, Schedule, Goals, StudyLog
-├── data/
-│   └── subjects.ts  # KPSS konuları
+│   ├── PlanContext    # State + AsyncStorage persistence
+│   └── SubjectsContext # Kullanıcı tanımlı ders/konular
+├── screens/           # Home, Plan, Schedule, Goals, StudyLog, Subjects, ...
 ├── app.json          # Expo yapılandırması
 ├── assets/           # Görseller
 ├── eas.json          # EAS Build

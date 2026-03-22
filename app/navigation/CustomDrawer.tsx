@@ -18,6 +18,8 @@ const MENU_ITEMS = [
   { name: 'Soru Kutusu', icon: '📥', screen: 'Goals' },
   { name: 'Zihin Haritası', icon: '🧠', screen: 'MindMap' },
   { name: 'Anlık Çözüm', icon: '📷', screen: 'InstantSolution' },
+  { name: 'Etüt Odası', icon: '📖', screen: 'StudyRoom' },
+  { name: 'Akıllı Analiz', icon: '📊', screen: 'SmartAnalysis' },
   { name: 'Sohbet', icon: '💬', screen: 'Chat' },
   { name: 'Dönüştürücü', icon: '🔄', screen: 'Converter' },
   { name: 'Zaman Haritası', icon: '🕐', screen: 'TimeMap' },
@@ -44,7 +46,7 @@ export default function CustomDrawerContent(props: any) {
         }}
       >
         <View style={[styles.avatar, { backgroundColor: theme.accentLight }]}>
-          <Text style={styles.avatarEmoji}>📚</Text>
+          <Text style={styles.avatarEmoji}>🦉</Text>
         </View>
         <View style={styles.profileInfo}>
           <Text style={[styles.userName, { color: theme.text }]}>{user?.name || 'Kullanıcı'}</Text>

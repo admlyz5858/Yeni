@@ -142,6 +142,13 @@ export default function HomeScreen({ navigation }: Props) {
     { icon: '🌟', label: 'Rozetler', nav: 'Achievements' },
     { icon: '⚙️', label: 'Ayarlar', nav: 'Settings' },
   ];
+  const bilgeFeatures = [
+    { icon: '📷', label: 'Soru Çözücü', nav: 'InstantSolution' },
+    { icon: '📖', label: 'Etüt Odası', nav: 'StudyRoom' },
+    { icon: '🔄', label: 'Dönüştürücü', nav: 'Converter' },
+    { icon: '🧠', label: 'Zihin Haritası', nav: 'MindMap' },
+    { icon: '📊', label: 'Akıllı Analiz', nav: 'SmartAnalysis' },
+  ];
 
   if (isLoading) {
     return (
@@ -162,9 +169,9 @@ export default function HomeScreen({ navigation }: Props) {
         <View style={styles.header}>
           <View style={styles.logoRow}>
             <View style={styles.logoCircle}>
-              <Text style={styles.logoEmoji}>📚</Text>
+              <Text style={styles.logoEmoji}>🦉</Text>
             </View>
-            <Text style={styles.appName}>Çalışma Asistanı</Text>
+            <Text style={styles.appName}>Bilge Baykuş</Text>
           </View>
           <View style={styles.headerIcons}>
             <TouchableOpacity
@@ -281,6 +288,27 @@ export default function HomeScreen({ navigation }: Props) {
           ))}
         </View>
 
+        {/* Bilge Baykuş Özellikleri */}
+        <View style={styles.bilgeSection}>
+          <Text style={styles.bilgeTitle}>🦉 Bilge Baykuş ile</Text>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.bilgeRow}
+          >
+            {bilgeFeatures.map((f) => (
+              <TouchableOpacity
+                key={f.nav}
+                style={styles.bilgePill}
+                onPress={() => navigation.navigate(f.nav)}
+              >
+                <Text style={styles.bilgePillIcon}>{f.icon}</Text>
+                <Text style={styles.bilgePillText}>{f.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </View>
+
         {/* Pills */}
         <ScrollView
           horizontal
@@ -296,10 +324,10 @@ export default function HomeScreen({ navigation }: Props) {
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.pill}
-            onPress={() => navigation.navigate('StudyGroups')}
+            onPress={() => navigation.navigate('StudyRoom')}
           >
-            <Text style={styles.pillIcon}>👥</Text>
-            <Text style={styles.pillText}>Çalışma grupları</Text>
+            <Text style={styles.pillIcon}>📖</Text>
+            <Text style={styles.pillText}>Etüt Odası</Text>
           </TouchableOpacity>
           <TouchableOpacity
             style={styles.pill}
@@ -500,6 +528,22 @@ const styles = StyleSheet.create({
   },
   circleEmoji: { fontSize: CIRCLE_SIZE * 0.35 },
   circleLabel: { fontSize: 12, color: TEXT_WHITE, textAlign: 'center' },
+  bilgeSection: { marginBottom: 20 },
+  bilgeTitle: { fontSize: 14, fontWeight: '600', color: TEXT_MUTED, marginBottom: 12 },
+  bilgeRow: { flexDirection: 'row', gap: 10 },
+  bilgePill: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: CARD_DARK,
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 20,
+    borderWidth: 1,
+    borderColor: CARD_BORDER,
+    gap: 6,
+  },
+  bilgePillIcon: { fontSize: 16 },
+  bilgePillText: { fontSize: 13, color: TEXT_WHITE, fontWeight: '500' },
   pillsRow: { flexDirection: 'row', gap: 12, marginBottom: 24 },
   pill: {
     flexDirection: 'row',

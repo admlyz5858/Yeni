@@ -3,17 +3,25 @@
 KPSS sınavına hazırlık için gelişmiş planlama uygulaması.
 
 **Özellikler:**
+
+**Üye Paneli (KPSS Planlama):**
 - 📅 Sınav geri sayımı
 - 📊 Çalışma istatistikleri (seri, haftalık/bugünkü saat)
-- 📋 Konu ilerleme + **konu notları**
-- 📝 Çalışma günlüğü (günlük saat kaydı)
-- ⏱️ **Pomodoro zamanlayıcı** (25 dk odaklanma, 5 dk mola)
-- 📆 Haftalık program (günlere ders ekleme/çıkarma)
-- 🎯 Hedef belirleme (sınav tarihi, günlük hedef)
-- 🌙 **Koyu/Açık tema**
-- 👋 **Hoş geldin ekranı** (onboarding)
-- ⚙️ Ayarlar (tema, onboarding tekrar)
-- 💾 Veriler cihazda saklanır (AsyncStorage)
+- 📋 Konu ilerleme + konu notları
+- 📝 Çalışma günlüğü, ⏱️ Pomodoro
+- 📆 Haftalık program, 🎯 Hedefler
+- 🌙 Koyu/Açık tema
+
+**Admin Paneli:**
+- 📊 Dashboard (üye sayısı, konu/çalışma istatistikleri)
+- 👥 Üye yönetimi (kullanıcı listesi)
+
+**Kimlik Doğrulama:**
+- Giriş / Kayıt ekranları
+- Rol tabanlı erişim (admin / üye)
+- Demo mod: Supabase olmadan çalışır
+- admin@admin.com / admin123 (Admin)
+- uye@uygulama.com / uyari123 (Üye)
 
 Expo (React Native) ile oluşturulmuş cross-platform mobil uygulama. iOS ve Android'de çalışır.
 

@@ -5,9 +5,11 @@ import {
   View,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 import { usePlan } from '../context/PlanContext';
+import { useAuth } from '../context/AuthContext';
 
 type Props = {
   navigation: any;
@@ -16,6 +18,7 @@ type Props = {
 export default function SettingsScreen({ navigation }: Props) {
   const { theme, mode, setMode } = useTheme();
   const { hasSeenOnboarding, setHasSeenOnboarding } = usePlan();
+  const { user, logout } = useAuth();
 
   return (
     <ScrollView
@@ -68,8 +71,22 @@ export default function SettingsScreen({ navigation }: Props) {
         </TouchableOpacity>
       </View>
 
+      <TouchableOpacity
+        style={[styles.logoutRow, { borderTopColor: theme.cardBorder }]}
+        onPress={() => {
+          Alert.alert('Çıkış', 'Hesabınızdan çıkış yapmak istiyor musunuz?', [
+            { text: 'İptal', style: 'cancel' },
+            { text: 'Çıkış', style: 'destructive', onPress: logout },
+          ]);
+        }}
+      >
+        <Text style={[styles.logoutText, { color: theme.danger }]}>Çıkış Yap</Text>
+      </TouchableOpacity>
+
       <View style={[styles.footer, { borderTopColor: theme.cardBorder }]}>
-        <Text style={[styles.footerText, { color: theme.textSecondary }]}>KPSS Planlama v1.0</Text>
+        <Text style={[styles.footerText, { color: theme.textSecondary }]}>
+          {user?.email} • KPSS Planlama v1.0
+        </Text>
       </View>
     </ScrollView>
   );
@@ -100,6 +117,11 @@ const styles = StyleSheet.create({
   themeLabel: { fontSize: 16, fontWeight: '600' },
   settingRow: { paddingVertical: 16 },
   settingLabel: { fontSize: 16 },
+  logoutRow: {
+    padding: 20,
+    borderTopWidth: 1,
+  },
+  logoutText: { fontSize: 16, fontWeight: '600' },
   footer: {
     paddingTop: 24,
     borderTopWidth: 1,

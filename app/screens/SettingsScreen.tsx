@@ -7,7 +7,7 @@ import {
   ScrollView,
   Alert,
 } from 'react-native';
-import { useTheme } from '../context/ThemeContext';
+import { useTheme, THEME_OPTIONS } from '../context/ThemeContext';
 import { usePlan } from '../context/PlanContext';
 import { useAuth } from '../context/AuthContext';
 import { requestNotificationPermissions, scheduleStudyReminder } from '../services/notifications';
@@ -35,30 +35,22 @@ export default function SettingsScreen({ navigation }: Props) {
       </View>
 
       <View style={[styles.section, { backgroundColor: theme.card }]}>
-        <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>Görünüm</Text>
-        <View style={styles.themeRow}>
-          <TouchableOpacity
-            style={[
-              styles.themeBtn,
-              { backgroundColor: theme.card, borderColor: theme.cardBorder },
-              mode === 'light' && { borderColor: theme.accent, borderWidth: 2 },
-            ]}
-            onPress={() => setMode('light')}
-          >
-            <Text style={styles.themeIcon}>☀️</Text>
-            <Text style={[styles.themeLabel, { color: theme.text }]}>Açık</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[
-              styles.themeBtn,
-              { backgroundColor: theme.card, borderColor: theme.cardBorder },
-              mode === 'dark' && { borderColor: theme.accent, borderWidth: 2 },
-            ]}
-            onPress={() => setMode('dark')}
-          >
-            <Text style={styles.themeIcon}>🌙</Text>
-            <Text style={[styles.themeLabel, { color: theme.text }]}>Koyu</Text>
-          </TouchableOpacity>
+        <Text style={[styles.sectionTitle, { color: theme.textSecondary }]}>Tema</Text>
+        <View style={styles.themeGrid}>
+          {THEME_OPTIONS.map((opt) => (
+            <TouchableOpacity
+              key={opt.id}
+              style={[
+                styles.themeBtn,
+                { backgroundColor: theme.card, borderColor: theme.cardBorder },
+                mode === opt.id && { borderColor: theme.accent, borderWidth: 2 },
+              ]}
+              onPress={() => setMode(opt.id)}
+            >
+              <Text style={styles.themeIcon}>{opt.icon}</Text>
+              <Text style={[styles.themeLabel, { color: theme.text }]} numberOfLines={1}>{opt.label}</Text>
+            </TouchableOpacity>
+          ))}
         </View>
       </View>
 
@@ -126,10 +118,15 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   sectionTitle: { fontSize: 13, fontWeight: '600', marginBottom: 16, textTransform: 'uppercase' },
-  themeRow: { flexDirection: 'row', gap: 12 },
+  themeGrid: {
+    flexDirection: 'row',
+    flexWrap: 'wrap',
+    gap: 10,
+  },
   themeBtn: {
-    flex: 1,
-    padding: 20,
+    width: '31%',
+    minWidth: 90,
+    padding: 16,
     borderRadius: 12,
     borderWidth: 1,
     alignItems: 'center',

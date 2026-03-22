@@ -1,5 +1,13 @@
-import React, { useEffect } from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Modal } from 'react-native';
+import React, { useEffect, useRef } from 'react';
+import {
+  StyleSheet,
+  Text,
+  View,
+  TouchableOpacity,
+  Modal,
+  Animated,
+  Easing,
+} from 'react-native';
 
 type Props = {
   visible: boolean;
@@ -8,19 +16,75 @@ type Props = {
 };
 
 export default function LevelUpModal({ visible, level, onClose }: Props) {
+  const scaleAnim = useRef(new Animated.Value(0)).current;
+  const opacityAnim = useRef(new Animated.Value(0)).current;
+  const emojiAnim = useRef(new Animated.Value(0)).current;
+
+  useEffect(() => {
+    if (visible) {
+      scaleAnim.setValue(0);
+      opacityAnim.setValue(0);
+      emojiAnim.setValue(0);
+      Animated.parallel([
+        Animated.timing(opacityAnim, {
+          toValue: 1,
+          duration: 200,
+          useNativeDriver: true,
+        }),
+        Animated.spring(scaleAnim, {
+          toValue: 1,
+          useNativeDriver: true,
+          friction: 8,
+          tension: 80,
+        }),
+      ]).start(() => {
+        Animated.loop(
+          Animated.sequence([
+            Animated.timing(emojiAnim, {
+              toValue: 1,
+              duration: 600,
+              useNativeDriver: true,
+              easing: Easing.inOut(Easing.ease),
+            }),
+            Animated.timing(emojiAnim, {
+              toValue: 0,
+              duration: 600,
+              useNativeDriver: true,
+              easing: Easing.inOut(Easing.ease),
+            }),
+          ])
+        ).start();
+      });
+    }
+  }, [visible]);
+
+  const emojiScale = emojiAnim.interpolate({
+    inputRange: [0, 1],
+    outputRange: [1, 1.15],
+  });
+
   return (
     <Modal visible={visible} transparent animationType="fade">
-      <View style={styles.overlay}>
-        <View style={styles.content}>
-          <Text style={styles.emoji}>🎉</Text>
+      <Animated.View style={[styles.overlay, { opacity: opacityAnim }]}>
+        <Animated.View
+          style={[
+            styles.content,
+            {
+              transform: [{ scale: scaleAnim }],
+            },
+          ]}
+        >
+          <Animated.Text style={[styles.emoji, { transform: [{ scale: emojiScale }] }]}>
+            🎉
+          </Animated.Text>
           <Text style={styles.title}>Seviye Atladın!</Text>
           <Text style={styles.level}>{level}</Text>
           <Text style={styles.sub}>Tebrikler! Yeni rozetler kilidini açabilirsin.</Text>
-          <TouchableOpacity style={styles.btn} onPress={onClose}>
+          <TouchableOpacity style={styles.btn} onPress={onClose} activeOpacity={0.8}>
             <Text style={styles.btnText}>Harika!</Text>
           </TouchableOpacity>
-        </View>
-      </View>
+        </Animated.View>
+      </Animated.View>
     </Modal>
   );
 }

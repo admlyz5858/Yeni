@@ -47,6 +47,8 @@ function MemberNavigator() {
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: theme.bg },
+          animation: 'slide_from_right',
+          animationDuration: 280,
         }}
       >
         <Stack.Screen name="Home" component={HomeScreen} />
@@ -80,6 +82,8 @@ function AdminNavigator() {
         screenOptions={{
           headerShown: false,
           contentStyle: { backgroundColor: theme.bg },
+          animation: 'slide_from_right',
+          animationDuration: 280,
         }}
       >
         <Stack.Screen name="AdminDashboard" component={AdminDashboard} />

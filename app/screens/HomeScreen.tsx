@@ -11,7 +11,10 @@ import { useTheme } from '../context/ThemeContext';
 import { useGamification } from '../context/GamificationContext';
 import { useFlashcards } from '../context/FlashcardContext';
 import { useSubjects } from '../context/SubjectsContext';
+import { useGame } from '../context/GameContext';
 import StudyHeatmap from '../components/StudyHeatmap';
+import StudyPet from '../components/StudyPet';
+import LevelUpModal from '../components/LevelUpModal';
 
 type Props = {
   navigation: any;
@@ -60,6 +63,7 @@ export default function HomeScreen({ navigation }: Props) {
   const { level, xp, checkAchievements, updateDailyChallengeFromStats, dailyLoginBonus } = useGamification();
   const { getDueCards, cardsCount } = useFlashcards();
   const { subjects } = useSubjects();
+  const { checkLevelUp, levelUpModal, setLevelUpModal } = useGame();
 
   const totalTopics = subjects.reduce((acc, s) => acc + s.topics.length, 0);
   const doneCount = Object.values(completedTopics).reduce(
@@ -87,6 +91,10 @@ export default function HomeScreen({ navigation }: Props) {
       studyLog,
     });
   }, [doneCount, streak, pomodoroCount, totalStudyHours, hasNotes, noteCount, cardsCount]);
+
+  useEffect(() => {
+    checkLevelUp(level);
+  }, [level]);
 
   useEffect(() => {
     updateDailyChallengeFromStats({
@@ -126,9 +134,41 @@ export default function HomeScreen({ navigation }: Props) {
           </TouchableOpacity>
         </View>
         <Text style={[styles.subtitle, { color: theme.textSecondary }]}>
-          Çalışma planınızı oluşturun ve ilerlemenizi takip edin
+          Odaklan, planla, rozetler kazan! 🎮
         </Text>
       </View>
+
+      <View style={styles.petRow}>
+        <StudyPet xp={xp} level={level} streak={streak} />
+        <View style={styles.petActions}>
+          <TouchableOpacity
+            style={[styles.gameBtn, { backgroundColor: theme.card }]}
+            onPress={() => navigation.navigate('Leaderboard')}
+          >
+            <Text style={styles.gameBtnIcon}>🏆</Text>
+            <Text style={[styles.gameBtnText, { color: theme.text }]}>Sıralama</Text>
+          </TouchableOpacity>
+          <TouchableOpacity
+            style={[styles.gameBtn, { backgroundColor: theme.card }]}
+            onPress={() => navigation.navigate('StudyGroups')}
+          >
+            <Text style={styles.gameBtnIcon}>👥</Text>
+            <Text style={[styles.gameBtnText, { color: theme.text }]}>Gruplar</Text>
+          </TouchableOpacity>
+        </View>
+      </View>
+
+      <TouchableOpacity
+        style={styles.focusCta}
+        onPress={() => navigation.navigate('Focus')}
+      >
+        <Text style={styles.focusCtaIcon}>🎯</Text>
+        <View style={styles.focusCtaContent}>
+          <Text style={styles.focusCtaTitle}>Odaklanma Merkezi</Text>
+          <Text style={styles.focusCtaSub}>Pomodoro • Seri • İstatistikler</Text>
+        </View>
+        <Text style={styles.focusCtaArrow}>→</Text>
+      </TouchableOpacity>
 
       <View style={styles.topBadges}>
         <TouchableOpacity
@@ -221,9 +261,18 @@ export default function HomeScreen({ navigation }: Props) {
 
         <TouchableOpacity
           style={[styles.menuCard, { backgroundColor: theme.card }]}
+          onPress={() => navigation.navigate('Focus')}
+        >
+          <Text style={styles.menuIcon}>🎯</Text>
+          <Text style={[styles.menuTitle, { color: theme.text }]}>Odaklanma</Text>
+          <Text style={[styles.menuSub, { color: theme.textSecondary }]}>Pomodoro, seri, odak istatistikleri</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.menuCard, { backgroundColor: theme.card }]}
           onPress={() => navigation.navigate('Pomodoro')}
         >
-          <Text style={styles.menuIcon}>⏱️</Text>
+          <Text style={styles.menuIcon}>🍅</Text>
           <Text style={[styles.menuTitle, { color: theme.text }]}>Pomodoro</Text>
           <Text style={[styles.menuSub, { color: theme.textSecondary }]}>25 dk odaklanma zamanlayıcısı</Text>
         </TouchableOpacity>
@@ -277,11 +326,20 @@ export default function HomeScreen({ navigation }: Props) {
 
         <TouchableOpacity
           style={[styles.menuCard, { backgroundColor: theme.card }]}
-          onPress={() => navigation.navigate('Achievements')}
+          onPress={() => navigation.navigate('Leaderboard')}
         >
           <Text style={styles.menuIcon}>🏆</Text>
+          <Text style={[styles.menuTitle, { color: theme.text }]}>Sıralama</Text>
+          <Text style={[styles.menuSub, { color: theme.textSecondary }]}>Haftalık liderler tablosu</Text>
+        </TouchableOpacity>
+
+        <TouchableOpacity
+          style={[styles.menuCard, { backgroundColor: theme.card }]}
+          onPress={() => navigation.navigate('Achievements')}
+        >
+          <Text style={styles.menuIcon}>🌟</Text>
           <Text style={[styles.menuTitle, { color: theme.text }]}>Rozetler</Text>
-          <Text style={[styles.menuSub, { color: theme.textSecondary }]}>Başarılar ve XP</Text>
+          <Text style={[styles.menuSub, { color: theme.textSecondary }]}>38 başarı, XP kazan</Text>
         </TouchableOpacity>
 
         <TouchableOpacity
@@ -302,6 +360,12 @@ export default function HomeScreen({ navigation }: Props) {
           <Text style={[styles.menuSub, { color: theme.textSecondary }]}>5000 XP ile kilidi aç</Text>
         </TouchableOpacity>
       </View>
+
+      <LevelUpModal
+        visible={levelUpModal}
+        level={level}
+        onClose={() => setLevelUpModal(false)}
+      />
     </ScrollView>
   );
 }
@@ -317,6 +381,39 @@ const styles = StyleSheet.create({
   settingsBtn: { padding: 8 },
   settingsIcon: { fontSize: 24 },
   subtitle: { fontSize: 16, lineHeight: 24 },
+  petRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: 16,
+    gap: 16,
+  },
+  petActions: { flex: 1, flexDirection: 'row', gap: 8 },
+  gameBtn: {
+    flex: 1,
+    padding: 12,
+    borderRadius: 12,
+    alignItems: 'center',
+  },
+  gameBtnIcon: { fontSize: 24, marginBottom: 4 },
+  gameBtnText: { fontSize: 12, fontWeight: '600' },
+  focusCta: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#dc2626',
+    borderRadius: 16,
+    padding: 20,
+    marginBottom: 16,
+    shadowColor: '#dc2626',
+    shadowOffset: { width: 0, height: 4 },
+    shadowOpacity: 0.3,
+    shadowRadius: 8,
+    elevation: 6,
+  },
+  focusCtaIcon: { fontSize: 36, marginRight: 16 },
+  focusCtaContent: { flex: 1 },
+  focusCtaTitle: { fontSize: 18, fontWeight: '700', color: '#fff' },
+  focusCtaSub: { fontSize: 14, color: 'rgba(255,255,255,0.9)' },
+  focusCtaArrow: { fontSize: 24, color: '#fff' },
   countdownCard: {
     backgroundColor: '#0f172a',
     borderRadius: 20,

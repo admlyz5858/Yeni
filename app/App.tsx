@@ -27,7 +27,11 @@ import { GamificationProvider } from './context/GamificationContext';
 import { FlashcardProvider } from './context/FlashcardContext';
 import { PremiumProvider } from './context/PremiumContext';
 import { SubjectsProvider } from './context/SubjectsContext';
+import { GameProvider } from './context/GameContext';
 import SubjectsScreen from './screens/SubjectsScreen';
+import LeaderboardScreen from './screens/LeaderboardScreen';
+import StudyGroupsScreen from './screens/StudyGroupsScreen';
+import FocusScreen from './screens/FocusScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -55,6 +59,9 @@ function MemberNavigator() {
         <Stack.Screen name="DailyActivity" component={DailyActivityScreen} />
         <Stack.Screen name="Premium" component={PremiumScreen} />
         <Stack.Screen name="Subjects" component={SubjectsScreen} />
+        <Stack.Screen name="Leaderboard" component={LeaderboardScreen} />
+        <Stack.Screen name="StudyGroups" component={StudyGroupsScreen} />
+        <Stack.Screen name="Focus" component={FocusScreen} />
       </Stack.Navigator>
     </>
   );
@@ -146,9 +153,11 @@ export default function App() {
           <GamificationProvider>
             <PremiumProvider>
               <SubjectsProvider>
-                <FlashcardProvider>
-                  <AppContent />
-                </FlashcardProvider>
+                <GameProvider>
+                  <FlashcardProvider>
+                    <AppContent />
+                  </FlashcardProvider>
+                </GameProvider>
               </SubjectsProvider>
             </PremiumProvider>
           </GamificationProvider>

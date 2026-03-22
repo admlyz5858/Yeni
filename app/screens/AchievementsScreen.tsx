@@ -7,6 +7,7 @@ import {
   ScrollView,
 } from 'react-native';
 import { useGamification } from '../context/GamificationContext';
+import { useGame } from '../context/GameContext';
 
 type Props = {
   navigation: any;
@@ -14,6 +15,7 @@ type Props = {
 
 export default function AchievementsScreen({ navigation }: Props) {
   const { xp, level, levelProgress, achievements } = useGamification();
+  const { titles, equippedTitleId, setEquippedTitle } = useGame();
   const unlocked = achievements.filter((a) => a.unlockedAt).length;
 
   return (
@@ -31,11 +33,35 @@ export default function AchievementsScreen({ navigation }: Props) {
         <Text style={styles.totalXp}>{xp} toplam XP</Text>
       </View>
 
-      <Text style={styles.sectionTitle}>Rozetler ({unlocked}/{achievements.length})</Text>
+      <Text style={styles.sectionTitle}>🏷️ Ünvanlar</Text>
+      <View style={styles.titlesRow}>
+        {titles.map((t) => {
+          const canUse = level >= t.minLevel;
+          const isEquipped = equippedTitleId === t.id;
+          return (
+            <TouchableOpacity
+              key={t.id}
+              style={[styles.titleChip, canUse && styles.titleChipUnlocked, isEquipped && styles.titleChipEquipped]}
+              onPress={() => canUse && setEquippedTitle(t.id)}
+              disabled={!canUse}
+            >
+              <Text style={[styles.titleChipText, !canUse && styles.titleChipLocked]}>
+                {t.name} {!canUse && `(Sev.${t.minLevel})`}
+              </Text>
+            </TouchableOpacity>
+          );
+        })}
+      </View>
+
+      <Text style={styles.sectionTitle}>🌟 Rozetler ({unlocked}/{achievements.length})</Text>
       {achievements.map((a) => (
         <View
           key={a.id}
-          style={[styles.achievementCard, !a.unlockedAt && styles.achievementLocked]}
+          style={[
+            styles.achievementCard,
+            !a.unlockedAt && styles.achievementLocked,
+            a.premium && styles.achievementPremium,
+          ]}
         >
           <Text style={styles.achievementIcon}>{a.icon}</Text>
           <View style={styles.achievementInfo}>
@@ -73,7 +99,18 @@ const styles = StyleSheet.create({
   xpFill: { height: '100%', backgroundColor: '#fff', borderRadius: 6 },
   xpText: { fontSize: 14, color: '#fff' },
   totalXp: { fontSize: 12, color: 'rgba(255,255,255,0.8)', marginTop: 4 },
-  sectionTitle: { fontSize: 18, fontWeight: '600', color: '#0f172a', marginBottom: 16 },
+  sectionTitle: { fontSize: 18, fontWeight: '600', color: '#0f172a', marginBottom: 12 },
+  titlesRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 8, marginBottom: 24 },
+  titleChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 8,
+    borderRadius: 20,
+    backgroundColor: '#f1f5f9',
+  },
+  titleChipUnlocked: { backgroundColor: '#e0e7ff' },
+  titleChipEquipped: { backgroundColor: '#7c3aed' },
+  titleChipText: { fontSize: 13, color: '#64748b', fontWeight: '600' },
+  titleChipLocked: { color: '#94a3b8' },
   achievementCard: {
     flexDirection: 'row',
     alignItems: 'center',
@@ -88,6 +125,7 @@ const styles = StyleSheet.create({
     elevation: 4,
   },
   achievementLocked: { opacity: 0.6 },
+  achievementPremium: { borderWidth: 2, borderColor: '#f59e0b' },
   achievementIcon: { fontSize: 36, marginRight: 16 },
   achievementInfo: { flex: 1 },
   achievementTitle: { fontSize: 17, fontWeight: '600', color: '#1e293b' },

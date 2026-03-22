@@ -26,6 +26,7 @@ type PlanContextType = {
   hasSeenOnboarding: boolean;
   setHasSeenOnboarding: (v: boolean) => void;
   pomodoroCount: number;
+  pomodoroLog: Record<string, number>; // date -> count per day
   addPomodoro: () => void;
   todayTopicCompletions: number;
   todayPomodoro: number;
@@ -58,6 +59,7 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
   const [topicNotes, setTopicNotesState] = useState<TopicNotes>({});
   const [hasSeenOnboarding, setHasSeenOnboardingState] = useState(false);
   const [pomodoroCount, setPomodoroCountState] = useState(0);
+  const [pomodoroLog, setPomodoroLogState] = useState<Record<string, number>>({});
   const [todayPomodoro, setTodayPomodoroState] = useState(0);
   const [todayTopicCompletions, setTodayTopicCompletionsState] = useState(0);
 
@@ -71,6 +73,7 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
       if (data.topicNotes && Object.keys(data.topicNotes).length) setTopicNotesState(data.topicNotes);
       if (data.hasSeenOnboarding) setHasSeenOnboardingState(data.hasSeenOnboarding);
       if (data.pomodoroCount) setPomodoroCountState(data.pomodoroCount);
+      if (data.pomodoroLog && Object.keys(data.pomodoroLog).length) setPomodoroLogState(data.pomodoroLog);
       const today = new Date().toISOString().slice(0, 10);
       AsyncStorage.getItem(DAILY_STATS_KEY).then((r) => {
         if (r) {
@@ -100,6 +103,7 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
     topicNotes: TopicNotes;
     hasSeenOnboarding: boolean;
     pomodoroCount: number;
+    pomodoroLog: Record<string, number>;
   }>) => {
     saveData({
       examDate: updates.examDate !== undefined ? updates.examDate : examDate,
@@ -110,6 +114,7 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
       topicNotes: updates.topicNotes !== undefined ? updates.topicNotes : topicNotes,
       hasSeenOnboarding: updates.hasSeenOnboarding !== undefined ? updates.hasSeenOnboarding : hasSeenOnboarding,
       pomodoroCount: updates.pomodoroCount !== undefined ? updates.pomodoroCount : pomodoroCount,
+      pomodoroLog: updates.pomodoroLog !== undefined ? updates.pomodoroLog : pomodoroLog,
     });
   };
 
@@ -170,9 +175,15 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
   };
 
   const addPomodoro = () => {
+    const today = new Date().toISOString().slice(0, 10);
     setPomodoroCountState((prev) => {
       const next = prev + 1;
-      saveData({ examDate, dailyGoalHours, completedTopics, schedule, studyLog, topicNotes, hasSeenOnboarding, pomodoroCount: next });
+      saveData({ examDate, dailyGoalHours, completedTopics, schedule, studyLog, topicNotes, hasSeenOnboarding, pomodoroCount: next, pomodoroLog: pomodoroLog });
+      return next;
+    });
+    setPomodoroLogState((prev) => {
+      const next = { ...prev, [today]: (prev[today] || 0) + 1 };
+      saveData({ examDate, dailyGoalHours, completedTopics, schedule, studyLog, topicNotes, hasSeenOnboarding, pomodoroCount: pomodoroCount + 1, pomodoroLog: next });
       return next;
     });
     setTodayPomodoroState((prev) => prev + 1);
@@ -213,6 +224,7 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
         hasSeenOnboarding,
         setHasSeenOnboarding,
         pomodoroCount,
+        pomodoroLog,
         addPomodoro,
         todayTopicCompletions,
         todayPomodoro,

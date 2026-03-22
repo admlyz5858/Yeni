@@ -8,6 +8,7 @@ import {
   Alert,
 } from 'react-native';
 import { useGamification } from '../context/GamificationContext';
+import { useGame } from '../context/GameContext';
 import { getQuoteOfDay, getTipOfDay } from '../data/activities';
 
 type Props = {
@@ -22,7 +23,16 @@ export default function DailyActivityScreen({ navigation }: Props) {
     dailyLoginBonus,
     claimDailyLogin,
     loginStreak,
+    xp,
   } = useGamification();
+  const {
+    weeklyQuests,
+    weeklyQuestProgress,
+    weeklyCompleted,
+    claimWeeklyQuest,
+    powerUps,
+    activatePowerUp,
+  } = useGame();
 
   const handleClaimBonus = () => {
     const bonus = claimDailyLogin();
@@ -71,6 +81,64 @@ export default function DailyActivityScreen({ navigation }: Props) {
         <Text style={styles.quoteText}>"{quote.text}"</Text>
         <Text style={styles.quoteAuthor}>— {quote.author}</Text>
       </View>
+
+      <Text style={styles.sectionTitle}>📋 Haftalık Görevler</Text>
+      {weeklyQuests.map((q) => {
+        const prog = weeklyQuestProgress[q.id] ?? 0;
+        const done = prog >= q.target;
+        const alreadyClaimed = weeklyCompleted[q.id];
+        const canClaim = done && !alreadyClaimed;
+        return (
+          <View key={q.id} style={[styles.questCard, done && styles.questCardDone]}>
+            <Text style={styles.questIcon}>{q.icon}</Text>
+            <View style={styles.questInfo}>
+              <Text style={styles.questTitle}>{q.title}</Text>
+              <Text style={styles.questProgress}>
+                {Math.min(prog, q.target)} / {q.target} • +{q.xp} XP
+              </Text>
+              <View style={styles.questBar}>
+                <View style={[styles.questBarFill, { width: `${Math.min(100, (prog / q.target) * 100)}%` }]} />
+              </View>
+            </View>
+            {canClaim ? (
+              <TouchableOpacity
+                style={styles.claimBtn}
+                onPress={() => {
+                  const earned = claimWeeklyQuest(q.id);
+                  if (earned > 0) Alert.alert('Tebrikler!', `+${earned} XP kazandınız!`);
+                }}
+              >
+                <Text style={styles.claimBtnText}>Al</Text>
+              </TouchableOpacity>
+            ) : alreadyClaimed ? (
+              <View style={styles.claimedBadge}>
+                <Text style={styles.claimedText}>✓ Alındı</Text>
+              </View>
+            ) : null}
+          </View>
+        );
+      })}
+
+      <Text style={styles.sectionTitle}>⚡ Güçlendirmeler</Text>
+      {powerUps.map((pu) => (
+        <TouchableOpacity
+          key={pu.id}
+          style={[styles.powerUpCard, xp < pu.costXp && styles.powerUpDisabled]}
+          onPress={() => {
+            if (xp < pu.costXp) return;
+            const ok = activatePowerUp(pu.id);
+            if (ok) Alert.alert('Aktif!', `${pu.name} kullanıldı. ${pu.desc}`);
+          }}
+          disabled={xp < pu.costXp}
+        >
+          <Text style={styles.powerUpIcon}>{pu.icon}</Text>
+          <View style={styles.powerUpInfo}>
+            <Text style={styles.powerUpName}>{pu.name}</Text>
+            <Text style={styles.powerUpDesc}>{pu.desc}</Text>
+          </View>
+          <Text style={styles.powerUpCost}>{pu.costXp} XP</Text>
+        </TouchableOpacity>
+      ))}
 
       <View style={styles.tipCard}>
         <Text style={styles.tipIcon}>💡</Text>
@@ -129,10 +197,52 @@ const styles = StyleSheet.create({
   quoteIcon: { fontSize: 24, marginBottom: 8 },
   quoteText: { fontSize: 16, fontStyle: 'italic', color: '#1e40af', lineHeight: 24 },
   quoteAuthor: { fontSize: 14, color: '#64748b', marginTop: 8 },
+  sectionTitle: { fontSize: 18, fontWeight: '600', color: '#1e293b', marginBottom: 12, marginTop: 8 },
+  questCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fff',
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 10,
+    shadowColor: '#000',
+    shadowOffset: { width: 0, height: 2 },
+    shadowOpacity: 0.06,
+    shadowRadius: 6,
+    elevation: 3,
+  },
+  questCardDone: { backgroundColor: '#ecfdf5', borderWidth: 2, borderColor: '#059669' },
+  questIcon: { fontSize: 28, marginRight: 12 },
+  questInfo: { flex: 1 },
+  questTitle: { fontSize: 16, fontWeight: '600', color: '#1e293b' },
+  questProgress: { fontSize: 13, color: '#64748b', marginTop: 4 },
+  questBar: { height: 6, backgroundColor: '#e2e8f0', borderRadius: 3, marginTop: 8, overflow: 'hidden' },
+  questBarFill: { height: '100%', backgroundColor: '#2563eb', borderRadius: 3 },
+  claimBtn: { backgroundColor: '#059669', paddingHorizontal: 16, paddingVertical: 8, borderRadius: 10 },
+  claimBtnText: { color: '#fff', fontWeight: '600', fontSize: 14 },
+  claimedBadge: { paddingHorizontal: 12, paddingVertical: 6 },
+  claimedText: { fontSize: 14, color: '#059669', fontWeight: '600' },
+  powerUpCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: '#fef3c7',
+    borderRadius: 14,
+    padding: 16,
+    marginBottom: 10,
+    borderWidth: 2,
+    borderColor: '#f59e0b',
+  },
+  powerUpDisabled: { opacity: 0.6, borderColor: '#d1d5db' },
+  powerUpIcon: { fontSize: 28, marginRight: 12 },
+  powerUpInfo: { flex: 1 },
+  powerUpName: { fontSize: 16, fontWeight: '600', color: '#92400e' },
+  powerUpDesc: { fontSize: 13, color: '#b45309', marginTop: 2 },
+  powerUpCost: { fontSize: 14, fontWeight: '700', color: '#b45309' },
   tipCard: {
     backgroundColor: '#f0fdf4',
     borderRadius: 16,
     padding: 20,
+    marginTop: 8,
   },
   tipIcon: { fontSize: 24, marginBottom: 8 },
   tipTitle: { fontSize: 16, fontWeight: '600', color: '#166534' },

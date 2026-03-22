@@ -132,5 +132,6 @@ Ardından `android/app/build.gradle` içinde signingConfigs tanımlayın. Veya E
 4. Görselleri yükleyin
 5. Gizlilik politikası URL'sini ekleyin
 6. İçerik derecelendirmesi anketini tamamlayın
-7. AAB dosyasını yükleyin
-8. İncelemeye gönderin
+7. AAB derlemeden önce `app/.env` ile Supabase bilgilerini tanımlayın
+8. AAB dosyasını yükleyin
+9. İncelemeye gönderin

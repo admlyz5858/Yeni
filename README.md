@@ -43,7 +43,7 @@ Gerçek kullanıcı girişi için Supabase gereklidir:
 2. **Settings → API** → `URL` ve `anon public` key'i kopyala
 3. **SQL Editor** → `supabase/migrations/20250321000001_profiles.sql` içeriğini yapıştır ve çalıştır
 4. **Authentication → Providers** → Email açık olduğundan emin ol
-5. Proje kökünde `.env` oluştur (`.env.example`'dan kopyala) ve değerleri yapıştır
+5. `app/` klasöründe `.env` oluştur (`.env.example`'dan kopyala) ve değerleri yapıştır
 6. İlk admin: SQL Editor'da `UPDATE public.profiles SET role = 'admin' WHERE email = 'sizin@email.com';`
 
 ## Başlangıç
@@ -77,6 +77,8 @@ APK dosyası: `app/android/app/build/outputs/apk/release/app-release.apk`
 
 **Gereksinimler:** Android SDK (ANDROID_HOME) ve Java 17+
 
+**GitHub Actions:** APK otomatik derlenir. Supabase ile derleme için repo Secrets'a `EXPO_PUBLIC_SUPABASE_URL` ve `EXPO_PUBLIC_SUPABASE_ANON_KEY` ekleyin.
+
 ## Google Play Store
 
 Uygulama mağaza yayınına hazırdır:
@@ -89,13 +91,17 @@ Uygulama mağaza yayınına hazırdır:
 
 ```
 app/
-├── App.tsx           # Ana uygulama + navigasyon
-├── context/
-│   ├── PlanContext    # State + AsyncStorage persistence
-│   └── SubjectsContext # Kullanıcı tanımlı ders/konular
-├── screens/           # Home, Plan, Schedule, Goals, StudyLog, Subjects, ...
-├── app.json          # Expo yapılandırması
-├── assets/           # Görseller
-├── eas.json          # EAS Build
+├── App.tsx            # Ana uygulama + navigasyon
+├── context/           # Auth, Plan, Theme, Gamification, Game, Premium, Subjects, Flashcard
+├── screens/           # Home, Plan, Schedule, Goals, StudyLog, Subjects, Focus, ...
+├── constants/
+│   └── store.ts       # PLAY_STORE_URL, PRIVACY_POLICY_URL, FEEDBACK_EMAIL (yayın öncesi güncelle)
+├── app.json           # Expo yapılandırması
+├── assets/            # Görseller
 └── package.json
 ```
+
+## Yayın Öncesi Kontrol
+
+- `app/constants/store.ts`: `FEEDBACK_EMAIL` ve `PRIVACY_POLICY_URL` güncelleyin
+- Sıralama ve Çalışma Grupları: Şu an simüle veri kullanır (gerçek backend için Supabase tabloları eklenebilir)

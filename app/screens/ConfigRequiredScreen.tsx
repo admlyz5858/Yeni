@@ -1,6 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View, TouchableOpacity, Alert } from 'react-native';
-import { Linking } from 'react-native';
+import { StyleSheet, Text, View, TouchableOpacity, Alert, Linking } from 'react-native';
 import { useAuth } from '../context/AuthContext';
 
 type Props = { allowDemo?: boolean };
@@ -23,7 +22,7 @@ export default function ConfigRequiredScreen({ allowDemo }: Props) {
       <View style={styles.steps}>
         <Text style={styles.step}>1. supabase.com üzerinden proje oluşturun</Text>
         <Text style={styles.step}>2. SQL Editor'da supabase/migrations/*.sql dosyalarını çalıştırın</Text>
-        <Text style={styles.step}>3. .env dosyasına EXPO_PUBLIC_SUPABASE_URL ve EXPO_PUBLIC_SUPABASE_ANON_KEY ekleyin</Text>
+        <Text style={styles.step}>3. app/ klasöründe .env oluşturup EXPO_PUBLIC_SUPABASE_URL ve EXPO_PUBLIC_SUPABASE_ANON_KEY ekleyin</Text>
         <Text style={styles.step}>4. Uygulamayı yeniden derleyin</Text>
       </View>
       <Text style={styles.link} onPress={() => Linking.openURL('https://github.com/admlyz5858/Yeni#readme')}>

@@ -5,12 +5,16 @@ import {
   View,
   TouchableOpacity,
   Dimensions,
+  ScrollView,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
 const { width } = Dimensions.get('window');
 const CYAN = '#06b6d4';
 const GREEN = '#10b981';
+const ORANGE = '#f97316';
+const PURPLE = '#8b5cf6';
+const BLUE = '#3b82f6';
 
 const SLIDES = [
   {
@@ -26,6 +30,55 @@ const SLIDES = [
     desc: 'Senin hızına, eksiklerine ve boş günlerine göre hazırlanan nokta atışı ders programı. Neyi ne zaman çalışacağını dert etme, rotanı ben çizerim.',
     icon: '📅',
     gradient: ['#e0f2f1', '#b2dfdb'] as [string, string],
+  },
+  {
+    id: 'soru',
+    title: 'Soru Çözücü',
+    desc: 'Takıldığın sorunun fotoğrafını çek, saniyeler içinde çözümünü ve mantığını anlatayım. Sadece cevabı değil, işin sırrını öğren. Özel ders artık cebinde!',
+    icon: '📷✨',
+    gradient: ['#fff7ed', '#ffedd5'] as [string, string],
+    btnColor: ORANGE,
+  },
+  {
+    id: 'etut',
+    title: 'Etüt Odası',
+    desc: 'Sıkıcı testleri unut! Soruları Reels kaydırır gibi çöz, eksik konularını eğlenceli bir alışkanlığa dönüştür. Zayıf noktalarını tespit edip özel içeriklerle seni ustalaştırırım.',
+    icon: '📖',
+    gradient: ['#ede9fe', '#e9d5ff'] as [string, string],
+    btnColor: PURPLE,
+  },
+  {
+    id: 'donusturucu',
+    title: 'Dönüştürücü',
+    desc: 'Ders notlarını veya kitap sayfalarını yükle; senin için anında özetler, bilgi kartları ve testler hazırlayayım. Verimli çalışmanın en teknolojik hali.',
+    icon: '⚡',
+    gradient: ['#e0f2fe', '#bae6fd'] as [string, string],
+    btnColor: BLUE,
+  },
+  {
+    id: 'zihin',
+    title: 'Zihin Haritası',
+    desc: 'Karmaşık konuları görselleştirerek hafızana kazıyorum. Bilgiyi senin için organize edip büyük resmi gösteriyor, öğrenmeyi kalıcı hale getiriyorum.',
+    icon: '🧠',
+    gradient: ['#e0e7ff', '#c7d2fe'] as [string, string],
+    btnColor: BLUE,
+  },
+  {
+    id: 'analiz',
+    title: 'Akıllı Analiz Sistemi',
+    desc: 'Gelişimini adım adım takip ederim. Deneme sonuçlarını analiz eder, hangi konuda ne kadar ilerlediğini raporlarım. Başarı tesadüf değildir!',
+    icon: '📊',
+    gradient: ['#e0f2fe', '#bae6fd'] as [string, string],
+    btnColor: CYAN,
+  },
+  {
+    id: 'oyunlar',
+    title: 'Taktik Oyunları',
+    desc: 'Sınavına özel oyunlarla öğren! Oyna, puan kazan ve rekabette yerini al.',
+    icon: '🎮',
+    gradient: ['#ede9fe', '#e9d5ff'] as [string, string],
+    btnColor: PURPLE,
+    isLast: true,
   },
 ];
 
@@ -45,6 +98,10 @@ export default function OnboardingScreen({
 
   const totalSteps = examSelectionStep ? SLIDES.length + 1 : SLIDES.length;
   const isExamStep = examSelectionStep && index === SLIDES.length;
+  const currentSlide = SLIDES[index];
+  const isLastSlide = index === SLIDES.length - 1 && !examSelectionStep;
+  const isLastBeforeExam = examSelectionStep && index === SLIDES.length - 1;
+  const isGamesSlide = currentSlide?.id === 'oyunlar';
 
   const handleNext = () => {
     if (isExamStep) {
@@ -67,14 +124,12 @@ export default function OnboardingScreen({
     if (showExamStep) {
       onComplete();
     } else {
-      setIndex(0);
       onComplete();
     }
   };
 
-  const currentSlide = SLIDES[index];
-  const isLastSlide = index === SLIDES.length - 1 && !examSelectionStep;
-  const isLastBeforeExam = examSelectionStep && index === SLIDES.length - 1;
+  const btnColor = (currentSlide as any)?.btnColor;
+  const isLastScreen = isGamesSlide && examSelectionStep;
 
   return (
     <View style={styles.container}>
@@ -87,7 +142,11 @@ export default function OnboardingScreen({
           {examSelectionStep}
         </View>
       ) : currentSlide ? (
-        <View style={styles.slide}>
+        <ScrollView
+          style={styles.scroll}
+          contentContainerStyle={styles.slide}
+          showsVerticalScrollIndicator={false}
+        >
           <LinearGradient
             colors={currentSlide.gradient}
             style={styles.card}
@@ -96,7 +155,7 @@ export default function OnboardingScreen({
           </LinearGradient>
           <Text style={styles.title}>{currentSlide.title}</Text>
           <Text style={styles.desc}>{currentSlide.desc}</Text>
-        </View>
+        </ScrollView>
       ) : null}
 
       <View style={styles.dots}>
@@ -106,6 +165,7 @@ export default function OnboardingScreen({
             style={[
               styles.dot,
               i === index ? (isExamStep ? styles.dotGreen : styles.dotActive) : undefined,
+              i === index && btnColor ? { backgroundColor: btnColor } : undefined,
             ]}
           />
         ))}
@@ -116,11 +176,13 @@ export default function OnboardingScreen({
           style={[
             styles.nextBtn,
             (isLastSlide || isLastBeforeExam) ? styles.nextBtnGreen : undefined,
+            isLastScreen ? styles.nextBtnPurple : undefined,
+            btnColor && !isLastScreen && !isLastSlide && !isLastBeforeExam ? { backgroundColor: btnColor } : undefined,
           ]}
           onPress={handleNext}
         >
           <Text style={styles.nextText}>
-            {isLastBeforeExam ? 'Devam Et' : isLastSlide ? 'Hazırım! →' : 'Devam Et →'}
+            {isLastScreen ? 'Başlayalım 🚀' : isLastBeforeExam ? 'Devam Et' : isLastSlide ? 'Hazırım! →' : 'Devam Et →'}
           </Text>
         </TouchableOpacity>
       )}
@@ -135,9 +197,10 @@ const styles = StyleSheet.create({
     padding: 24,
     paddingTop: 48,
   },
-  skipBtn: { alignSelf: 'flex-end', padding: 16, marginBottom: 24 },
+  skipBtn: { alignSelf: 'flex-end', padding: 16, marginBottom: 8 },
   skipText: { color: '#64748b', fontSize: 16 },
-  slide: { flex: 1, alignItems: 'center', justifyContent: 'center' },
+  scroll: { flex: 1 },
+  slide: { flexGrow: 1, alignItems: 'center', justifyContent: 'center', paddingBottom: 24 },
   card: {
     width: width * 0.75,
     height: width * 0.75,
@@ -166,7 +229,7 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     justifyContent: 'center',
     gap: 8,
-    marginBottom: 32,
+    marginBottom: 24,
   },
   dot: {
     width: 8,
@@ -186,6 +249,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
   },
   nextBtnGreen: { backgroundColor: GREEN },
+  nextBtnPurple: { backgroundColor: PURPLE },
   nextText: { color: '#fff', fontSize: 18, fontWeight: '600' },
   examStep: { flex: 1 },
 });

@@ -1,6 +1,7 @@
 import { StatusBar } from 'expo-status-bar';
 import { useState } from 'react';
 import { View, Text, ActivityIndicator } from 'react-native';
+import NotificationPermissionModal from './components/NotificationPermissionModal';
 import { NavigationContainer } from '@react-navigation/native';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import { ThemeProvider, useTheme } from './context/ThemeContext';
@@ -130,6 +131,7 @@ function AuthScreens() {
 function AppContent() {
   const { user, isLoading, hasBackend } = useAuth();
   const { hasSeenOnboarding, setHasSeenOnboarding, setSelectedExam } = usePlan();
+  const [showNotificationModal, setShowNotificationModal] = useState(false);
 
   if (isLoading) {
     return (
@@ -157,19 +159,30 @@ function AppContent() {
   }
 
   if (!hasSeenOnboarding) {
+    const handleComplete = () => {
+      setHasSeenOnboarding(true);
+      setShowNotificationModal(false);
+    };
     return (
-      <OnboardingScreen
-        onComplete={() => setHasSeenOnboarding(true)}
-        examSelectionStep={
-          <ExamSelectionScreen
-            progress={0.85}
-            onSelect={(examId) => {
-              setSelectedExam(examId);
-              setHasSeenOnboarding(true);
-            }}
-          />
-        }
-      />
+      <View style={{ flex: 1 }}>
+        <OnboardingScreen
+          onComplete={handleComplete}
+          examSelectionStep={
+            <ExamSelectionScreen
+              progress={0.92}
+              onSelect={(examId) => {
+                setSelectedExam(examId);
+                setShowNotificationModal(true);
+              }}
+            />
+          }
+        />
+        <NotificationPermissionModal
+          visible={showNotificationModal}
+          onAllow={handleComplete}
+          onSkip={handleComplete}
+        />
+      </View>
     );
   }
 

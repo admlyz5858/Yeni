@@ -1,4 +1,6 @@
-# Yeni Mobil Uygulama
+# KPSS Çalışma Uygulaması
+
+KPSS sınavına hazırlık için test çözme uygulaması. Türkçe, Matematik, Tarih, Coğrafya, Vatandaşlık ve Güncel Konular kategorilerinde sorular içerir.
 
 Expo (React Native) ile oluşturulmuş cross-platform mobil uygulama. iOS ve Android'de çalışır.
 
@@ -35,9 +37,12 @@ APK dosyası: `app/android/app/build/outputs/apk/release/app-release.apk`
 
 ```
 app/
-├── App.tsx      # Ana uygulama bileşeni
-├── app.json     # Expo yapılandırması
-├── assets/      # Görseller ve ikonlar
-├── eas.json     # EAS Build yapılandırması (eas build için)
+├── App.tsx           # Ana uygulama + navigasyon
+├── screens/          # Ana Sayfa, Quiz, Sonuç ekranları
+├── data/
+│   └── questions.ts  # KPSS soruları (kategorilere göre)
+├── app.json          # Expo yapılandırması
+├── assets/           # Görseller ve ikonlar
+├── eas.json          # EAS Build yapılandırması
 └── package.json
 ```

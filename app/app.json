@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "Yeni Uygulama",
-    "slug": "yeni-uygulama",
+    "name": "KPSS Çalışma",
+    "slug": "kpss-calisma",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -15,7 +15,7 @@
       "supportsTablet": true
     },
     "android": {
-      "package": "com.yeniuygulama.app",
+      "package": "com.kpsscalisma.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",

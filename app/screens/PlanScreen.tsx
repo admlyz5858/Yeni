@@ -9,7 +9,7 @@ import {
   TextInput,
 } from 'react-native';
 import { usePlan } from '../context/PlanContext';
-import { SUBJECTS } from '../data/subjects';
+import { useSubjects } from '../context/SubjectsContext';
 
 type Props = {
   navigation: any;
@@ -17,6 +17,7 @@ type Props = {
 
 export default function PlanScreen({ navigation }: Props) {
   const { completedTopics, toggleTopic, topicNotes, setTopicNote } = usePlan();
+  const { subjects } = useSubjects();
   const [modalVisible, setModalVisible] = useState(false);
   const [editTopic, setEditTopic] = useState<{ subjectId: string; topic: string } | null>(null);
 
@@ -43,9 +44,27 @@ export default function PlanScreen({ navigation }: Props) {
         <Text style={styles.subtitle}>
           Konuları tamamladıkça işaretleyin • Not eklemek için 📝
         </Text>
+        <TouchableOpacity
+          style={styles.subjectsLink}
+          onPress={() => navigation.navigate('Subjects')}
+        >
+          <Text style={styles.subjectsLinkText}>📚 Dersleri Düzenle</Text>
+        </TouchableOpacity>
       </View>
 
-      {SUBJECTS.map((subject) => {
+      {subjects.length === 0 ? (
+        <View style={styles.emptyCard}>
+          <Text style={styles.emptyIcon}>📚</Text>
+          <Text style={styles.emptyTitle}>Henüz ders eklenmedi</Text>
+          <Text style={styles.emptySub}>Önce "Derslerim" ekranından ders ve konularınızı ekleyin.</Text>
+          <TouchableOpacity
+            style={styles.emptyBtn}
+            onPress={() => navigation.navigate('Subjects')}
+          >
+            <Text style={styles.emptyBtnText}>Dersleri Düzenle</Text>
+          </TouchableOpacity>
+        </View>
+      ) : subjects.map((subject) => {
         const done = (completedTopics[subject.id] && Object.values(completedTopics[subject.id]).filter(Boolean).length) || 0;
         const total = subject.topics.length;
 
@@ -125,6 +144,20 @@ const styles = StyleSheet.create({
   backBtnText: { fontSize: 16, color: '#2563eb', fontWeight: '500' },
   title: { fontSize: 24, fontWeight: 'bold', color: '#0f172a', marginBottom: 4 },
   subtitle: { fontSize: 15, color: '#64748b' },
+  subjectsLink: { marginTop: 8, padding: 8 },
+  subjectsLinkText: { fontSize: 14, color: '#2563eb', fontWeight: '500' },
+  emptyCard: {
+    backgroundColor: '#fff',
+    borderRadius: 16,
+    padding: 32,
+    alignItems: 'center',
+    marginBottom: 20,
+  },
+  emptyIcon: { fontSize: 48, marginBottom: 16 },
+  emptyTitle: { fontSize: 18, fontWeight: '600', color: '#1e293b', marginBottom: 8 },
+  emptySub: { fontSize: 15, color: '#64748b', textAlign: 'center', marginBottom: 20 },
+  emptyBtn: { backgroundColor: '#2563eb', paddingHorizontal: 24, paddingVertical: 14, borderRadius: 12 },
+  emptyBtnText: { color: '#fff', fontWeight: '600' },
   subjectCard: {
     backgroundColor: '#fff',
     borderRadius: 16,

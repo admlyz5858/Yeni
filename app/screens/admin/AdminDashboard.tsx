@@ -8,7 +8,7 @@ import {
 } from 'react-native';
 import { useAuth } from '../../context/AuthContext';
 import { usePlan } from '../../context/PlanContext';
-import { SUBJECTS } from '../../data/subjects';
+import { useSubjects } from '../../context/SubjectsContext';
 
 type Props = {
   navigation: any;
@@ -17,13 +17,14 @@ type Props = {
 export default function AdminDashboard({ navigation }: Props) {
   const { user, logout, getUsers } = useAuth();
   const { completedTopics, studyLog } = usePlan();
+  const { subjects } = useSubjects();
   const [userCount, setUserCount] = useState(0);
 
   useEffect(() => {
     getUsers().then((users) => setUserCount(users.length));
   }, []);
 
-  const totalTopics = SUBJECTS.reduce((acc, s) => acc + s.topics.length, 0);
+  const totalTopics = subjects.reduce((acc, s) => acc + s.topics.length, 0);
   const totalCompleted = Object.values(completedTopics).reduce(
     (acc, subj) => acc + Object.values(subj).filter(Boolean).length,
     0

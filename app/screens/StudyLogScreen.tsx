@@ -9,7 +9,6 @@ import {
   Modal,
 } from 'react-native';
 import { usePlan } from '../context/PlanContext';
-import { SUBJECTS } from '../data/subjects';
 
 type Props = {
   navigation: any;

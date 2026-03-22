@@ -8,7 +8,7 @@ import {
   TextInput,
 } from 'react-native';
 import { usePlan } from '../context/PlanContext';
-import { SUBJECTS } from '../data/subjects';
+import { useSubjects } from '../context/SubjectsContext';
 
 const DAYS = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
 
@@ -18,9 +18,11 @@ type Props = {
 
 export default function SmartPlanScreen({ navigation }: Props) {
   const { examDate, dailyGoalHours, setSchedule } = usePlan();
+  const { subjects } = useSubjects();
   const [generated, setGenerated] = useState(false);
 
   const generatePlan = () => {
+    if (subjects.length === 0) return;
     const items: { day: string; subjectId: string; hours: number }[] = [];
     let daysUntil = 90;
     if (examDate) {
@@ -34,7 +36,7 @@ export default function SmartPlanScreen({ navigation }: Props) {
 
     DAYS.forEach((day, di) => {
       for (let i = 0; i < subjectsPerDay; i++) {
-        const subj = SUBJECTS[(di + i) % SUBJECTS.length];
+        const subj = subjects[(di + i) % subjects.length];
         items.push({ day, subjectId: subj.id, hours: hrsPerSlot });
       }
     });
@@ -62,7 +64,7 @@ export default function SmartPlanScreen({ navigation }: Props) {
         </Text>
       </View>
 
-      <TouchableOpacity style={styles.generateBtn} onPress={generatePlan}>
+      <TouchableOpacity style={styles.generateBtn} onPress={generatePlan} disabled={subjects.length === 0}>
         <Text style={styles.generateBtnText}>Plan Oluştur</Text>
       </TouchableOpacity>
 

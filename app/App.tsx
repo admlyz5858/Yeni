@@ -26,6 +26,8 @@ import AdminUsersScreen from './screens/admin/AdminUsersScreen';
 import { GamificationProvider } from './context/GamificationContext';
 import { FlashcardProvider } from './context/FlashcardContext';
 import { PremiumProvider } from './context/PremiumContext';
+import { SubjectsProvider } from './context/SubjectsContext';
+import SubjectsScreen from './screens/SubjectsScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -52,6 +54,7 @@ function MemberNavigator() {
         <Stack.Screen name="Achievements" component={AchievementsScreen} />
         <Stack.Screen name="DailyActivity" component={DailyActivityScreen} />
         <Stack.Screen name="Premium" component={PremiumScreen} />
+        <Stack.Screen name="Subjects" component={SubjectsScreen} />
       </Stack.Navigator>
     </>
   );
@@ -142,9 +145,11 @@ export default function App() {
         <PlanProvider>
           <GamificationProvider>
             <PremiumProvider>
-              <FlashcardProvider>
-                <AppContent />
-              </FlashcardProvider>
+              <SubjectsProvider>
+                <FlashcardProvider>
+                  <AppContent />
+                </FlashcardProvider>
+              </SubjectsProvider>
             </PremiumProvider>
           </GamificationProvider>
         </PlanProvider>

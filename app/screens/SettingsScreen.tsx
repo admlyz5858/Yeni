@@ -100,7 +100,7 @@ export default function SettingsScreen({ navigation }: Props) {
 
       <View style={[styles.footer, { borderTopColor: theme.cardBorder }]}>
         <Text style={[styles.footerText, { color: theme.textSecondary }]}>
-          {user?.email} • KPSS Planlama v1.0
+          {user?.email} • Çalışma Asistanı v1.0
         </Text>
       </View>
     </ScrollView>

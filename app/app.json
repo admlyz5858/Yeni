@@ -1,7 +1,7 @@
 {
   "expo": {
-    "name": "KPSS Planlama",
-    "slug": "kpss-calisma",
+    "name": "Çalışma Asistanı",
+    "slug": "calisma-asistani",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
@@ -15,7 +15,7 @@
       "supportsTablet": true
     },
     "android": {
-      "package": "com.kpsscalisma.app",
+      "package": "com.calismaasistani.app",
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",

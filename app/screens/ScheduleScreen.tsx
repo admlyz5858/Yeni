@@ -8,7 +8,7 @@ import {
   Modal,
 } from 'react-native';
 import { usePlan } from '../context/PlanContext';
-import { SUBJECTS } from '../data/subjects';
+import { useSubjects } from '../context/SubjectsContext';
 
 const DAYS = ['Pazartesi', 'Salı', 'Çarşamba', 'Perşembe', 'Cuma', 'Cumartesi', 'Pazar'];
 
@@ -20,16 +20,18 @@ type Props = {
 
 export default function ScheduleScreen({ navigation }: Props) {
   const { schedule, setSchedule, dailyGoalHours } = usePlan();
+  const { subjects } = useSubjects();
   const [modalVisible, setModalVisible] = useState(false);
   const [editingDay, setEditingDay] = useState<string | null>(null);
 
   const createSampleSchedule = () => {
+    if (subjects.length === 0) return;
     const items: ScheduleItem[] = [];
     const subjectsPerDay = 2;
     const hrsPerSubject = Math.max(1, Math.floor(dailyGoalHours / subjectsPerDay));
     DAYS.forEach((day, dayIndex) => {
       for (let j = 0; j < subjectsPerDay; j++) {
-        const subj = SUBJECTS[(dayIndex + j) % SUBJECTS.length];
+        const subj = subjects[(dayIndex + j) % subjects.length];
         items.push({ day, subjectId: subj.id, hours: hrsPerSubject });
       }
     });
@@ -71,7 +73,7 @@ export default function ScheduleScreen({ navigation }: Props) {
       </View>
 
       <View style={styles.actions}>
-        <TouchableOpacity style={styles.sampleBtn} onPress={createSampleSchedule}>
+        <TouchableOpacity style={styles.sampleBtn} onPress={createSampleSchedule} disabled={subjects.length === 0}>
           <Text style={styles.sampleBtnText}>📋 Örnek Program</Text>
         </TouchableOpacity>
       </View>
@@ -92,7 +94,7 @@ export default function ScheduleScreen({ navigation }: Props) {
               {daySchedule.length > 0 ? (
                 <View style={styles.subjectsRow}>
                   {daySchedule.map((s, idx) => {
-                    const subj = SUBJECTS.find((x) => x.id === s.subjectId);
+                    const subj = subjects.find((x) => x.id === s.subjectId);
                     return (
                       <View key={`${day}-${idx}-${s.subjectId}`} style={styles.subjectTag}>
                         <Text style={styles.subjectTagIcon}>{subj?.icon || '📖'}</Text>
@@ -134,7 +136,7 @@ export default function ScheduleScreen({ navigation }: Props) {
             <Text style={styles.modalTitle}>
               {editingDay} - Ders ve süre seçin
             </Text>
-            {SUBJECTS.map((subj) => (
+            {subjects.map((subj) => (
               <TouchableOpacity
                 key={subj.id}
                 style={styles.modalOption}

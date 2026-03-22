@@ -12,7 +12,7 @@ import {
 import { useFocusEffect } from '@react-navigation/native';
 import { useFlashcards } from '../context/FlashcardContext';
 import { usePremium } from '../context/PremiumContext';
-import { SUBJECTS } from '../data/subjects';
+import { useSubjects } from '../context/SubjectsContext';
 import type { Flashcard } from '../context/FlashcardContext';
 
 type Props = {
@@ -24,14 +24,13 @@ const FREE_FLASHCARD_LIMIT = 20;
 export default function FlashcardScreen({ navigation }: Props) {
   const { getDueCards, updateCard, addCard, cardsCount } = useFlashcards();
   const { hasFeature } = usePremium();
+  const { subjects } = useSubjects();
   const [dueCards, setDueCards] = useState<Flashcard[]>([]);
   const [index, setIndex] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [addModal, setAddModal] = useState(false);
   const [front, setFront] = useState('');
   const [back, setBack] = useState('');
-  const [addSubject, setAddSubject] = useState(SUBJECTS[0].id);
-  const [addTopic, setAddTopic] = useState(SUBJECTS[0].topics[0]);
 
   useFocusEffect(
     React.useCallback(() => {
@@ -61,7 +60,9 @@ export default function FlashcardScreen({ navigation }: Props) {
         Alert.alert('Limit', `Ücretsiz kullanıcılar ${FREE_FLASHCARD_LIMIT} karta kadar ekleyebilir. Premium ile sınırsız kart!`);
         return;
       }
-      addCard(addSubject, addTopic, front.trim(), back.trim());
+      const sid = subjects[0]?.id ?? 'genel';
+      const top = subjects[0]?.topics?.[0] ?? 'Genel';
+      addCard(sid, top, front.trim(), back.trim());
       setFront('');
       setBack('');
       setAddModal(false);

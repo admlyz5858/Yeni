@@ -10,7 +10,7 @@ import { usePlan } from '../context/PlanContext';
 import { useTheme } from '../context/ThemeContext';
 import { useGamification } from '../context/GamificationContext';
 import { useFlashcards } from '../context/FlashcardContext';
-import { SUBJECTS } from '../data/subjects';
+import { useSubjects } from '../context/SubjectsContext';
 import StudyHeatmap from '../components/StudyHeatmap';
 
 type Props = {
@@ -58,9 +58,10 @@ export default function HomeScreen({ navigation }: Props) {
   const { examDate, completedTopics, studyLog, isLoading, topicNotes, pomodoroCount, todayTopicCompletions, todayPomodoro } = usePlan();
   const { theme } = useTheme();
   const { level, xp, checkAchievements, updateDailyChallengeFromStats, dailyLoginBonus } = useGamification();
-  const { getDueCards, cards, cardsCount } = useFlashcards();
+  const { getDueCards, cardsCount } = useFlashcards();
+  const { subjects } = useSubjects();
 
-  const totalTopics = SUBJECTS.reduce((acc, s) => acc + s.topics.length, 0);
+  const totalTopics = subjects.reduce((acc, s) => acc + s.topics.length, 0);
   const doneCount = Object.values(completedTopics).reduce(
     (acc, subj) => acc + Object.values(subj).filter(Boolean).length,
     0
@@ -119,7 +120,7 @@ export default function HomeScreen({ navigation }: Props) {
     >
       <View style={styles.header}>
         <View style={styles.headerRow}>
-          <Text style={[styles.title, { color: theme.text }]}>KPSS Planlama</Text>
+          <Text style={[styles.title, { color: theme.text }]}>Çalışma Asistanı</Text>
           <TouchableOpacity onPress={() => navigation.navigate('Settings')} style={styles.settingsBtn}>
             <Text style={styles.settingsIcon}>⚙️</Text>
           </TouchableOpacity>
@@ -200,6 +201,15 @@ export default function HomeScreen({ navigation }: Props) {
       </TouchableOpacity>
 
       <View style={styles.menu}>
+        <TouchableOpacity
+          style={[styles.menuCard, { backgroundColor: theme.card }]}
+          onPress={() => navigation.navigate('Subjects')}
+        >
+          <Text style={styles.menuIcon}>📚</Text>
+          <Text style={[styles.menuTitle, { color: theme.text }]}>Derslerim</Text>
+          <Text style={[styles.menuSub, { color: theme.textSecondary }]}>Ders ve konularını ekle/düzenle</Text>
+        </TouchableOpacity>
+
         <TouchableOpacity
           style={[styles.menuCard, { backgroundColor: theme.card }]}
           onPress={() => navigation.navigate('Plan')}

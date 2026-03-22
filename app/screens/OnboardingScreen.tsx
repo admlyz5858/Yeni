@@ -11,8 +11,8 @@ const { width } = Dimensions.get('window');
 
 const SLIDES = [
   {
-    title: 'KPSS Planlama',
-    desc: 'Sınavınıza planlı çalışın. Konuları takip edin, hedeflerinizi belirleyin.',
+    title: 'Çalışma Asistanı',
+    desc: 'Her sınava hazırlanın. Kendi ders ve konularınızı ekleyin, hedeflerinizi belirleyin.',
     icon: '📚',
   },
   {

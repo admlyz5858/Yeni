@@ -40,7 +40,7 @@ export default function LoginScreen({ onLogin, onGoRegister }: Props) {
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <View style={styles.content}>
-        <Text style={styles.title}>KPSS Planlama</Text>
+        <Text style={styles.title}>Çalışma Asistanı</Text>
         <Text style={styles.subtitle}>Hesabınıza giriş yapın</Text>
 
         <TextInput

@@ -4,56 +4,70 @@ import {
   Text,
   View,
   TouchableOpacity,
-  ScrollView,
   Animated,
   Easing,
+  ScrollView,
 } from 'react-native';
-import Svg, { Circle } from 'react-native-svg';
-
-const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+import { BlurView } from 'expo-blur';
+import { LinearGradient } from 'expo-linear-gradient';
+import Svg, { Circle, Line } from 'react-native-svg';
 import * as Haptics from 'expo-haptics';
 import { usePlan } from '../context/PlanContext';
-import { useTheme } from '../context/ThemeContext';
 import {
   playAmbient,
   stopAmbient,
   AMBIENT_OPTIONS,
 } from '../services/ambient';
+import { StatusBar } from 'expo-status-bar';
 
-const PRESETS = [
-  { work: 25, break: 5, label: 'Klasik' },
-  { work: 50, break: 10, label: 'Derin' },
-  { work: 90, break: 20, label: 'Ultra' },
+const AnimatedCircle = Animated.createAnimatedComponent(Circle);
+
+const MODES = [
+  { id: 'work', work: 25, break: 5, icon: '🎯', label: 'Odaklanma' },
+  { id: 'short', work: 15, break: 3, icon: '💎', label: 'Kısa' },
+  { id: 'long', work: 45, break: 15, icon: '🌿', label: 'Uzun' },
 ];
 
-const CIRCLE_SIZE = 200;
-const STROKE_WIDTH = 8;
+const CIRCLE_SIZE = 240;
+const STROKE_WIDTH = 6;
 const R = (CIRCLE_SIZE - STROKE_WIDTH) / 2;
 const CIRCUMFERENCE = 2 * Math.PI * R;
+const ACCENT_PURPLE = '#9D50FF';
 
-type Props = {
-  navigation: any;
-};
+type Props = { navigation: any };
 
 export default function PomodoroScreen({ navigation }: Props) {
-  const { theme } = useTheme();
   const { addPomodoro } = usePlan();
-  const [presetIndex, setPresetIndex] = useState(0);
-  const preset = PRESETS[presetIndex];
+  const [modeIndex, setModeIndex] = useState(0);
+  const mode = MODES[modeIndex];
   const [phase, setPhase] = useState<'work' | 'break'>('work');
-  const [secondsLeft, setSecondsLeft] = useState(preset.work * 60);
+  const [secondsLeft, setSecondsLeft] = useState(mode.work * 60);
   const [isRunning, setIsRunning] = useState(false);
   const [rounds, setRounds] = useState(0);
   const [ambientId, setAmbientId] = useState<string | null>(null);
+  const [currentTime, setCurrentTime] = useState('');
   const intervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
 
-  const pulseAnim = useRef(new Animated.Value(1)).current;
   const progressAnim = useRef(new Animated.Value(0)).current;
-  const phaseFadeAnim = useRef(new Animated.Value(1)).current;
-  const scaleInAnim = useRef(new Animated.Value(0.9)).current;
+  const pulseAnim = useRef(new Animated.Value(1)).current;
 
-  const totalSeconds = phase === 'work' ? preset.work * 60 : preset.break * 60;
+  const totalSeconds = phase === 'work' ? mode.work * 60 : mode.break * 60;
   const progress = 1 - secondsLeft / totalSeconds;
+
+  useEffect(() => {
+    const tick = () =>
+      setCurrentTime(
+        new Date().toLocaleTimeString('tr-TR', {
+          hour: '2-digit',
+          minute: '2-digit',
+          second: '2-digit',
+          hour12: false,
+        })
+      );
+    tick();
+    const id = setInterval(tick, 1000);
+    return () => clearInterval(id);
+  }, []);
 
   useEffect(() => {
     Animated.timing(progressAnim, {
@@ -69,14 +83,14 @@ export default function PomodoroScreen({ navigation }: Props) {
       Animated.loop(
         Animated.sequence([
           Animated.timing(pulseAnim, {
-            toValue: 1.02,
-            duration: 1200,
+            toValue: 1.03,
+            duration: 1000,
             useNativeDriver: true,
             easing: Easing.inOut(Easing.ease),
           }),
           Animated.timing(pulseAnim, {
             toValue: 1,
-            duration: 1200,
+            duration: 1000,
             useNativeDriver: true,
             easing: Easing.inOut(Easing.ease),
           }),
@@ -93,26 +107,14 @@ export default function PomodoroScreen({ navigation }: Props) {
         setSecondsLeft((s) => {
           if (s <= 1) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-            Animated.sequence([
-              Animated.timing(phaseFadeAnim, {
-                toValue: 0,
-                duration: 150,
-                useNativeDriver: true,
-              }),
-              Animated.timing(phaseFadeAnim, {
-                toValue: 1,
-                duration: 200,
-                useNativeDriver: true,
-              }),
-            ]).start();
             if (phase === 'work') {
               addPomodoro();
               setPhase('break');
               setRounds((r) => r + 1);
-              return preset.break * 60;
+              return mode.break * 60;
             } else {
               setPhase('work');
-              return preset.work * 60;
+              return mode.work * 60;
             }
           }
           return s - 1;
@@ -124,7 +126,7 @@ export default function PomodoroScreen({ navigation }: Props) {
     return () => {
       if (intervalRef.current) clearInterval(intervalRef.current);
     };
-  }, [isRunning, phase, preset]);
+  }, [isRunning, phase, mode]);
 
   useEffect(() => {
     return () => {
@@ -135,20 +137,14 @@ export default function PomodoroScreen({ navigation }: Props) {
   const reset = () => {
     setIsRunning(false);
     setPhase('work');
-    setSecondsLeft(preset.work * 60);
+    setSecondsLeft(mode.work * 60);
   };
 
-  const changePreset = (i: number) => {
+  const changeMode = (i: number) => {
     if (isRunning) return;
-    setPresetIndex(i);
+    setModeIndex(i);
     setPhase('work');
-    setSecondsLeft(PRESETS[i].work * 60);
-    Animated.spring(scaleInAnim, {
-      toValue: 0.9,
-      useNativeDriver: true,
-      friction: 8,
-      tension: 80,
-    }).start(() => scaleInAnim.setValue(1));
+    setSecondsLeft(MODES[i].work * 60);
   };
 
   const handleAmbientSelect = async (id: string | null) => {
@@ -169,251 +165,316 @@ export default function PomodoroScreen({ navigation }: Props) {
     outputRange: [CIRCUMFERENCE, 0],
   });
 
-  const phaseColor = phase === 'work' ? theme.accent : theme.success;
-  const phaseBg = phase === 'work' ? theme.accentLight : theme.successLight;
+  const cx = CIRCLE_SIZE / 2;
+  const cy = CIRCLE_SIZE / 2;
+  const tickCount = 60;
+  const ticks = Array.from({ length: tickCount }, (_, i) => {
+    const angle = ((i / tickCount) * 360 - 90) * (Math.PI / 180);
+    const r0 = R - 4;
+    const r1 = R + 2;
+    const x0 = cx + r0 * Math.cos(angle);
+    const y0 = cy + r0 * Math.sin(angle);
+    const x1 = cx + r1 * Math.cos(angle);
+    const y1 = cy + r1 * Math.sin(angle);
+    return { x0, y0, x1, y1 };
+  });
 
   return (
-    <ScrollView
-      style={[styles.container, { backgroundColor: theme.bg }]}
-      contentContainerStyle={styles.content}
-      showsVerticalScrollIndicator={false}
-    >
-      <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.backBtn}>
-          <Text style={[styles.backBtnText, { color: theme.accent }]}>← Geri</Text>
-        </TouchableOpacity>
-        <Text style={[styles.title, { color: theme.text }]}>Pomodoro</Text>
-        <View style={styles.presetRow}>
-          {PRESETS.map((p, i) => (
+    <View style={styles.container}>
+      <StatusBar style="light" />
+
+      {/* Background */}
+      <LinearGradient
+        colors={['#0d1b0d', '#1a2e1a', '#152415', '#0f1a0f', '#1a0a2e']}
+        style={StyleSheet.absoluteFill}
+      />
+
+      {/* Menu button */}
+      <TouchableOpacity
+        style={styles.menuBtn}
+        onPress={() => navigation.goBack()}
+      >
+        <BlurView intensity={60} tint="dark" style={styles.menuBtnBlur}>
+          <Text style={styles.menuIcon}>☰</Text>
+        </BlurView>
+      </TouchableOpacity>
+
+      {/* Mode selection bar */}
+      <View style={styles.modeBarWrapper}>
+        <BlurView intensity={40} tint="dark" style={styles.modeBar}>
+          {MODES.map((m, i) => (
             <TouchableOpacity
-              key={p.label}
-              style={[
-                styles.presetBtn,
-                { backgroundColor: theme.card, borderColor: theme.cardBorder },
-                presetIndex === i && { backgroundColor: theme.accent, borderColor: theme.accent },
-              ]}
-              onPress={() => changePreset(i)}
+              key={m.id}
+              style={[styles.modeBtn, modeIndex === i && styles.modeBtnActive]}
+              onPress={() => changeMode(i)}
             >
-              <Text
-                style={[
-                  styles.presetLabel,
-                  { color: theme.textSecondary },
-                  presetIndex === i && { color: '#fff' },
-                ]}
-              >
-                {p.label}
-              </Text>
-              <Text
-                style={[
-                  styles.presetTime,
-                  { color: theme.textSecondary },
-                  presetIndex === i && { color: 'rgba(255,255,255,0.9)' },
-                ]}
-              >
-                {p.work}/{p.break}
-              </Text>
+              <Text style={styles.modeIcon}>{m.icon}</Text>
             </TouchableOpacity>
           ))}
-        </View>
+        </BlurView>
       </View>
 
-      <Animated.View
-        style={[
-          styles.timerCard,
-          {
-            backgroundColor: theme.card,
-            shadowColor: theme.text,
-          },
-          {
-            transform: [{ scale: Animated.multiply(pulseAnim, scaleInAnim) }],
-          },
-        ]}
-      >
-        <Animated.View style={{ opacity: phaseFadeAnim }}>
-          <View style={[styles.phaseBadge, { backgroundColor: phaseBg }]}>
-            <Text style={[styles.phaseLabel, { color: phaseColor }]}>
-              {phase === 'work' ? '🎯 Odaklanma' : '☕ Mola'}
-            </Text>
-          </View>
-        </Animated.View>
+      {/* Timer card */}
+      <Animated.View style={[styles.cardWrapper, { transform: [{ scale: pulseAnim }] }]}>
+        <BlurView intensity={50} tint="dark" style={styles.timerCard}>
+          <Text style={styles.clockText}>{currentTime}</Text>
 
-        <View style={styles.circleWrapper}>
-          <Svg width={CIRCLE_SIZE} height={CIRCLE_SIZE} style={styles.svg}>
-            <Circle
-              cx={CIRCLE_SIZE / 2}
-              cy={CIRCLE_SIZE / 2}
-              r={R}
-              stroke={theme.cardBorder}
-              strokeWidth={STROKE_WIDTH}
-              fill="transparent"
-            />
-            <AnimatedCircle
-              cx={CIRCLE_SIZE / 2}
-              cy={CIRCLE_SIZE / 2}
-              r={R}
-              stroke={phaseColor}
-              strokeWidth={STROKE_WIDTH}
-              fill="transparent"
-              strokeDasharray={CIRCUMFERENCE}
-              strokeDashoffset={strokeDashoffset}
-              strokeLinecap="round"
-              transform={`rotate(-90, ${CIRCLE_SIZE / 2}, ${CIRCLE_SIZE / 2})`}
-            />
-          </Svg>
-          <View style={styles.timerInner}>
-            <Text style={[styles.timer, { color: theme.text }]}>
-              {String(m).padStart(2, '0')}:{String(s).padStart(2, '0')}
-            </Text>
+          <View style={styles.circleWrapper}>
+            <Svg width={CIRCLE_SIZE} height={CIRCLE_SIZE}>
+              {ticks.map((t, i) => (
+                <Line
+                  key={i}
+                  x1={t.x0}
+                  y1={t.y0}
+                  x2={t.x1}
+                  y2={t.y1}
+                  stroke="rgba(255,255,255,0.3)"
+                  strokeWidth={1}
+                />
+              ))}
+              <Circle
+                cx={cx}
+                cy={cy}
+                r={R}
+                stroke="rgba(255,255,255,0.15)"
+                strokeWidth={STROKE_WIDTH}
+                fill="transparent"
+              />
+              <AnimatedCircle
+                cx={cx}
+                cy={cy}
+                r={R}
+                stroke={ACCENT_PURPLE}
+                strokeWidth={STROKE_WIDTH}
+                fill="transparent"
+                strokeDasharray={CIRCUMFERENCE}
+                strokeDashoffset={strokeDashoffset}
+                strokeLinecap="round"
+                transform={`rotate(-90, ${cx}, ${cy})`}
+              />
+            </Svg>
+            <View style={styles.timerOverlay}>
+              <Text style={styles.timerText}>
+                {String(m).padStart(2, '0')}:{String(s).padStart(2, '0')}
+              </Text>
+            </View>
           </View>
-        </View>
 
-        <View style={styles.timerActions}>
-          <TouchableOpacity
-            style={[styles.timerBtn, styles.timerBtnPrimary, { backgroundColor: theme.accent }]}
-            onPress={() => setIsRunning(!isRunning)}
-          >
-            <Text style={styles.timerBtnText}>{isRunning ? 'Duraklat' : 'Başla'}</Text>
-          </TouchableOpacity>
-          <TouchableOpacity
-            style={[styles.timerBtn, { borderColor: theme.cardBorder }]}
-            onPress={reset}
-          >
-            <Text style={[styles.timerBtnTextSecondary, { color: theme.textSecondary }]}>
-              Sıfırla
-            </Text>
-          </TouchableOpacity>
-        </View>
+          <View style={styles.controlRow}>
+            <TouchableOpacity
+              style={styles.playBtn}
+              onPress={() => setIsRunning(!isRunning)}
+            >
+              <View style={styles.playBtnGlow} />
+              <View style={styles.playBtnInner}>
+                <Text style={styles.playIcon}>{isRunning ? '⏸' : '▶'}</Text>
+              </View>
+            </TouchableOpacity>
+            <TouchableOpacity style={styles.resetBtn} onPress={reset}>
+              <BlurView intensity={40} tint="dark" style={styles.resetBtnBlur}>
+                <Text style={styles.resetIcon}>↺</Text>
+              </BlurView>
+            </TouchableOpacity>
+          </View>
+        </BlurView>
       </Animated.View>
 
-      <View style={[styles.ambientSection, { backgroundColor: theme.card }]}>
-        <Text style={[styles.ambientTitle, { color: theme.textSecondary }]}>
-          🎵 Ambians Müzik
-        </Text>
-        <ScrollView
-          horizontal
-          showsHorizontalScrollIndicator={false}
-          contentContainerStyle={styles.ambientRow}
-        >
-          <TouchableOpacity
-            style={[
-              styles.ambientChip,
-              { borderColor: theme.cardBorder },
-              !ambientId && { borderColor: theme.accent, borderWidth: 2 },
-            ]}
-            onPress={() => handleAmbientSelect(null)}
+      {/* Ambient */}
+      <View style={styles.ambientWrapper}>
+        <BlurView intensity={30} tint="dark" style={styles.ambientBar}>
+          <ScrollView
+            horizontal
+            showsHorizontalScrollIndicator={false}
+            contentContainerStyle={styles.ambientRow}
           >
-            <Text style={[styles.ambientIcon, { color: theme.text }]}>🔇</Text>
-            <Text style={[styles.ambientLabel, { color: theme.text }]}>Yok</Text>
-          </TouchableOpacity>
-          {AMBIENT_OPTIONS.map((opt) => (
             <TouchableOpacity
-              key={opt.id}
-              style={[
-                styles.ambientChip,
-                { borderColor: theme.cardBorder },
-                ambientId === opt.id && { borderColor: theme.accent, borderWidth: 2 },
-              ]}
-              onPress={() => handleAmbientSelect(opt.id)}
+              style={[styles.ambientChip, !ambientId && styles.ambientChipActive]}
+              onPress={() => handleAmbientSelect(null)}
             >
-              <Text style={[styles.ambientIcon, { color: theme.text }]}>{opt.icon}</Text>
-              <Text style={[styles.ambientLabel, { color: theme.text }]}>{opt.label}</Text>
+              <Text style={styles.ambientLabel}>Yok</Text>
             </TouchableOpacity>
-          ))}
-        </ScrollView>
+            {AMBIENT_OPTIONS.map((opt) => (
+              <TouchableOpacity
+                key={opt.id}
+                style={[styles.ambientChip, ambientId === opt.id && styles.ambientChipActive]}
+                onPress={() => handleAmbientSelect(opt.id)}
+              >
+                <Text style={styles.ambientLabel}>{opt.icon} {opt.label}</Text>
+              </TouchableOpacity>
+            ))}
+          </ScrollView>
+        </BlurView>
       </View>
 
-      <View style={[styles.statsCard, { backgroundColor: theme.accentLight }]}>
-        <Text style={[styles.statsLabel, { color: theme.textSecondary }]}>Tamamlanan Tur</Text>
-        <Text style={[styles.statsValue, { color: theme.accent }]}>{rounds}</Text>
-      </View>
-    </ScrollView>
+      {rounds > 0 && (
+        <View style={styles.roundsBadge}>
+          <Text style={styles.roundsText}>Tamamlanan: {rounds} tur</Text>
+        </View>
+      )}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: { flex: 1 },
-  content: { padding: 20, paddingBottom: 40 },
-  header: { marginBottom: 24 },
-  backBtn: { padding: 8, marginBottom: 8 },
-  backBtnText: { fontSize: 16, fontWeight: '500' },
-  title: { fontSize: 28, fontWeight: 'bold', marginBottom: 12 },
-  presetRow: { flexDirection: 'row', gap: 8 },
-  presetBtn: {
-    flex: 1,
-    paddingHorizontal: 12,
-    paddingVertical: 12,
-    borderRadius: 14,
+  container: { flex: 1, justifyContent: 'center', alignItems: 'center' },
+  menuBtn: {
+    position: 'absolute',
+    top: 56,
+    left: 20,
+    zIndex: 10,
+  },
+  menuBtnBlur: {
+    width: 48,
+    height: 48,
+    borderRadius: 24,
+    overflow: 'hidden',
+    alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 1,
-    alignItems: 'center',
+    borderColor: 'rgba(255,255,255,0.2)',
   },
-  presetLabel: { fontSize: 14, fontWeight: '600' },
-  presetTime: { fontSize: 11 },
-  timerCard: {
-    borderRadius: 28,
-    padding: 32,
-    alignItems: 'center',
-    marginBottom: 24,
-    shadowOffset: { width: 0, height: 12 },
-    shadowOpacity: 0.12,
-    shadowRadius: 28,
-    elevation: 12,
+  menuIcon: { fontSize: 22, color: '#fff' },
+  modeBarWrapper: {
+    position: 'absolute',
+    top: 120,
+    left: 20,
+    right: 20,
   },
-  phaseBadge: {
+  modeBar: {
+    flexDirection: 'row',
+    justifyContent: 'space-around',
+    paddingVertical: 12,
     paddingHorizontal: 16,
-    paddingVertical: 8,
-    borderRadius: 20,
-    marginBottom: 20,
+    borderRadius: 28,
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.15)',
   },
-  phaseLabel: { fontSize: 16, fontWeight: '600' },
+  modeBtn: {
+    width: 44,
+    height: 44,
+    borderRadius: 22,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  modeBtnActive: {
+    backgroundColor: 'rgba(157, 80, 255, 0.4)',
+    borderWidth: 2,
+    borderColor: 'rgba(255,255,255,0.5)',
+  },
+  modeIcon: { fontSize: 22 },
+  cardWrapper: { marginTop: 100 },
+  timerCard: {
+    width: '90%',
+    maxWidth: 340,
+    borderRadius: 32,
+    padding: 28,
+    alignItems: 'center',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.2)',
+  },
+  clockText: {
+    fontSize: 14,
+    color: 'rgba(255,255,255,0.7)',
+    marginBottom: 20,
+    fontVariant: ['tabular-nums'],
+  },
   circleWrapper: {
     width: CIRCLE_SIZE,
     height: CIRCLE_SIZE,
     alignItems: 'center',
     justifyContent: 'center',
-    marginBottom: 28,
   },
-  svg: { position: 'absolute', top: 0, left: 0 },
-  timerInner: {
+  timerOverlay: {
+    position: 'absolute',
     alignItems: 'center',
     justifyContent: 'center',
   },
-  timer: {
+  timerText: {
     fontSize: 56,
-    fontWeight: '200',
+    fontWeight: 'bold',
+    color: '#fff',
     fontVariant: ['tabular-nums'],
   },
-  timerActions: { flexDirection: 'row', gap: 16 },
-  timerBtn: {
-    paddingHorizontal: 28,
-    paddingVertical: 16,
-    borderRadius: 16,
-    borderWidth: 2,
+  controlRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: 28,
+    gap: 20,
   },
-  timerBtnPrimary: {},
-  timerBtnText: { color: '#fff', fontSize: 18, fontWeight: '600' },
-  timerBtnTextSecondary: { fontSize: 18, fontWeight: '600' },
-  ambientSection: {
-    borderRadius: 16,
-    padding: 20,
-    marginBottom: 24,
+  playBtn: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
-  ambientTitle: { fontSize: 13, fontWeight: '600', marginBottom: 12, textTransform: 'uppercase' },
-  ambientRow: { flexDirection: 'row', gap: 10 },
-  ambientChip: {
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderRadius: 12,
+  playBtnGlow: {
+    position: 'absolute',
+    width: 84,
+    height: 84,
+    borderRadius: 42,
+    backgroundColor: ACCENT_PURPLE,
+    opacity: 0.4,
+  },
+  playBtnInner: {
+    width: 72,
+    height: 72,
+    borderRadius: 36,
+    backgroundColor: ACCENT_PURPLE,
+    alignItems: 'center',
+    justifyContent: 'center',
+    elevation: 8,
+    shadowColor: ACCENT_PURPLE,
+    shadowOffset: { width: 0, height: 0 },
+    shadowOpacity: 0.8,
+    shadowRadius: 16,
+  },
+  playIcon: { fontSize: 28, color: '#fff' },
+  resetBtn: { overflow: 'hidden', borderRadius: 28 },
+  resetBtnBlur: {
+    width: 56,
+    height: 56,
+    borderRadius: 28,
+    alignItems: 'center',
+    justifyContent: 'center',
     borderWidth: 1,
-    alignItems: 'center',
-    minWidth: 70,
+    borderColor: 'rgba(255,255,255,0.2)',
   },
-  ambientIcon: { fontSize: 22, marginBottom: 4 },
-  ambientLabel: { fontSize: 12, fontWeight: '600' },
-  statsCard: {
+  resetIcon: { fontSize: 24, color: '#fff' },
+  ambientWrapper: {
+    position: 'absolute',
+    bottom: 40,
+    left: 20,
+    right: 20,
+  },
+  ambientBar: {
     borderRadius: 16,
-    padding: 24,
-    alignItems: 'center',
+    overflow: 'hidden',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.1)',
   },
-  statsLabel: { fontSize: 14 },
-  statsValue: { fontSize: 36, fontWeight: 'bold' },
+  ambientRow: {
+    flexDirection: 'row',
+    gap: 8,
+    padding: 12,
+  },
+  ambientChip: {
+    paddingHorizontal: 14,
+    paddingVertical: 10,
+    borderRadius: 12,
+    backgroundColor: 'rgba(255,255,255,0.1)',
+  },
+  ambientChipActive: {
+    backgroundColor: 'rgba(157, 80, 255, 0.3)',
+    borderWidth: 1,
+    borderColor: 'rgba(255,255,255,0.3)',
+  },
+  ambientLabel: { fontSize: 13, color: '#fff' },
+  roundsBadge: {
+    position: 'absolute',
+    bottom: 100,
+  },
+  roundsText: { fontSize: 14, color: 'rgba(255,255,255,0.7)' },
 });

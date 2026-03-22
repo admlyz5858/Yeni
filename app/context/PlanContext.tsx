@@ -1,14 +1,16 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from './AuthContext';
+import * as backend from '../lib/backend';
 
-const STORAGE_KEY = '@kpss_plan_data';
-const DAILY_STATS_KEY = '@kpss_daily_stats';
+const STORAGE_KEY = '@study_plan_data';
+const DAILY_STATS_KEY = '@study_daily_stats';
 
 type CompletedTopics = Record<string, Record<string, boolean>>;
 type ScheduleItem = { day: string; subjectId: string; hours: number };
-type StudyLog = Record<string, number>; // date "YYYY-MM-DD" -> hours
+type StudyLog = Record<string, number>;
 
-type TopicNotes = Record<string, Record<string, string>>; // subjectId -> topic -> note
+type TopicNotes = Record<string, Record<string, string>>;
 
 type PlanContextType = {
   examDate: string | null;
@@ -26,7 +28,7 @@ type PlanContextType = {
   hasSeenOnboarding: boolean;
   setHasSeenOnboarding: (v: boolean) => void;
   pomodoroCount: number;
-  pomodoroLog: Record<string, number>; // date -> count per day
+  pomodoroLog: Record<string, number>;
   addPomodoro: () => void;
   todayTopicCompletions: number;
   todayPomodoro: number;
@@ -35,21 +37,11 @@ type PlanContextType = {
 
 const PlanContext = createContext<PlanContextType | undefined>(undefined);
 
-async function loadData(): Promise<Partial<PlanContextType>> {
-  try {
-    const raw = await AsyncStorage.getItem(STORAGE_KEY);
-    if (raw) return JSON.parse(raw);
-  } catch {}
-  return {};
-}
-
-async function saveData(data: object) {
-  try {
-    await AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data));
-  } catch {}
-}
-
 export function PlanProvider({ children }: { children: React.ReactNode }) {
+  const { user, hasBackend } = useAuth();
+  const useSupabase = !!(user && user.id !== 'demo' && hasBackend);
+  const userId = useSupabase ? user!.id : null;
+
   const [isLoading, setIsLoading] = useState(true);
   const [examDate, setExamDateState] = useState<string | null>(null);
   const [dailyGoalHours, setDailyGoalHoursState] = useState(4);
@@ -63,38 +55,75 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
   const [todayPomodoro, setTodayPomodoroState] = useState(0);
   const [todayTopicCompletions, setTodayTopicCompletionsState] = useState(0);
 
-  useEffect(() => {
-    loadData().then((data) => {
-      if (data.examDate) setExamDateState(data.examDate);
-      if (data.dailyGoalHours) setDailyGoalHoursState(data.dailyGoalHours);
-      if (data.completedTopics && Object.keys(data.completedTopics).length) setCompletedTopicsState(data.completedTopics);
-      if (data.schedule && Array.isArray(data.schedule)) setScheduleState(data.schedule);
-      if (data.studyLog && Object.keys(data.studyLog).length) setStudyLogState(data.studyLog);
-      if (data.topicNotes && Object.keys(data.topicNotes).length) setTopicNotesState(data.topicNotes);
-      if (data.hasSeenOnboarding) setHasSeenOnboardingState(data.hasSeenOnboarding);
-      if (data.pomodoroCount) setPomodoroCountState(data.pomodoroCount);
-      if (data.pomodoroLog && Object.keys(data.pomodoroLog).length) setPomodoroLogState(data.pomodoroLog);
+  const loadFromBackend = useCallback(async () => {
+    if (!userId) return;
+    await backend.ensureUserRows(userId);
+    const plan = await backend.fetchPlan(userId);
+    const log = await backend.fetchStudyLog(userId);
+    const today = new Date().toISOString().slice(0, 10);
+    if (plan) {
+      setExamDateState(plan.exam_date || null);
+      setDailyGoalHoursState(plan.daily_goal_hours ?? 4);
+      setCompletedTopicsState((plan.completed_topics as CompletedTopics) || {});
+      setScheduleState((plan.schedule as ScheduleItem[]) || []);
+      setTopicNotesState((plan.topic_notes as TopicNotes) || {});
+      setHasSeenOnboardingState(plan.has_seen_onboarding ?? false);
+      setPomodoroCountState(plan.pomodoro_count ?? 0);
+      setPomodoroLogState((plan.pomodoro_log as Record<string, number>) || {});
+    }
+    setStudyLogState(log || {});
+    const daily = await backend.fetchDaily(userId, today);
+    if (daily) {
+      setTodayTopicCompletionsState(daily.today_topics ?? 0);
+      setTodayPomodoroState(daily.today_pomodoro ?? 0);
+    }
+  }, [userId]);
+
+  const loadFromLocal = useCallback(async () => {
+    try {
+      const raw = await AsyncStorage.getItem(STORAGE_KEY);
+      if (raw) {
+        const data = JSON.parse(raw);
+        if (data.examDate) setExamDateState(data.examDate);
+        if (data.dailyGoalHours) setDailyGoalHoursState(data.dailyGoalHours);
+        if (data.completedTopics && Object.keys(data.completedTopics).length) setCompletedTopicsState(data.completedTopics);
+        if (data.schedule?.length) setScheduleState(data.schedule);
+        if (data.studyLog && Object.keys(data.studyLog).length) setStudyLogState(data.studyLog);
+        if (data.topicNotes && Object.keys(data.topicNotes).length) setTopicNotesState(data.topicNotes);
+        if (data.hasSeenOnboarding) setHasSeenOnboardingState(data.hasSeenOnboarding);
+        if (data.pomodoroCount) setPomodoroCountState(data.pomodoroCount);
+        if (data.pomodoroLog && Object.keys(data.pomodoroLog).length) setPomodoroLogState(data.pomodoroLog);
+      }
       const today = new Date().toISOString().slice(0, 10);
-      AsyncStorage.getItem(DAILY_STATS_KEY).then((r) => {
-        if (r) {
-          const d = JSON.parse(r);
-          if (d.date === today) {
-            setTodayTopicCompletionsState(d.todayTopics || 0);
-            setTodayPomodoroState(d.todayPomodoro || 0);
-          }
+      const r = await AsyncStorage.getItem(DAILY_STATS_KEY);
+      if (r) {
+        const d = JSON.parse(r);
+        if (d.date === today) {
+          setTodayTopicCompletionsState(d.todayTopics || 0);
+          setTodayPomodoroState(d.todayPomodoro || 0);
         }
-      });
-      setIsLoading(false);
-    });
+      }
+    } catch {}
   }, []);
 
   useEffect(() => {
+    if (useSupabase && userId) {
+      loadFromBackend().finally(() => setIsLoading(false));
+    } else {
+      loadFromLocal().finally(() => setIsLoading(false));
+    }
+  }, [useSupabase, userId, loadFromBackend, loadFromLocal]);
+
+  useEffect(() => {
     const today = new Date().toISOString().slice(0, 10);
-    AsyncStorage.setItem(DAILY_STATS_KEY, JSON.stringify({ date: today, todayTopics: todayTopicCompletions, todayPomodoro }));
-  }, [todayTopicCompletions, todayPomodoro]);
+    if (useSupabase && userId) {
+      backend.upsertDaily(userId, today, { today_topics: todayTopicCompletions, today_pomodoro: todayPomodoro });
+    } else {
+      AsyncStorage.setItem(DAILY_STATS_KEY, JSON.stringify({ date: today, todayTopics: todayTopicCompletions, todayPomodoro }));
+    }
+  }, [todayTopicCompletions, todayPomodoro, useSupabase, userId]);
 
-
-  const persist = (updates: Partial<{
+  const persistToBackend = useCallback((data: {
     examDate: string | null;
     dailyGoalHours: number;
     completedTopics: CompletedTopics;
@@ -104,28 +133,28 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
     hasSeenOnboarding: boolean;
     pomodoroCount: number;
     pomodoroLog: Record<string, number>;
-  }>) => {
-    saveData({
-      examDate: updates.examDate !== undefined ? updates.examDate : examDate,
-      dailyGoalHours: updates.dailyGoalHours !== undefined ? updates.dailyGoalHours : dailyGoalHours,
-      completedTopics: updates.completedTopics !== undefined ? updates.completedTopics : completedTopics,
-      schedule: updates.schedule !== undefined ? updates.schedule : schedule,
-      studyLog: updates.studyLog !== undefined ? updates.studyLog : studyLog,
-      topicNotes: updates.topicNotes !== undefined ? updates.topicNotes : topicNotes,
-      hasSeenOnboarding: updates.hasSeenOnboarding !== undefined ? updates.hasSeenOnboarding : hasSeenOnboarding,
-      pomodoroCount: updates.pomodoroCount !== undefined ? updates.pomodoroCount : pomodoroCount,
-      pomodoroLog: updates.pomodoroLog !== undefined ? updates.pomodoroLog : pomodoroLog,
-    });
-  };
+  }) => {
+    if (!userId) return;
+    backend.savePlan(userId, data);
+  }, [userId]);
+
+  const persistToLocal = useCallback((data: object) => {
+    AsyncStorage.setItem(STORAGE_KEY, JSON.stringify(data));
+  }, []);
 
   const setExamDate = (v: string | null) => {
     setExamDateState(v);
-    persist({ examDate: v });
+    if (useSupabase && userId) {
+      persistToBackend({ examDate: v, dailyGoalHours, completedTopics, schedule, studyLog, topicNotes, hasSeenOnboarding, pomodoroCount, pomodoroLog });
+    } else {
+      persistToLocal({ examDate: v, dailyGoalHours, completedTopics, schedule, studyLog, topicNotes, hasSeenOnboarding, pomodoroCount, pomodoroLog });
+    }
   };
 
   const setDailyGoalHours = (h: number) => {
     setDailyGoalHoursState(h);
-    persist({ dailyGoalHours: h });
+    const payload = { examDate, dailyGoalHours: h, completedTopics, schedule, studyLog, topicNotes, hasSeenOnboarding, pomodoroCount, pomodoroLog };
+    useSupabase && userId ? persistToBackend(payload) : persistToLocal(payload);
   };
 
   const toggleTopic = (subjectId: string, topic: string) => {
@@ -139,69 +168,55 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
           [topic]: !(prev[subjectId]?.[topic] ?? false),
         },
       };
-      saveData({
-        examDate,
-        dailyGoalHours,
-        completedTopics: next,
-        schedule,
-        studyLog,
-        topicNotes,
-        hasSeenOnboarding,
-        pomodoroCount,
-      });
+      const payload = { examDate, dailyGoalHours, completedTopics: next, schedule, studyLog, topicNotes, hasSeenOnboarding, pomodoroCount, pomodoroLog };
+      if (useSupabase && userId) persistToBackend(payload);
+      else persistToLocal(payload);
       return next;
     });
   };
 
   const setSchedule = (s: ScheduleItem[]) => {
     setScheduleState(s);
-    persist({ schedule: s });
+    const payload = { examDate, dailyGoalHours, completedTopics, schedule: s, studyLog, topicNotes, hasSeenOnboarding, pomodoroCount, pomodoroLog };
+    useSupabase && userId ? persistToBackend(payload) : persistToLocal(payload);
   };
 
   const setTopicNote = (subjectId: string, topic: string, note: string) => {
     setTopicNotesState((prev) => {
-      const next = {
-        ...prev,
-        [subjectId]: { ...(prev[subjectId] || {}), [topic]: note },
-      };
-      saveData({ examDate, dailyGoalHours, completedTopics, schedule, studyLog, topicNotes: next, hasSeenOnboarding, pomodoroCount });
+      const next = { ...prev, [subjectId]: { ...(prev[subjectId] || {}), [topic]: note } };
+      const payload = { examDate, dailyGoalHours, completedTopics, schedule, studyLog, topicNotes: next, hasSeenOnboarding, pomodoroCount, pomodoroLog };
+      if (useSupabase && userId) persistToBackend(payload);
+      else persistToLocal(payload);
       return next;
     });
   };
 
   const setHasSeenOnboarding = (v: boolean) => {
     setHasSeenOnboardingState(v);
-    persist({ hasSeenOnboarding: v });
+    const payload = { examDate, dailyGoalHours, completedTopics, schedule, studyLog, topicNotes, hasSeenOnboarding: v, pomodoroCount, pomodoroLog };
+    useSupabase && userId ? persistToBackend(payload) : persistToLocal(payload);
   };
 
   const addPomodoro = () => {
     const today = new Date().toISOString().slice(0, 10);
-    setPomodoroCountState((prev) => {
-      const next = prev + 1;
-      saveData({ examDate, dailyGoalHours, completedTopics, schedule, studyLog, topicNotes, hasSeenOnboarding, pomodoroCount: next, pomodoroLog: pomodoroLog });
-      return next;
-    });
-    setPomodoroLogState((prev) => {
-      const next = { ...prev, [today]: (prev[today] || 0) + 1 };
-      saveData({ examDate, dailyGoalHours, completedTopics, schedule, studyLog, topicNotes, hasSeenOnboarding, pomodoroCount: pomodoroCount + 1, pomodoroLog: next });
-      return next;
-    });
-    setTodayPomodoroState((prev) => prev + 1);
+    const newCount = pomodoroCount + 1;
+    const newLog = { ...pomodoroLog, [today]: (pomodoroLog[today] || 0) + 1 };
+    setPomodoroCountState(newCount);
+    setPomodoroLogState(newLog);
+    setTodayPomodoroState((p) => p + 1);
+    const payload = { examDate, dailyGoalHours, completedTopics, schedule, studyLog, topicNotes, hasSeenOnboarding, pomodoroCount: newCount, pomodoroLog: newLog };
+    useSupabase && userId ? persistToBackend(payload) : persistToLocal(payload);
   };
 
   const logStudy = (date: string, hours: number) => {
     setStudyLogState((prev) => {
       const next = { ...prev, [date]: (prev[date] || 0) + hours };
-      saveData({
-        examDate,
-        dailyGoalHours,
-        completedTopics,
-        schedule,
-        studyLog: next,
-        topicNotes,
-        hasSeenOnboarding,
-        pomodoroCount,
-      });
+      if (useSupabase && userId) {
+        backend.upsertStudyLog(userId, date, hours);
+      } else {
+        const payload = { examDate, dailyGoalHours, completedTopics, schedule, studyLog: next, topicNotes, hasSeenOnboarding, pomodoroCount, pomodoroLog };
+        persistToLocal(payload);
+      }
       return next;
     });
   };

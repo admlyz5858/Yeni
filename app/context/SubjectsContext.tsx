@@ -1,5 +1,7 @@
-import React, { createContext, useContext, useState, useEffect } from 'react';
+import React, { createContext, useContext, useState, useEffect, useCallback } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from './AuthContext';
+import * as backend from '../lib/backend';
 
 const SUBJECTS_KEY = '@study_subjects';
 
@@ -37,26 +39,42 @@ function generateId() {
 const Context = createContext<SubjectsContextType | undefined>(undefined);
 
 export function SubjectsProvider({ children }: { children: React.ReactNode }) {
+  const { user, hasBackend } = useAuth();
+  const useSupabase = !!(user && user.id !== 'demo' && hasBackend);
+  const userId = useSupabase ? user!.id : null;
+
   const [subjects, setSubjectsState] = useState<Subject[]>(DEFAULT_SUBJECTS);
 
   useEffect(() => {
-    AsyncStorage.getItem(SUBJECTS_KEY).then((raw) => {
-      if (raw) {
-        try {
-          const parsed = JSON.parse(raw);
-          if (Array.isArray(parsed) && parsed.length > 0) setSubjectsState(parsed);
-        } catch {}
-      }
-    });
-  }, []);
+    if (useSupabase && userId) {
+      backend.ensureUserRows(userId);
+      backend.fetchSubjects(userId).then((data) => {
+        if (Array.isArray(data) && data.length > 0) setSubjectsState(data);
+      });
+    } else {
+      AsyncStorage.getItem(SUBJECTS_KEY).then((raw) => {
+        if (raw) {
+          try {
+            const parsed = JSON.parse(raw);
+            if (Array.isArray(parsed) && parsed.length > 0) setSubjectsState(parsed);
+          } catch {}
+        }
+      });
+    }
+  }, [useSupabase, userId]);
 
-  const save = (s: Subject[]) => {
+  const save = useCallback((s: Subject[]) => {
     setSubjectsState(s);
-    AsyncStorage.setItem(SUBJECTS_KEY, JSON.stringify(s));
-  };
+    if (useSupabase && userId) {
+      backend.saveSubjects(userId, s);
+    } else {
+      AsyncStorage.setItem(SUBJECTS_KEY, JSON.stringify(s));
+    }
+  }, [useSupabase, userId]);
 
   const addSubject = (name: string, icon = '📚', color = COLORS[subjects.length % COLORS.length]) => {
-    save([...subjects, { id: generateId(), name, icon, color, topics: [] }]);
+    const next = [...subjects, { id: generateId(), name, icon, color, topics: [] }];
+    save(next);
   };
 
   const updateSubject = (id: string, updates: Partial<Subject>) => {

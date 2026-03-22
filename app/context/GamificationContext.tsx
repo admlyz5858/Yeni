@@ -1,6 +1,8 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { getDailyChallenge } from '../data/activities';
+import { useAuth } from './AuthContext';
+import * as backend from '../lib/backend';
 
 const GAMIFICATION_KEY = '@kpss_gamification';
 const LOGIN_KEY = '@kpss_last_login';
@@ -133,6 +135,10 @@ type AchievementStats = {
 const GamificationContext = createContext<GamificationContextType | undefined>(undefined);
 
 export function GamificationProvider({ children }: { children: React.ReactNode }) {
+  const { user, hasBackend } = useAuth();
+  const useSupabase = !!(user && user.id !== 'demo' && hasBackend);
+  const userId = useSupabase ? user!.id : null;
+
   const [xp, setXpState] = useState(0);
   const [achievements, setAchievementsState] = useState<Achievement[]>(ACHIEVEMENTS);
   const [challengeCompleted, setChallengeCompleted] = useState(false);
@@ -146,6 +152,31 @@ export function GamificationProvider({ children }: { children: React.ReactNode }
   const dailyChallenge = getDailyChallenge(Date.now());
 
   useEffect(() => {
+    if (useSupabase && userId) {
+      backend.ensureUserRows(userId);
+      backend.fetchGamification(userId).then((data) => {
+        if (data) {
+          setXpState(data.xp ?? 0);
+          const ach = data.achievements as Record<string, string> | undefined;
+          if (ach) {
+            setAchievementsState(ACHIEVEMENTS.map((a) => ({
+              ...a,
+              unlockedAt: ach[a.id] || null,
+            })));
+          }
+          setLastLogin(data.last_login || null);
+          setLoginStreak(data.login_streak ?? 0);
+        }
+      });
+      backend.fetchDaily(userId, today).then((d) => {
+        if (d) {
+          setChallengeCompleted(d.challenge_completed ?? false);
+          setChallengeProgress(d.challenge_progress ?? 0);
+          setDailyBonusClaimed(d.bonus_claimed ?? false);
+        }
+      });
+      return;
+    }
     AsyncStorage.getItem(GAMIFICATION_KEY).then((raw) => {
       if (raw) {
         const d = JSON.parse(raw);
@@ -184,9 +215,15 @@ export function GamificationProvider({ children }: { children: React.ReactNode }
         else if (last !== today) setLoginStreak(0);
       }
     });
-  }, []);
+  }, [useSupabase, userId]);
 
   const persist = (newXp: number, newAchievements: Achievement[]) => {
+    if (useSupabase && userId) {
+      const unlocked: Record<string, string> = {};
+      newAchievements.forEach((a) => { if (a.unlockedAt) unlocked[a.id] = a.unlockedAt; });
+      backend.saveGamification(userId, { xp: newXp, achievements: unlocked });
+      return;
+    }
     const unlocked: Record<string, string> = {};
     newAchievements.forEach((a) => { if (a.unlockedAt) unlocked[a.id] = a.unlockedAt; });
     AsyncStorage.setItem(GAMIFICATION_KEY, JSON.stringify({ xp: newXp, achievements: unlocked }));
@@ -216,12 +253,16 @@ export function GamificationProvider({ children }: { children: React.ReactNode }
     if (challengeCompleted) return;
     setChallengeCompleted(true);
     addXp(dailyChallenge.xp);
-    AsyncStorage.setItem(CHALLENGE_KEY, JSON.stringify({
-      date: today,
-      challengeId: dailyChallenge.id,
-      completed: true,
-      progress: dailyChallenge.target,
-    }));
+    if (useSupabase && userId) {
+      backend.upsertDaily(userId, today, { challenge_completed: true, challenge_progress: dailyChallenge.target });
+    } else {
+      AsyncStorage.setItem(CHALLENGE_KEY, JSON.stringify({
+        date: today,
+        challengeId: dailyChallenge.id,
+        completed: true,
+        progress: dailyChallenge.target,
+      }));
+    }
   };
 
   const updateDailyChallengeFromStats = (stats: {
@@ -244,12 +285,16 @@ export function GamificationProvider({ children }: { children: React.ReactNode }
     if (progress >= dailyChallenge.target) completeDailyChallenge();
     else if (!challengeSynced) {
       setChallengeSynced(true);
-      AsyncStorage.setItem(CHALLENGE_KEY, JSON.stringify({
-        date: today,
-        challengeId: dailyChallenge.id,
-        completed: false,
-        progress,
-      }));
+      if (useSupabase && userId) {
+        backend.upsertDaily(userId, today, { challenge_progress: progress });
+      } else {
+        AsyncStorage.setItem(CHALLENGE_KEY, JSON.stringify({
+          date: today,
+          challengeId: dailyChallenge.id,
+          completed: false,
+          progress,
+        }));
+      }
     }
   };
 
@@ -266,8 +311,13 @@ export function GamificationProvider({ children }: { children: React.ReactNode }
     setLastLogin(today);
     setLoginStreak(newStreak);
     addXp(bonus);
-    AsyncStorage.setItem(LOGIN_KEY, JSON.stringify({ lastLogin: today, streak: newStreak }));
-    AsyncStorage.setItem(LOGIN_KEY + '_bonus', JSON.stringify({ date: today }));
+    if (useSupabase && userId) {
+      backend.saveGamification(userId, { last_login: today, login_streak: newStreak });
+      backend.upsertDaily(userId, today, { bonus_claimed: true });
+    } else {
+      AsyncStorage.setItem(LOGIN_KEY, JSON.stringify({ lastLogin: today, streak: newStreak }));
+      AsyncStorage.setItem(LOGIN_KEY + '_bonus', JSON.stringify({ date: today }));
+    }
     return bonus;
   };
 

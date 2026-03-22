@@ -1,7 +1,9 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { useAuth } from './AuthContext';
+import * as backend from '../lib/backend';
 
-const FLASHCARD_KEY = '@kpss_flashcards';
+const FLASHCARD_KEY = '@study_flashcards';
 
 export type Flashcard = {
   id: string;
@@ -17,7 +19,7 @@ export type Flashcard = {
 
 type FlashcardContextType = {
   cards: Flashcard[];
-  addCard: (subjectId: string, topic: string, front: string, back: string) => void;
+  addCard: (subjectId: string, topic: string, front: string, back: string) => void | Promise<void>;
   updateCard: (id: string, quality: number) => void;
   deleteCard: (id: string) => void;
   getDueCards: () => Flashcard[];
@@ -41,34 +43,73 @@ function sm2(interval: number, easeFactor: number, quality: number): { interval:
   return { interval: Math.min(newInterval, 365), ef: newEf };
 }
 
+function toCard(r: Record<string, unknown>): Flashcard {
+  return {
+    id: String(r.id),
+    subjectId: String(r.subjectId ?? r.subject_id),
+    topic: String(r.topic),
+    front: String(r.front),
+    back: String(r.back),
+    nextReview: String(r.nextReview ?? r.next_review),
+    interval: Number(r.interval ?? 0),
+    easeFactor: Number(r.easeFactor ?? r.ease_factor ?? 2.5),
+    repetitions: Number(r.repetitions ?? 0),
+  };
+}
+
 export function FlashcardProvider({ children }: { children: React.ReactNode }) {
+  const { user, hasBackend } = useAuth();
+  const useSupabase = !!(user && user.id !== 'demo' && hasBackend);
+  const userId = useSupabase ? user!.id : null;
+
   const [cards, setCardsState] = useState<Flashcard[]>([]);
 
   useEffect(() => {
-    AsyncStorage.getItem(FLASHCARD_KEY).then((raw) => {
-      if (raw) setCardsState(JSON.parse(raw));
-    });
-  }, []);
-
-  const save = (c: Flashcard[]) => {
-    setCardsState(c);
-    AsyncStorage.setItem(FLASHCARD_KEY, JSON.stringify(c));
-  };
+    if (useSupabase && userId) {
+      backend.fetchFlashcards(userId).then((data) => {
+        setCardsState((data || []).map(toCard));
+      });
+    } else {
+      AsyncStorage.getItem(FLASHCARD_KEY).then((raw) => {
+        if (raw) setCardsState(JSON.parse(raw));
+      });
+    }
+  }, [useSupabase, userId]);
 
   const addCard = (subjectId: string, topic: string, front: string, back: string) => {
-    const id = `${Date.now()}-${Math.random().toString(36).slice(2)}`;
+    const nextReview = new Date().toISOString().slice(0, 10);
     const card: Flashcard = {
-      id,
+      id: `local-${Date.now()}`,
       subjectId,
       topic,
       front,
       back,
-      nextReview: new Date().toISOString().slice(0, 10),
+      nextReview,
       interval: 0,
       easeFactor: 2.5,
       repetitions: 0,
     };
-    save([...cards, card]);
+    if (useSupabase && userId) {
+      setCardsState((c) => [...c, card]);
+      backend.addFlashcard(userId, {
+        subjectId,
+        topic,
+        front,
+        back,
+        nextReview,
+        interval: 0,
+        easeFactor: 2.5,
+        repetitions: 0,
+      }).then((newId) => {
+        if (newId) setCardsState((c) => c.map((x) => (x.id === card.id ? { ...x, id: newId } : x)));
+      });
+    } else {
+      setCardsState((c) => {
+        const next = [...c, { ...card, id: `${Date.now()}-${Math.random().toString(36).slice(2)}` }];
+        AsyncStorage.setItem(FLASHCARD_KEY, JSON.stringify(next));
+        return next;
+      });
+    }
   };
 
   const updateCard = (id: string, quality: number) => {
@@ -82,10 +123,27 @@ export function FlashcardProvider({ children }: { children: React.ReactNode }) {
       repetitions: card.repetitions + 1,
       nextReview: nextReviewDate(interval),
     };
-    save(cards.map((c) => (c.id === id ? updated : c)));
+    if (useSupabase && userId) {
+      backend.updateFlashcard(userId, id, {
+        nextReview: updated.nextReview,
+        interval: updated.interval,
+        easeFactor: updated.easeFactor,
+        repetitions: updated.repetitions,
+      });
+    } else {
+      AsyncStorage.setItem(FLASHCARD_KEY, JSON.stringify(cards.map((c) => (c.id === id ? updated : c))));
+    }
+    setCardsState((c) => c.map((x) => (x.id === id ? updated : x)));
   };
 
-  const deleteCard = (id: string) => save(cards.filter((c) => c.id !== id));
+  const deleteCard = (id: string) => {
+    if (useSupabase && userId) backend.deleteFlashcard(userId, id);
+    setCardsState((c) => {
+      const next = c.filter((x) => x.id !== id);
+      if (!useSupabase) AsyncStorage.setItem(FLASHCARD_KEY, JSON.stringify(next));
+      return next;
+    });
+  };
 
   const getDueCards = () => {
     const today = new Date().toISOString().slice(0, 10);

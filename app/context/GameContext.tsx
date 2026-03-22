@@ -2,6 +2,8 @@ import React, { createContext, useContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { useGamification } from './GamificationContext';
 import { usePlan } from './PlanContext';
+import { useAuth } from './AuthContext';
+import * as backend from '../lib/backend';
 
 const GAME_KEY = '@study_game';
 
@@ -105,8 +107,13 @@ type GameContextType = {
 const Context = createContext<GameContextType | undefined>(undefined);
 
 export function GameProvider({ children }: { children: React.ReactNode }) {
+  const { user, hasBackend } = useAuth();
   const { xp, level, addXp } = useGamification();
-  const { studyLog, pomodoroLog, completedTopics } = usePlan();
+  const { studyLog, pomodoroLog } = usePlan();
+  const useSupabase = !!(user && user.id !== 'demo' && hasBackend);
+  const userId = useSupabase ? user!.id : null;
+
+  const [leaderboard, setLeaderboard] = useState<{ rank: number; name: string; xp: number; isUser: boolean }[]>([]);
   const [myGroupId, setMyGroupId] = useState<string | null>(null);
   const [equippedTitleId, setEquippedTitleId] = useState('yeni');
   const [activePowerUp, setActivePowerUp] = useState<{ id: string; expiresAt: number } | null>(null);
@@ -122,10 +129,44 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
     return d.getTime();
   })();
 
-  const leaderboard = getLeaderboard(Math.floor(weekStart / 86400000), xp);
+  useEffect(() => {
+    if (useSupabase && userId) {
+      backend.getLeaderboard(25).then((data) => {
+        const list = data.map((r, i) => ({
+          rank: i + 1,
+          name: r.userId === userId ? 'Sen' : (r.name || 'Anonim'),
+          xp: r.xp,
+          isUser: r.userId === userId,
+        }));
+        const me = list.find((r) => r.isUser);
+        if (!me && userId) {
+          list.push({ rank: list.length + 1, name: 'Sen', xp, isUser: true });
+          list.sort((a, b) => b.xp - a.xp);
+          list.forEach((r, i) => r.rank = i + 1);
+        }
+        setLeaderboard(list.slice(0, 20));
+      });
+    } else {
+      setLeaderboard(getLeaderboard(Math.floor(weekStart / 86400000), xp));
+    }
+  }, [useSupabase, userId, xp]);
 
   useEffect(() => {
-    AsyncStorage.getItem(GAME_KEY).then((r) => {
+    if (useSupabase && userId) {
+      backend.fetchGame(userId).then((data) => {
+        if (data) {
+          setMyGroupId(data.my_group_id || null);
+          setEquippedTitleId(data.equipped_title_id || 'yeni');
+          setWeeklyCompleted((data.weekly_completed as Record<string, boolean>) || {});
+          setLastSeenLevel(data.last_seen_level ?? 1);
+        }
+      });
+    }
+  }, [useSupabase, userId]);
+
+  useEffect(() => {
+    if (!useSupabase) {
+      AsyncStorage.getItem(GAME_KEY).then((r) => {
       if (r) {
         const d = JSON.parse(r);
         setMyGroupId(d.myGroupId || null);
@@ -134,7 +175,19 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
         setLastSeenLevel(d.lastSeenLevel || 1);
       }
     });
-  }, []);
+    }
+  }, [useSupabase]);
+
+  const persist = (updates: Record<string, unknown>) => {
+    if (useSupabase && userId) {
+      backend.saveGame(userId, updates);
+    } else {
+      AsyncStorage.getItem(GAME_KEY).then((r) => {
+        const d = r ? JSON.parse(r) : {};
+        AsyncStorage.setItem(GAME_KEY, JSON.stringify({ ...d, ...updates }));
+      });
+    }
+  };
 
   const checkLevelUp = (currentLevel: number) => {
     if (currentLevel > lastSeenLevel) {
@@ -142,13 +195,6 @@ export function GameProvider({ children }: { children: React.ReactNode }) {
       setLastSeenLevel(currentLevel);
       persist({ lastSeenLevel: currentLevel });
     }
-  };
-
-  const persist = (updates: Record<string, unknown>) => {
-    AsyncStorage.getItem(GAME_KEY).then((r) => {
-      const d = r ? JSON.parse(r) : {};
-      AsyncStorage.setItem(GAME_KEY, JSON.stringify({ ...d, ...updates }));
-    });
   };
 
   const joinGroup = (groupId: string) => {

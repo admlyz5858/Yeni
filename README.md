@@ -41,7 +41,9 @@ Gerçek kullanıcı girişi için Supabase gereklidir:
 
 1. [supabase.com](https://supabase.com) → Yeni proje oluştur
 2. **Settings → API** → `URL` ve `anon public` key'i kopyala
-3. **SQL Editor** → `supabase/migrations/20250321000001_profiles.sql` içeriğini yapıştır ve çalıştır
+3. **SQL Editor** → Aşağıdaki migration dosyalarını sırayla çalıştırın:
+   - `supabase/migrations/20250321000001_profiles.sql`
+   - `supabase/migrations/20250322000002_backend.sql`
 4. **Authentication → Providers** → Email açık olduğundan emin ol
 5. `app/` klasöründe `.env` oluştur (`.env.example`'dan kopyala) ve değerleri yapıştır
 6. İlk admin: SQL Editor'da `UPDATE public.profiles SET role = 'admin' WHERE email = 'sizin@email.com';`

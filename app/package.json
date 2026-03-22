@@ -7,8 +7,8 @@
     "android": "expo run:android",
     "ios": "expo run:ios",
     "web": "expo start --web",
-    "build:apk": "expo prebuild --platform android --clean && (sed -i 's/gradle-9.0.0/gradle-8.13/' android/gradle/wrapper/gradle-wrapper.properties || true) && cd android && ./gradlew assembleRelease",
-    "build:aab": "expo prebuild --platform android --clean && (sed -i 's/gradle-9.0.0/gradle-8.13/' android/gradle/wrapper/gradle-wrapper.properties || true) && cd android && ./gradlew bundleRelease"
+    "build:apk": "expo prebuild --platform android --clean && (sed -i 's/gradle-9.0.0/gradle-8.13/' android/gradle/wrapper/gradle-wrapper.properties || true) && (echo \"sdk.dir=$ANDROID_HOME\" >> android/local.properties || true) && (chmod +x android/gradlew || true) && cd android && ./gradlew assembleRelease",
+    "build:aab": "expo prebuild --platform android --clean && (sed -i 's/gradle-9.0.0/gradle-8.13/' android/gradle/wrapper/gradle-wrapper.properties || true) && (echo \"sdk.dir=$ANDROID_HOME\" >> android/local.properties || true) && (chmod +x android/gradlew || true) && cd android && ./gradlew bundleRelease"
   },
   "dependencies": {
     "@react-native-async-storage/async-storage": "2.2.0",

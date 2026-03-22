@@ -33,6 +33,8 @@ import LeaderboardScreen from './screens/LeaderboardScreen';
 import StudyGroupsScreen from './screens/StudyGroupsScreen';
 import FocusScreen from './screens/FocusScreen';
 import AboutScreen from './screens/AboutScreen';
+import ConfigRequiredScreen from './screens/ConfigRequiredScreen';
+import ForgotPasswordScreen from './screens/ForgotPasswordScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -88,27 +90,36 @@ function AdminNavigator() {
 }
 
 function AuthScreens() {
-  const [showRegister, setShowRegister] = useState(false);
-  const { login, register } = useAuth();
+  const [screen, setScreen] = useState<'login' | 'register' | 'forgot'>('login');
+  const { login, register, resetPassword } = useAuth();
 
-  if (showRegister) {
+  if (screen === 'register') {
     return (
       <RegisterScreen
         onRegister={register}
-        onGoLogin={() => setShowRegister(false)}
+        onGoLogin={() => setScreen('login')}
+      />
+    );
+  }
+  if (screen === 'forgot') {
+    return (
+      <ForgotPasswordScreen
+        onReset={resetPassword}
+        onGoLogin={() => setScreen('login')}
       />
     );
   }
   return (
     <LoginScreen
       onLogin={login}
-      onGoRegister={() => setShowRegister(true)}
+      onGoRegister={() => setScreen('register')}
+      onForgotPassword={() => setScreen('forgot')}
     />
   );
 }
 
 function AppContent() {
-  const { user, isLoading } = useAuth();
+  const { user, isLoading, hasBackend } = useAuth();
   const { hasSeenOnboarding, setHasSeenOnboarding } = usePlan();
 
   if (isLoading) {
@@ -118,6 +129,10 @@ function AppContent() {
         <Text style={{ marginTop: 12, color: '#64748b' }}>Yükleniyor...</Text>
       </View>
     );
+  }
+
+  if (!hasBackend) {
+    return <ConfigRequiredScreen />;
   }
 
   if (!user) {

@@ -12,26 +12,31 @@ import {
 } from 'react-native';
 
 type Props = {
-  onLogin: (email: string, password: string) => Promise<{ ok: boolean; error?: string }>;
-  onGoRegister: () => void;
-  onForgotPassword?: () => void;
+  onReset: (email: string) => Promise<{ ok: boolean; error?: string }>;
+  onGoLogin: () => void;
 };
 
-export default function LoginScreen({ onLogin, onGoRegister, onForgotPassword }: Props) {
+export default function ForgotPasswordScreen({ onReset, onGoLogin }: Props) {
   const [email, setEmail] = useState('');
-  const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
+  const [sent, setSent] = useState(false);
 
-  const handleLogin = async () => {
-    if (!email.trim() || !password) {
-      Alert.alert('Hata', 'E-posta ve şifre girin.');
+  const handleReset = async () => {
+    if (!email.trim()) {
+      Alert.alert('Hata', 'E-posta adresinizi girin.');
       return;
     }
     setLoading(true);
-    const result = await onLogin(email.trim(), password);
+    const result = await onReset(email.trim());
     setLoading(false);
-    if (!result.ok) {
-      Alert.alert('Giriş Başarısız', result.error || 'Bir hata oluştu.');
+    if (result.ok) {
+      setSent(true);
+      Alert.alert(
+        'E-posta Gönderildi',
+        'Şifre sıfırlama bağlantısı e-posta adresinize gönderildi. Lütfen gelen kutunuzu kontrol edin.'
+      );
+    } else {
+      Alert.alert('Hata', result.error || 'Bir sorun oluştu.');
     }
   };
 
@@ -41,8 +46,10 @@ export default function LoginScreen({ onLogin, onGoRegister, onForgotPassword }:
       behavior={Platform.OS === 'ios' ? 'padding' : undefined}
     >
       <View style={styles.content}>
-        <Text style={styles.title}>Çalışma Asistanı</Text>
-        <Text style={styles.subtitle}>Hesabınıza giriş yapın</Text>
+        <Text style={styles.title}>Şifremi Unuttum</Text>
+        <Text style={styles.subtitle}>
+          E-posta adresinizi girin, size şifre sıfırlama bağlantısı gönderelim.
+        </Text>
 
         <TextInput
           style={styles.input}
@@ -52,35 +59,23 @@ export default function LoginScreen({ onLogin, onGoRegister, onForgotPassword }:
           onChangeText={setEmail}
           keyboardType="email-address"
           autoCapitalize="none"
+          editable={!sent}
         />
-        <TextInput
-          style={styles.input}
-          placeholder="Şifre"
-          placeholderTextColor="#94a3b8"
-          value={password}
-          onChangeText={setPassword}
-          secureTextEntry
-        />
-        {onForgotPassword && (
-          <TouchableOpacity style={styles.forgotBtn} onPress={onForgotPassword}>
-            <Text style={styles.forgotText}>Şifremi unuttum</Text>
-          </TouchableOpacity>
-        )}
 
         <TouchableOpacity
-          style={[styles.btn, loading && styles.btnDisabled]}
-          onPress={handleLogin}
-          disabled={loading}
+          style={[styles.btn, (loading || sent) && styles.btnDisabled]}
+          onPress={handleReset}
+          disabled={loading || sent}
         >
           {loading ? (
             <ActivityIndicator color="#fff" />
           ) : (
-            <Text style={styles.btnText}>Giriş Yap</Text>
+            <Text style={styles.btnText}>{sent ? 'Gönderildi' : 'Bağlantı Gönder'}</Text>
           )}
         </TouchableOpacity>
 
-        <TouchableOpacity style={styles.link} onPress={onGoRegister}>
-          <Text style={styles.linkText}>Hesabınız yok mu? Kayıt olun</Text>
+        <TouchableOpacity style={styles.link} onPress={onGoLogin}>
+          <Text style={styles.linkText}>← Giriş ekranına dön</Text>
         </TouchableOpacity>
       </View>
     </KeyboardAvoidingView>
@@ -101,8 +96,6 @@ const styles = StyleSheet.create({
     marginBottom: 16,
     backgroundColor: '#fff',
   },
-  forgotBtn: { alignSelf: 'flex-end', marginBottom: 16 },
-  forgotText: { fontSize: 14, color: '#2563eb' },
   btn: {
     backgroundColor: '#2563eb',
     borderRadius: 12,

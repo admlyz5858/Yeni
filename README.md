@@ -27,14 +27,24 @@ Her sınava hazırlık için genel çalışma planlama uygulaması.
 - 📊 Dashboard (üye sayısı, konu/çalışma istatistikleri)
 - 👥 Üye yönetimi (kullanıcı listesi)
 
-**Kimlik Doğrulama:**
-- Giriş / Kayıt ekranları
+**Kimlik Doğrulama (Supabase):**
+- Gerçek kullanıcı kayıt ve giriş
+- Şifremi unuttum (e-posta ile sıfırlama)
 - Rol tabanlı erişim (admin / üye)
-- Demo mod: Supabase olmadan çalışır
-- admin@admin.com / admin123 (Admin)
-- uye@uygulama.com / uyari123 (Üye)
+- Supabase yapılandırması gereklidir (.env)
 
 Expo (React Native) ile oluşturulmuş cross-platform mobil uygulama. iOS ve Android'de çalışır.
+
+## Supabase Kurulumu (Zorunlu)
+
+Gerçek kullanıcı girişi için Supabase gereklidir:
+
+1. [supabase.com](https://supabase.com) → Yeni proje oluştur
+2. **Settings → API** → `URL` ve `anon public` key'i kopyala
+3. **SQL Editor** → `supabase/migrations/20250321000001_profiles.sql` içeriğini yapıştır ve çalıştır
+4. **Authentication → Providers** → Email açık olduğundan emin ol
+5. Proje kökünde `.env` oluştur (`.env.example`'dan kopyala) ve değerleri yapıştır
+6. İlk admin: SQL Editor'da `UPDATE public.profiles SET role = 'admin' WHERE email = 'sizin@email.com';`
 
 ## Başlangıç
 

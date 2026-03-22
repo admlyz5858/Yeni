@@ -34,6 +34,14 @@ export default function RegisterScreen({ onRegister, onGoLogin }: Props) {
     setLoading(true);
     const result = await onRegister(email.trim(), password, name.trim());
     setLoading(false);
+    if (result.ok && result.error === 'EMAIL_CONFIRM') {
+      Alert.alert(
+        'E-posta Doğrulaması',
+        'Kayıt başarılı! E-posta adresinize doğrulama linki gönderildi. Lütfen e-postanızı kontrol edip hesabınızı aktifleştirin, ardından giriş yapın.'
+      );
+      onGoLogin();
+      return;
+    }
     if (!result.ok) {
       Alert.alert('Kayıt Başarısız', result.error || 'Bir hata oluştu.');
     }

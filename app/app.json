@@ -1,11 +1,11 @@
 {
   "expo": {
-    "name": "Yeni Uygulama",
-    "slug": "yeni-uygulama",
+    "name": "Bilge Baykuş",
+    "slug": "bilge-baykus",
     "version": "1.0.0",
     "orientation": "portrait",
     "icon": "./assets/icon.png",
-    "userInterfaceStyle": "light",
+    "userInterfaceStyle": "automatic",
     "splash": {
       "image": "./assets/splash-icon.png",
       "resizeMode": "contain",
@@ -15,7 +15,8 @@
       "supportsTablet": true
     },
     "android": {
-      "package": "com.yeniuygulama.app",
+      "package": "com.calismaasistani.app",
+      "versionCode": 1,
       "adaptiveIcon": {
         "backgroundColor": "#E6F4FE",
         "foregroundImage": "./assets/android-icon-foreground.png",
@@ -26,6 +27,10 @@
     },
     "web": {
       "favicon": "./assets/favicon.png"
-    }
+    },
+    "plugins": [
+      "expo-sharing",
+      "expo-notifications"
+    ]
   }
 }

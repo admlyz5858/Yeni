@@ -5,6 +5,7 @@ import {
   View,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../context/ThemeContext';
@@ -51,7 +52,7 @@ export default function SmartAnalysisScreen({ navigation }: Props) {
 
       <TouchableOpacity
         style={[styles.addBtn, { backgroundColor: theme.accent }]}
-        onPress={() => {}}
+        onPress={() => Alert.alert('Yakında', 'Deneme ekleme özelliği yakında eklenecek.')}
       >
         <Text style={styles.addBtnText}>+ Deneme Ekle</Text>
       </TouchableOpacity>

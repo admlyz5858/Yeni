@@ -154,14 +154,14 @@ export default function SettingsScreen({ navigation }: Props) {
           icon="⛔"
           label="Engellenen Kullanıcılar"
           sub="Engellediğiniz kullanıcıları yönetin"
-          onPress={() => {}}
+          onPress={() => Alert.alert('Yakında', 'Bu özellik yakında eklenecek.')}
           theme={theme}
         />
         <SettingItem
           icon="🎁"
           label="Davet Kodu Gir"
           sub="Ücretsiz erişim kazan"
-          onPress={() => {}}
+          onPress={() => Alert.alert('Yakında', 'Davet kodu girme özelliği yakında eklenecek.')}
           theme={theme}
           noBorder
         />
@@ -195,7 +195,7 @@ export default function SettingsScreen({ navigation }: Props) {
           icon="📅"
           label="Zaman Haritası"
           sub="Haftalık çalışma takviminizi düzenleyin"
-          onPress={() => navigation.navigate('Schedule')}
+          onPress={() => navigation.navigate('TimeMap')}
           theme={theme}
           noBorder
         />

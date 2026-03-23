@@ -7,6 +7,7 @@ import {
   ScrollView,
   Dimensions,
   Modal,
+  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 
@@ -187,6 +188,7 @@ export default function GamesScreen({ navigation }: Props) {
           <TouchableOpacity
             key={g.id}
             style={[styles.mainGameCard, { backgroundColor: g.color }]}
+            onPress={() => Alert.alert('Yakında', `${g.name} oyunu yakında eklenecek.`)}
           >
             <Text style={styles.mainGameIcon}>{g.icon}</Text>
             <Text style={styles.mainGameTitle}>{g.name}</Text>
@@ -203,7 +205,10 @@ export default function GamesScreen({ navigation }: Props) {
       </View>
 
       {/* Karma Sınav */}
-      <TouchableOpacity style={styles.karmaCard}>
+      <TouchableOpacity
+        style={styles.karmaCard}
+        onPress={() => Alert.alert('Yakında', 'Karma Sınav özelliği yakında eklenecek.')}
+      >
         <View style={styles.karmaIcon}>
           <Text style={styles.karmaIconText}>⊞</Text>
         </View>
@@ -224,7 +229,10 @@ export default function GamesScreen({ navigation }: Props) {
               <Text style={styles.catIconText}>{cat.icon}</Text>
             </View>
             <Text style={[styles.catName, { color: cat.color }]}>{cat.name}</Text>
-            <TouchableOpacity style={styles.karmaBtn}>
+            <TouchableOpacity
+              style={styles.karmaBtn}
+              onPress={() => Alert.alert('Yakında', 'Karma sınav özelliği yakında eklenecek.')}
+            >
               <Text style={styles.karmaBtnLock}>🔒</Text>
               <Text style={styles.karmaBtnText}>Karma</Text>
               <Text style={styles.karmaBtnArrow}>›</Text>
@@ -241,7 +249,7 @@ export default function GamesScreen({ navigation }: Props) {
                 title={t.title}
                 locked={t.locked}
                 color={cat.color}
-                onPress={() => {}}
+                onPress={() => Alert.alert('Yakında', `${t.title} oyunu yakında eklenecek.`)}
               />
             ))}
           </ScrollView>

@@ -5,6 +5,7 @@ import {
   View,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { LinearGradient } from 'expo-linear-gradient';
 import { useTheme } from '../context/ThemeContext';
@@ -49,6 +50,7 @@ export default function StudyRoomScreen({ navigation }: Props) {
             <TouchableOpacity
               key={s}
               style={[styles.pill, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}
+              onPress={() => Alert.alert('Yakında', `${s} konularından sorular yakında eklenecek.`)}
             >
               <Text style={[styles.pillText, { color: theme.text }]}>{s}</Text>
             </TouchableOpacity>
@@ -58,7 +60,7 @@ export default function StudyRoomScreen({ navigation }: Props) {
 
       <TouchableOpacity
         style={[styles.startBtn, { backgroundColor: theme.accent }]}
-        onPress={() => {}}
+        onPress={() => Alert.alert('Yakında', 'Soru çözme özelliği yakında eklenecek.')}
       >
         <Text style={styles.startBtnText}>Sorulara Başla →</Text>
       </TouchableOpacity>

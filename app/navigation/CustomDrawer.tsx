@@ -1,9 +1,6 @@
 import React from 'react';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
-import {
-  DrawerContentScrollView,
-  DrawerItemList,
-} from '@react-navigation/drawer';
+import { View, Text, TouchableOpacity, StyleSheet, Alert } from 'react-native';
+import { DrawerContentScrollView } from '@react-navigation/drawer';
 import { useTheme } from '../context/ThemeContext';
 import { useAuth } from '../context/AuthContext';
 import { usePremium } from '../context/PremiumContext';
@@ -80,15 +77,15 @@ export default function CustomDrawerContent(props: any) {
       <View style={[styles.socialSection, { borderTopColor: theme.cardBorder }]}>
         <Text style={[styles.socialTitle, { color: theme.textSecondary }]}>BİZİ TAKİP EDİN</Text>
         <View style={styles.socialIcons}>
-          <TouchableOpacity style={styles.socialBtn}>
+          <TouchableOpacity style={styles.socialBtn} onPress={() => Alert.alert('Yakında', 'Sosyal medya linkleri yakında eklenecek.')}>
             <Text style={styles.socialIcon}>📱</Text>
           </TouchableOpacity>
           <View style={[styles.divider, { backgroundColor: theme.cardBorder }]} />
-          <TouchableOpacity style={styles.socialBtn}>
+          <TouchableOpacity style={styles.socialBtn} onPress={() => Alert.alert('Yakında', 'Sosyal medya linkleri yakında eklenecek.')}>
             <Text style={styles.socialIcon}>📷</Text>
           </TouchableOpacity>
           <View style={[styles.divider, { backgroundColor: theme.cardBorder }]} />
-          <TouchableOpacity style={styles.socialBtn}>
+          <TouchableOpacity style={styles.socialBtn} onPress={() => Alert.alert('Yakında', 'Sosyal medya linkleri yakında eklenecek.')}>
             <Text style={styles.socialIcon}>🎵</Text>
           </TouchableOpacity>
         </View>

@@ -6,6 +6,7 @@ import {
   TouchableOpacity,
   ScrollView,
   Dimensions,
+  Alert,
 } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 
@@ -29,7 +30,7 @@ export default function MindMapScreen({ navigation }: Props) {
           <Text style={[styles.backText, { color: theme.accent }]}>←</Text>
         </TouchableOpacity>
         <Text style={[styles.title, { color: theme.text }]}>Zihin Haritası</Text>
-        <TouchableOpacity style={styles.bookmarkBtn}>
+        <TouchableOpacity style={styles.bookmarkBtn} onPress={() => Alert.alert('Yakında', 'Yer imleri özelliği yakında eklenecek.')}>
           <Text style={styles.bookmarkIcon}>🔖</Text>
         </TouchableOpacity>
       </View>
@@ -52,6 +53,7 @@ export default function MindMapScreen({ navigation }: Props) {
           <TouchableOpacity
             key={m.id}
             style={[styles.mapCard, { backgroundColor: theme.card, borderColor: theme.cardBorder }]}
+            onPress={() => Alert.alert('Yakında', `${m.title} haritası yakında açılacak.`)}
           >
             <View style={styles.mapPreview}>
               <View style={styles.mapNode} />
@@ -75,7 +77,7 @@ export default function MindMapScreen({ navigation }: Props) {
 
       <TouchableOpacity
         style={[styles.createBtn, { backgroundColor: theme.text }]}
-        onPress={() => {}}
+        onPress={() => Alert.alert('Yakında', 'Zihin haritası oluşturma özelliği yakında eklenecek.')}
       >
         <Text style={styles.createIcon}>🎓</Text>
         <Text style={styles.createText}>Yeni Zihin Haritası Oluştur</Text>

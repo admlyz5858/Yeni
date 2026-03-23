@@ -139,7 +139,9 @@ export function PlanProvider({ children }: { children: React.ReactNode }) {
     pomodoroLog: Record<string, number>;
   }) => {
     if (!userId) return;
-    backend.savePlan(userId, data);
+    backend.savePlan(userId, data).catch((err) => {
+      if (__DEV__) console.warn('Plan kaydetme hatası:', err);
+    });
   }, [userId]);
 
   const persistToLocal = useCallback((data: object) => {

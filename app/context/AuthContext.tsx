@@ -62,10 +62,14 @@ export function AuthProvider({ children }: { children: React.ReactNode }) {
             try {
               const u = JSON.parse(raw);
               if (u?.id === 'demo') setUserState(u);
-            } catch {}
+            } catch (e) {
+              if (__DEV__) console.warn('Demo auth parse:', e);
+            }
           }
         }
-      } catch {}
+      } catch (e) {
+        if (__DEV__) console.warn('Auth init:', e);
+      }
       setIsLoading(false);
     };
     init();

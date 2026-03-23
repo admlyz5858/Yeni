@@ -1,17 +1,12 @@
 import React from 'react';
 import { createDrawerNavigator } from '@react-navigation/drawer';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
-import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
-import { View, Text, TouchableOpacity, StyleSheet } from 'react-native';
 import { useTheme } from '../context/ThemeContext';
 
 import MainTabs from './MainTabs';
 import CustomDrawerContent from './CustomDrawer';
 
-import HomeScreen from '../screens/HomeScreen';
-import GamesScreen from '../screens/GamesScreen';
 import PomodoroScreen from '../screens/PomodoroScreen';
-import LeaderboardScreen from '../screens/LeaderboardScreen';
 import ProfileScreen from '../screens/ProfileScreen';
 import PlanScreen from '../screens/PlanScreen';
 import ScheduleScreen from '../screens/ScheduleScreen';

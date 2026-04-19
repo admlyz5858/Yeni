@@ -13,6 +13,7 @@ import { Card } from '../components/Card';
 import { Header } from '../components/Header';
 import { Button } from '../components/Button';
 import { useApp } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
 import { colors } from '../theme/colors';
 import { radius, spacing } from '../theme/spacing';
 import { KpssTrack } from '../data/curriculum';
@@ -30,7 +31,15 @@ const goalOptions = [30, 60, 90, 120, 180, 240];
 
 export const SettingsScreen: React.FC = () => {
   const { state, updateSettings, resetAll } = useApp();
+  const { user, signOut } = useAuth();
   const { settings } = state;
+
+  const confirmSignOut = () => {
+    Alert.alert('Çıkış Yap', 'Hesabından çıkış yapmak istiyor musun?', [
+      { text: 'İptal', style: 'cancel' },
+      { text: 'Çıkış Yap', style: 'destructive', onPress: () => signOut() },
+    ]);
+  };
 
   const confirmReset = () => {
     Alert.alert(
@@ -51,6 +60,17 @@ export const SettingsScreen: React.FC = () => {
     <SafeAreaView style={styles.safe} edges={['top']}>
       <Header title="Ayarlar" subtitle="Hedef ve tercihlerini belirle" />
       <ScrollView contentContainerStyle={styles.content}>
+        <Card>
+          <Text style={styles.cardLabel}>Hesap</Text>
+          <Text style={styles.accountEmail}>{user?.email ?? '—'}</Text>
+          <View style={{ height: spacing.sm }} />
+          <Button
+            title="Çıkış Yap"
+            variant="secondary"
+            onPress={confirmSignOut}
+          />
+        </Card>
+
         <Card>
           <Text style={styles.cardLabel}>KPSS Türü</Text>
           <View style={styles.trackList}>
@@ -228,4 +248,5 @@ const styles = StyleSheet.create({
   switchRow: { flexDirection: 'row', alignItems: 'center' },
   switchTitle: { color: colors.text, fontSize: 15, fontWeight: '600' },
   muted: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
+  accountEmail: { color: colors.text, fontSize: 15, fontWeight: '600' },
 });

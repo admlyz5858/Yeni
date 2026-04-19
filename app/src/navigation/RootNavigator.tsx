@@ -1,8 +1,9 @@
 import React from 'react';
-import { Platform, StyleSheet, Text, View } from 'react-native';
+import { ActivityIndicator, Platform, StyleSheet, Text, View } from 'react-native';
 import { NavigationContainer, DefaultTheme } from '@react-navigation/native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import * as Linking from 'expo-linking';
 import { DashboardScreen } from '../screens/DashboardScreen';
 import { CurriculumScreen } from '../screens/CurriculumScreen';
 import { SubjectDetailScreen } from '../screens/SubjectDetailScreen';
@@ -10,7 +11,11 @@ import { TopicDetailScreen } from '../screens/TopicDetailScreen';
 import { FocusScreen } from '../screens/FocusScreen';
 import { StatsScreen } from '../screens/StatsScreen';
 import { SettingsScreen } from '../screens/SettingsScreen';
+import { SignInScreen } from '../screens/auth/SignInScreen';
+import { SignUpScreen } from '../screens/auth/SignUpScreen';
+import { ForgotPasswordScreen } from '../screens/auth/ForgotPasswordScreen';
 import { colors } from '../theme/colors';
+import { useAuth } from '../context/AuthContext';
 
 const Tab = createBottomTabNavigator();
 const Stack = createNativeStackNavigator();
@@ -62,6 +67,54 @@ const TabIcon: React.FC<TabIconProps> = ({ label, active, color }) => (
   </View>
 );
 
+const MainTabs = () => (
+  <Tab.Navigator
+    screenOptions={({ route }) => ({
+      headerShown: false,
+      tabBarStyle: {
+        backgroundColor: colors.surface,
+        borderTopColor: colors.border,
+        height: Platform.OS === 'ios' ? 84 : 64,
+        paddingTop: 6,
+        paddingBottom: Platform.OS === 'ios' ? 24 : 8,
+      },
+      tabBarActiveTintColor: colors.primary,
+      tabBarInactiveTintColor: colors.textMuted,
+      tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
+      tabBarIcon: ({ color, focused }) => {
+        const map: Record<string, string> = {
+          Ana: 'AN',
+          Müfredat: 'MF',
+          Odak: 'OD',
+          İstatistik: 'İS',
+          Ayarlar: 'AY',
+        };
+        const lbl = map[route.name] ?? route.name.slice(0, 2).toUpperCase();
+        return <TabIcon label={lbl} active={focused} color={color} />;
+      },
+    })}
+  >
+    <Tab.Screen name="Ana" component={DashboardScreen} />
+    <Tab.Screen name="Müfredat" component={CurriculumStack} />
+    <Tab.Screen name="Odak" component={FocusScreen} />
+    <Tab.Screen name="İstatistik" component={StatsScreen} />
+    <Tab.Screen name="Ayarlar" component={SettingsScreen} />
+  </Tab.Navigator>
+);
+
+const AuthStack = () => (
+  <Stack.Navigator
+    screenOptions={{
+      headerShown: false,
+      contentStyle: { backgroundColor: colors.bg },
+    }}
+  >
+    <Stack.Screen name="SignIn" component={SignInScreen} />
+    <Stack.Screen name="SignUp" component={SignUpScreen} />
+    <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} />
+  </Stack.Navigator>
+);
+
 const navTheme = {
   ...DefaultTheme,
   dark: true,
@@ -76,41 +129,31 @@ const navTheme = {
   },
 };
 
+const linking = {
+  prefixes: [Linking.createURL('/'), 'kpssplanlayici://'],
+  config: {
+    screens: {
+      SignIn: 'signin',
+      SignUp: 'signup',
+      ForgotPassword: 'reset',
+    },
+  },
+};
+
 export const RootNavigator: React.FC = () => {
+  const { session, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <View style={styles.loading}>
+        <ActivityIndicator color={colors.primary} size="large" />
+      </View>
+    );
+  }
+
   return (
-    <NavigationContainer theme={navTheme}>
-      <Tab.Navigator
-        screenOptions={({ route }) => ({
-          headerShown: false,
-          tabBarStyle: {
-            backgroundColor: colors.surface,
-            borderTopColor: colors.border,
-            height: Platform.OS === 'ios' ? 84 : 64,
-            paddingTop: 6,
-            paddingBottom: Platform.OS === 'ios' ? 24 : 8,
-          },
-          tabBarActiveTintColor: colors.primary,
-          tabBarInactiveTintColor: colors.textMuted,
-          tabBarLabelStyle: { fontSize: 11, fontWeight: '600' },
-          tabBarIcon: ({ color, focused }) => {
-            const map: Record<string, string> = {
-              Ana: 'AN',
-              Müfredat: 'MF',
-              Odak: 'OD',
-              İstatistik: 'İS',
-              Ayarlar: 'AY',
-            };
-            const lbl = map[route.name] ?? route.name.slice(0, 2).toUpperCase();
-            return <TabIcon label={lbl} active={focused} color={color} />;
-          },
-        })}
-      >
-        <Tab.Screen name="Ana" component={DashboardScreen} />
-        <Tab.Screen name="Müfredat" component={CurriculumStack} />
-        <Tab.Screen name="Odak" component={FocusScreen} />
-        <Tab.Screen name="İstatistik" component={StatsScreen} />
-        <Tab.Screen name="Ayarlar" component={SettingsScreen} />
-      </Tab.Navigator>
+    <NavigationContainer theme={navTheme} linking={linking as any}>
+      {session ? <MainTabs /> : <AuthStack />}
     </NavigationContainer>
   );
 };
@@ -128,5 +171,11 @@ const styles = StyleSheet.create({
     fontSize: 11,
     fontWeight: '800',
     letterSpacing: 1,
+  },
+  loading: {
+    flex: 1,
+    backgroundColor: colors.bg,
+    alignItems: 'center',
+    justifyContent: 'center',
   },
 });

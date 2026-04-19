@@ -16,7 +16,15 @@ import {
   defaultState,
   defaultTopicProgress,
 } from '../storage/types';
-import { loadState, saveState, clearState } from '../storage/storage';
+import { clearState, loadState, saveState } from '../storage/storage';
+import { useAuth } from './AuthContext';
+import {
+  fetchRemoteState,
+  pushSession,
+  pushSettings,
+  pushTopicProgress,
+  wipeUserData,
+} from '../lib/remote';
 
 type Action =
   | { type: 'HYDRATE'; payload: AppState }
@@ -30,10 +38,7 @@ function reducer(state: AppState, action: Action): AppState {
     case 'HYDRATE':
       return action.payload;
     case 'UPDATE_SETTINGS':
-      return {
-        ...state,
-        settings: { ...state.settings, ...action.payload },
-      };
+      return { ...state, settings: { ...state.settings, ...action.payload } };
     case 'UPDATE_TOPIC': {
       const existing = state.progress[action.topicId] ?? defaultTopicProgress;
       return {
@@ -73,6 +78,7 @@ function reducer(state: AppState, action: Action): AppState {
 interface AppContextValue {
   state: AppState;
   hydrated: boolean;
+  syncing: boolean;
   updateSettings: (payload: Partial<AppSettings>) => void;
   updateTopic: (topicId: string, payload: Partial<TopicProgress>) => void;
   setTopicStatus: (topicId: string, status: TopicStatus) => void;
@@ -87,8 +93,11 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
   children,
 }) => {
   const [state, dispatch] = useReducer(reducer, defaultState);
-  const hydratedRef = useRef(false);
   const [hydrated, setHydrated] = React.useState(false);
+  const [syncing, setSyncing] = React.useState(false);
+  const hydratedRef = useRef(false);
+  const currentUserRef = useRef<string | null>(null);
+  const { user } = useAuth();
 
   useEffect(() => {
     let mounted = true;
@@ -108,32 +117,109 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
     saveState(state);
   }, [state]);
 
-  const updateSettings = useCallback((payload: Partial<AppSettings>) => {
-    dispatch({ type: 'UPDATE_SETTINGS', payload });
-  }, []);
+  useEffect(() => {
+    const userId = user?.id ?? null;
+    if (currentUserRef.current === userId) return;
+    currentUserRef.current = userId;
+
+    if (!userId) {
+      return;
+    }
+
+    let cancelled = false;
+    setSyncing(true);
+    fetchRemoteState(userId)
+      .then((remote) => {
+        if (cancelled) return;
+        dispatch({ type: 'HYDRATE', payload: remote });
+      })
+      .catch((e) => {
+        console.warn('[sync] fetchRemoteState failed', e?.message ?? e);
+      })
+      .finally(() => {
+        if (!cancelled) setSyncing(false);
+      });
+
+    return () => {
+      cancelled = true;
+    };
+  }, [user?.id]);
+
+  const updateSettings = useCallback(
+    (payload: Partial<AppSettings>) => {
+      dispatch({ type: 'UPDATE_SETTINGS', payload });
+      const userId = user?.id;
+      if (userId) {
+        const nextSettings = { ...state.settings, ...payload };
+        pushSettings(userId, nextSettings).catch((e) =>
+          console.warn('[sync] pushSettings failed', e?.message ?? e),
+        );
+      }
+    },
+    [user?.id, state.settings],
+  );
 
   const updateTopic = useCallback(
     (topicId: string, payload: Partial<TopicProgress>) => {
       dispatch({ type: 'UPDATE_TOPIC', topicId, payload });
+      const userId = user?.id;
+      if (userId) {
+        const existing = state.progress[topicId] ?? defaultTopicProgress;
+        const merged: TopicProgress = { ...existing, ...payload };
+        pushTopicProgress(userId, topicId, merged).catch((e) =>
+          console.warn('[sync] pushTopicProgress failed', e?.message ?? e),
+        );
+      }
     },
-    [],
+    [user?.id, state.progress],
   );
 
   const setTopicStatus = useCallback(
     (topicId: string, status: TopicStatus) => {
-      dispatch({ type: 'UPDATE_TOPIC', topicId, payload: { status } });
+      updateTopic(topicId, { status });
     },
-    [],
+    [updateTopic],
   );
 
-  const addSession = useCallback((session: StudySession) => {
-    dispatch({ type: 'ADD_SESSION', payload: session });
-  }, []);
+  const addSession = useCallback(
+    (session: StudySession) => {
+      dispatch({ type: 'ADD_SESSION', payload: session });
+      const userId = user?.id;
+      if (userId) {
+        pushSession(userId, session).catch((e) =>
+          console.warn('[sync] pushSession failed', e?.message ?? e),
+        );
+        if (session.topicId) {
+          const existing =
+            state.progress[session.topicId] ?? defaultTopicProgress;
+          const merged: TopicProgress = {
+            ...existing,
+            studySeconds: existing.studySeconds + session.durationSeconds,
+            lastStudiedAt: session.endedAt,
+            status:
+              existing.status === 'not_started'
+                ? 'in_progress'
+                : existing.status,
+          };
+          pushTopicProgress(userId, session.topicId, merged).catch((e) =>
+            console.warn('[sync] session topic push failed', e?.message ?? e),
+          );
+        }
+      }
+    },
+    [user?.id, state.progress],
+  );
 
   const resetAll = useCallback(async () => {
+    const userId = user?.id;
     await clearState();
     dispatch({ type: 'RESET' });
-  }, []);
+    if (userId) {
+      wipeUserData(userId).catch((e) =>
+        console.warn('[sync] wipeUserData failed', e?.message ?? e),
+      );
+    }
+  }, [user?.id]);
 
   const getTopicProgress = useCallback(
     (topicId: string): TopicProgress =>
@@ -145,6 +231,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
     () => ({
       state,
       hydrated,
+      syncing,
       updateSettings,
       updateTopic,
       setTopicStatus,
@@ -155,6 +242,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
     [
       state,
       hydrated,
+      syncing,
       updateSettings,
       updateTopic,
       setTopicStatus,

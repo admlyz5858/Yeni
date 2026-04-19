@@ -13,6 +13,8 @@ export async function loadState(): Promise<AppState> {
       progress: parsed.progress ?? {},
       sessions: parsed.sessions ?? [],
       profile: { ...defaultState.profile, ...(parsed.profile ?? {}) },
+      dailyTasks: parsed.dailyTasks ?? [],
+      plannerGeneratedFor: parsed.plannerGeneratedFor ?? null,
     };
   } catch (e) {
     return defaultState;

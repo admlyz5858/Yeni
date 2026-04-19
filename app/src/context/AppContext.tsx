@@ -20,13 +20,23 @@ import {
 import { clearState, loadState, saveState } from '../storage/storage';
 import { useAuth } from './AuthContext';
 import {
+  clearDailyTasksFromDate,
   fetchRemoteState,
+  pushDailyTaskStatus,
+  pushDailyTasks,
   pushProfile,
   pushSession,
   pushSettings,
   pushTopicProgress,
   wipeUserData,
 } from '../lib/remote';
+import {
+  DailyTask,
+  DailyTaskStatus,
+  generateWeeklyPlan,
+  mergeExistingTasks,
+  todayKey,
+} from '../lib/planner';
 
 type Action =
   | { type: 'HYDRATE'; payload: AppState }
@@ -34,6 +44,13 @@ type Action =
   | { type: 'UPDATE_PROFILE'; payload: Partial<Profile> }
   | { type: 'UPDATE_TOPIC'; topicId: string; payload: Partial<TopicProgress> }
   | { type: 'ADD_SESSION'; payload: StudySession }
+  | { type: 'SET_DAILY_TASKS'; tasks: DailyTask[]; generatedFor: string }
+  | {
+      type: 'UPDATE_TASK_STATUS';
+      taskId: string;
+      status: DailyTaskStatus;
+      updatedAt: number;
+    }
   | { type: 'RESET' };
 
 function reducer(state: AppState, action: Action): AppState {
@@ -73,6 +90,21 @@ function reducer(state: AppState, action: Action): AppState {
       }
       return { ...state, sessions: newSessions, progress };
     }
+    case 'SET_DAILY_TASKS':
+      return {
+        ...state,
+        dailyTasks: action.tasks,
+        plannerGeneratedFor: action.generatedFor,
+      };
+    case 'UPDATE_TASK_STATUS':
+      return {
+        ...state,
+        dailyTasks: state.dailyTasks.map((t) =>
+          t.id === action.taskId
+            ? { ...t, status: action.status, updatedAt: action.updatedAt }
+            : t,
+        ),
+      };
     case 'RESET':
       return defaultState;
     default:
@@ -91,6 +123,9 @@ interface AppContextValue {
   addSession: (session: StudySession) => void;
   resetAll: () => Promise<void>;
   getTopicProgress: (topicId: string) => TopicProgress;
+  regeneratePlan: () => Promise<void>;
+  ensurePlanForToday: () => Promise<void>;
+  setTaskStatus: (taskId: string, status: DailyTaskStatus) => void;
 }
 
 const AppContext = createContext<AppContextValue | null>(null);
@@ -243,6 +278,70 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, [user?.id]);
 
+  const regeneratePlan = useCallback(async () => {
+    const plan = generateWeeklyPlan({
+      track: state.settings.track,
+      dailyGoalMinutes: state.settings.dailyGoalMinutes,
+      examDate: state.profile.examDate,
+      progress: state.progress,
+    });
+    const fresh: DailyTask[] = plan.days.flatMap((d) => d.tasks);
+    const merged = mergeExistingTasks(state.dailyTasks, fresh);
+    dispatch({
+      type: 'SET_DAILY_TASKS',
+      tasks: merged,
+      generatedFor: plan.generatedFor,
+    });
+    const userId = user?.id;
+    if (userId) {
+      try {
+        const today = todayKey();
+        await clearDailyTasksFromDate(userId, today);
+        await pushDailyTasks(userId, merged);
+      } catch (e: any) {
+        console.warn('[sync] regeneratePlan push failed', e?.message ?? e);
+      }
+    }
+  }, [
+    state.settings.track,
+    state.settings.dailyGoalMinutes,
+    state.profile.examDate,
+    state.progress,
+    state.dailyTasks,
+    user?.id,
+  ]);
+
+  const ensurePlanForToday = useCallback(async () => {
+    const today = todayKey();
+    if (state.plannerGeneratedFor === today) return;
+    const hasTodayTasks = state.dailyTasks.some((t) => t.date === today);
+    if (!hasTodayTasks) {
+      await regeneratePlan();
+    } else {
+      dispatch({
+        type: 'SET_DAILY_TASKS',
+        tasks: state.dailyTasks,
+        generatedFor: today,
+      });
+    }
+  }, [state.plannerGeneratedFor, state.dailyTasks, regeneratePlan]);
+
+  const setTaskStatus = useCallback(
+    (taskId: string, status: DailyTaskStatus) => {
+      const updatedAt = Date.now();
+      dispatch({ type: 'UPDATE_TASK_STATUS', taskId, status, updatedAt });
+      const userId = user?.id;
+      const task = state.dailyTasks.find((t) => t.id === taskId);
+      if (!task) return;
+      if (userId) {
+        pushDailyTaskStatus(userId, { ...task, status, updatedAt }).catch((e) =>
+          console.warn('[sync] task status push failed', e?.message ?? e),
+        );
+      }
+    },
+    [state.dailyTasks, user?.id],
+  );
+
   const getTopicProgress = useCallback(
     (topicId: string): TopicProgress =>
       state.progress[topicId] ?? defaultTopicProgress,
@@ -261,6 +360,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
       addSession,
       resetAll,
       getTopicProgress,
+      regeneratePlan,
+      ensurePlanForToday,
+      setTaskStatus,
     }),
     [
       state,
@@ -273,6 +375,9 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
       addSession,
       resetAll,
       getTopicProgress,
+      regeneratePlan,
+      ensurePlanForToday,
+      setTaskStatus,
     ],
   );
 

@@ -9,6 +9,7 @@ import {
   defaultSettings,
   defaultTopicProgress,
 } from '../storage/types';
+import type { DailyTask, DailyTaskStatus } from './planner';
 
 interface RemoteProfile {
   id: string;
@@ -70,8 +71,34 @@ function sanitizeStatus(v: string): TopicProgress['status'] {
     : 'not_started';
 }
 
+interface RemoteDailyTask {
+  id: string;
+  user_id: string;
+  date: string;
+  topic_id: string;
+  subject_id: string | null;
+  target_minutes: number;
+  status: string;
+  sort_index: number;
+  updated_at: string | null;
+}
+
+const validTaskStatuses = [
+  'pending',
+  'in_progress',
+  'done',
+  'skipped',
+] as const;
+
+function sanitizeTaskStatus(v: string): DailyTaskStatus {
+  return (validTaskStatuses as readonly string[]).includes(v)
+    ? (v as DailyTaskStatus)
+    : 'pending';
+}
+
 export async function fetchRemoteState(userId: string): Promise<AppState> {
-  const [profileRes, progressRes, sessionsRes] = await Promise.all([
+  const todayIso = new Date().toISOString().slice(0, 10);
+  const [profileRes, progressRes, sessionsRes, tasksRes] = await Promise.all([
     supabase.from('profiles').select('*').eq('id', userId).maybeSingle(),
     supabase.from('topic_progress').select('*').eq('user_id', userId),
     supabase
@@ -80,11 +107,19 @@ export async function fetchRemoteState(userId: string): Promise<AppState> {
       .eq('user_id', userId)
       .order('created_at', { ascending: false })
       .limit(500),
+    supabase
+      .from('daily_tasks')
+      .select('*')
+      .eq('user_id', userId)
+      .gte('date', todayIso)
+      .order('date', { ascending: true })
+      .order('sort_index', { ascending: true }),
   ]);
 
   const profile = (profileRes.data as RemoteProfile | null) ?? null;
   const progressRows = (progressRes.data as RemoteTopicProgress[] | null) ?? [];
   const sessionRows = (sessionsRes.data as RemoteSession[] | null) ?? [];
+  const taskRows = (tasksRes.data as RemoteDailyTask[] | null) ?? [];
 
   const settings: AppSettings = {
     ...defaultSettings,
@@ -132,7 +167,27 @@ export async function fetchRemoteState(userId: string): Promise<AppState> {
       : new Date(row.created_at).getTime(),
   }));
 
-  return { settings, progress, sessions, profile: profileState };
+  const dailyTasks: DailyTask[] = taskRows.map((row) => ({
+    id: row.id,
+    date: row.date,
+    topicId: row.topic_id,
+    subjectId: row.subject_id ?? '',
+    targetMinutes: row.target_minutes,
+    status: sanitizeTaskStatus(row.status),
+    sortIndex: row.sort_index,
+    updatedAt: row.updated_at
+      ? new Date(row.updated_at).getTime()
+      : Date.now(),
+  }));
+
+  return {
+    settings,
+    progress,
+    sessions,
+    profile: profileState,
+    dailyTasks,
+    plannerGeneratedFor: null,
+  };
 }
 
 export async function pushSettings(
@@ -224,5 +279,62 @@ export async function wipeUserData(userId: string): Promise<void> {
   await Promise.all([
     supabase.from('topic_progress').delete().eq('user_id', userId),
     supabase.from('study_sessions').delete().eq('user_id', userId),
+    supabase.from('daily_tasks').delete().eq('user_id', userId),
   ]);
+}
+
+export async function pushDailyTasks(
+  userId: string,
+  tasks: DailyTask[],
+): Promise<void> {
+  if (tasks.length === 0) return;
+  const rows = tasks.map((t) => ({
+    user_id: userId,
+    date: t.date,
+    topic_id: t.topicId,
+    subject_id: t.subjectId || null,
+    target_minutes: t.targetMinutes,
+    status: t.status,
+    sort_index: t.sortIndex,
+    updated_at: new Date().toISOString(),
+  }));
+  const { error } = await supabase
+    .from('daily_tasks')
+    .upsert(rows, { onConflict: 'user_id,date,topic_id' });
+  if (error) throw error;
+}
+
+export async function pushDailyTaskStatus(
+  userId: string,
+  task: DailyTask,
+): Promise<void> {
+  const { error } = await supabase
+    .from('daily_tasks')
+    .upsert(
+      {
+        user_id: userId,
+        date: task.date,
+        topic_id: task.topicId,
+        subject_id: task.subjectId || null,
+        target_minutes: task.targetMinutes,
+        status: task.status,
+        sort_index: task.sortIndex,
+        updated_at: new Date().toISOString(),
+      },
+      { onConflict: 'user_id,date,topic_id' },
+    );
+  if (error) throw error;
+}
+
+export async function clearDailyTasksFromDate(
+  userId: string,
+  fromDate: string,
+): Promise<void> {
+  const { error } = await supabase
+    .from('daily_tasks')
+    .delete()
+    .eq('user_id', userId)
+    .gte('date', fromDate)
+    .neq('status', 'done');
+  if (error) throw error;
 }

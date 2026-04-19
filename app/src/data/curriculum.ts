@@ -4,6 +4,14 @@ export interface KpssTopic {
   id: string;
   title: string;
   subtopics?: string[];
+  difficulty?: number;
+  estimatedMinutes?: number;
+}
+
+export interface KpssSubjectDefaults {
+  difficulty: number;
+  estimatedMinutes: number;
+  examWeight: number;
 }
 
 export interface KpssSubject {
@@ -12,6 +20,7 @@ export interface KpssSubject {
   icon: string;
   color: string;
   topics: KpssTopic[];
+  defaults?: KpssSubjectDefaults;
 }
 
 export interface KpssSection {
@@ -19,6 +28,30 @@ export interface KpssSection {
   title: string;
   description: string;
   subjects: KpssSubject[];
+}
+
+export interface TopicMeta {
+  difficulty: number;
+  estimatedMinutes: number;
+  examWeight: number;
+}
+
+const FALLBACK_META: TopicMeta = {
+  difficulty: 3,
+  estimatedMinutes: 20,
+  examWeight: 1,
+};
+
+export function getTopicMeta(
+  subject: KpssSubject,
+  topic: KpssTopic,
+): TopicMeta {
+  const defaults = subject.defaults ?? FALLBACK_META;
+  return {
+    difficulty: topic.difficulty ?? defaults.difficulty,
+    estimatedMinutes: topic.estimatedMinutes ?? defaults.estimatedMinutes,
+    examWeight: defaults.examWeight,
+  };
 }
 
 export const genelYetenek: KpssSection = {
@@ -31,6 +64,7 @@ export const genelYetenek: KpssSection = {
       title: 'Türkçe',
       icon: 'T',
       color: '#6366f1',
+      defaults: { difficulty: 3, estimatedMinutes: 30, examWeight: 4 },
       topics: [
         { id: 't-ses', title: 'Ses Bilgisi' },
         { id: 't-yazim', title: 'Yazım Kuralları' },
@@ -50,6 +84,7 @@ export const genelYetenek: KpssSection = {
       title: 'Matematik',
       icon: 'M',
       color: '#22d3ee',
+      defaults: { difficulty: 4, estimatedMinutes: 45, examWeight: 4 },
       topics: [
         { id: 'm-temel', title: 'Temel Kavramlar' },
         { id: 'm-sayilar', title: 'Sayı Basamakları' },
@@ -79,6 +114,7 @@ export const genelYetenek: KpssSection = {
       title: 'Geometri',
       icon: 'G',
       color: '#f59e0b',
+      defaults: { difficulty: 4, estimatedMinutes: 35, examWeight: 2 },
       topics: [
         { id: 'g-acilar', title: 'Doğruda ve Üçgende Açılar' },
         { id: 'g-ucgen', title: 'Üçgenler' },
@@ -105,6 +141,7 @@ export const genelKultur: KpssSection = {
       title: 'Tarih',
       icon: 'T',
       color: '#ef4444',
+      defaults: { difficulty: 3, estimatedMinutes: 35, examWeight: 4 },
       topics: [
         { id: 'tr-islam-oncesi', title: 'İslamiyet Öncesi Türk Tarihi' },
         { id: 'tr-ilk-turk-islam', title: 'İlk Türk İslam Devletleri' },
@@ -131,6 +168,7 @@ export const genelKultur: KpssSection = {
       title: 'Coğrafya',
       icon: 'C',
       color: '#10b981',
+      defaults: { difficulty: 3, estimatedMinutes: 30, examWeight: 3 },
       topics: [
         { id: 'c-turkiye-konum', title: "Türkiye'nin Coğrafi Konumu" },
         { id: 'c-yerşekilleri', title: "Türkiye'nin Yer Şekilleri" },
@@ -148,6 +186,7 @@ export const genelKultur: KpssSection = {
       title: 'Vatandaşlık',
       icon: 'V',
       color: '#8b5cf6',
+      defaults: { difficulty: 3, estimatedMinutes: 25, examWeight: 3 },
       topics: [
         { id: 'v-hukuk', title: 'Hukuk Başlangıcı' },
         { id: 'v-devlet', title: 'Devlet Biçimleri' },
@@ -166,6 +205,7 @@ export const genelKultur: KpssSection = {
       title: 'Güncel Bilgiler',
       icon: 'G',
       color: '#06b6d4',
+      defaults: { difficulty: 2, estimatedMinutes: 20, examWeight: 2 },
       topics: [
         { id: 'gn-turkiye', title: 'Türkiye Güncel Olaylar' },
         { id: 'gn-dunya', title: 'Dünya Güncel Olaylar' },
@@ -186,6 +226,7 @@ export const egitimBilimleri: KpssSection = {
       title: 'Gelişim Psikolojisi',
       icon: 'G',
       color: '#6366f1',
+      defaults: { difficulty: 3, estimatedMinutes: 30, examWeight: 3 },
       topics: [
         { id: 'gp-temel', title: 'Gelişim Temel Kavramlar' },
         { id: 'gp-bedensel', title: 'Bedensel ve Motor Gelişim' },
@@ -201,6 +242,7 @@ export const egitimBilimleri: KpssSection = {
       title: 'Öğrenme Psikolojisi',
       icon: 'Ö',
       color: '#22d3ee',
+      defaults: { difficulty: 4, estimatedMinutes: 35, examWeight: 3 },
       topics: [
         { id: 'op-temel', title: 'Öğrenme Temel Kavramlar' },
         { id: 'op-davranisci', title: 'Davranışçı Kuramlar' },
@@ -217,6 +259,7 @@ export const egitimBilimleri: KpssSection = {
       title: 'Rehberlik',
       icon: 'R',
       color: '#f59e0b',
+      defaults: { difficulty: 3, estimatedMinutes: 25, examWeight: 2 },
       topics: [
         { id: 'r-temel', title: 'Rehberlik Temel Kavramları' },
         { id: 'r-turleri', title: 'Rehberlik Türleri' },
@@ -230,6 +273,7 @@ export const egitimBilimleri: KpssSection = {
       title: 'Ölçme ve Değerlendirme',
       icon: 'Ö',
       color: '#10b981',
+      defaults: { difficulty: 4, estimatedMinutes: 30, examWeight: 2 },
       topics: [
         { id: 'od-temel', title: 'Temel Kavramlar' },
         { id: 'od-olcek', title: 'Ölçek Türleri' },
@@ -245,6 +289,7 @@ export const egitimBilimleri: KpssSection = {
       title: 'Program Geliştirme',
       icon: 'P',
       color: '#ef4444',
+      defaults: { difficulty: 3, estimatedMinutes: 25, examWeight: 2 },
       topics: [
         { id: 'pg-temel', title: 'Temel Kavramlar' },
         { id: 'pg-tasarim', title: 'Program Tasarım Yaklaşımları' },
@@ -258,6 +303,7 @@ export const egitimBilimleri: KpssSection = {
       title: 'Öğretim İlke ve Yöntemleri',
       icon: 'Ö',
       color: '#8b5cf6',
+      defaults: { difficulty: 3, estimatedMinutes: 30, examWeight: 3 },
       topics: [
         { id: 'oy-temel', title: 'Temel Kavramlar' },
         { id: 'oy-ilkeler', title: 'Öğretim İlkeleri' },
@@ -273,6 +319,7 @@ export const egitimBilimleri: KpssSection = {
       title: 'Öğretim Teknolojileri',
       icon: 'T',
       color: '#06b6d4',
+      defaults: { difficulty: 2, estimatedMinutes: 20, examWeight: 1 },
       topics: [
         { id: 'tm-temel', title: 'Temel Kavramlar' },
         { id: 'tm-iletisim', title: 'İletişim ve Öğretim' },
@@ -285,6 +332,7 @@ export const egitimBilimleri: KpssSection = {
       title: 'Sınıf Yönetimi',
       icon: 'S',
       color: '#eab308',
+      defaults: { difficulty: 2, estimatedMinutes: 20, examWeight: 2 },
       topics: [
         { id: 'sy-temel', title: 'Temel Kavramlar' },
         { id: 'sy-ortam', title: 'Sınıf Ortamı' },

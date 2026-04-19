@@ -262,13 +262,13 @@ npm run build:apk
 - [ ] Supabase e-posta şablonları TR (Dashboard'dan manuel yapılacak)
 - [ ] Leaked password protection aç (Supabase advisor, Dashboard'dan manuel)
 
-### 🟡 Faz 2 — Müfredat & Plan Motoru
-- [ ] Konulara meta veri (`estimatedMinutes`, `difficulty`, `examWeight`, `prerequisites`)
+### ✅ Faz 2 — Müfredat & Plan Motoru
+- [x] Konulara/derslere meta veri (`estimatedMinutes`, `difficulty`, `examWeight`)
+- [x] `src/lib/planner.ts` — haftalık + günlük plan üretici (sınav tarihine göre ağırlıklı, konu durumu + soru başarısı + son çalışma dahil)
+- [x] Plan tab'ı: bugünün görevleri + haftalık önizleme + "Planı Yenile"
+- [x] Ana ekran "Bugünün Görevleri" mini kartı
+- [x] `public.daily_tasks` tablosu + RLS + offline-first sync
 - [ ] Kaynak linkleri (`resourceLinks[]`)
-- [ ] Sınav tarihi alanı
-- [ ] `src/lib/planner.ts` — haftalık plan üretici
-- [ ] "Bu hafta" kartı
-- [ ] `public.daily_tasks` tablosu + günlük plan ekranı
 - [ ] Plan yenileme cron (Edge Function + pg_cron)
 - [ ] `public.custom_topics` (kullanıcı kendi konusu)
 

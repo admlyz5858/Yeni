@@ -5,6 +5,7 @@ import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 import * as Linking from 'expo-linking';
 import { DashboardScreen } from '../screens/DashboardScreen';
+import { PlanScreen } from '../screens/PlanScreen';
 import { CurriculumScreen } from '../screens/CurriculumScreen';
 import { SubjectDetailScreen } from '../screens/SubjectDetailScreen';
 import { TopicDetailScreen } from '../screens/TopicDetailScreen';
@@ -116,6 +117,7 @@ const MainTabs = () => (
       tabBarIcon: ({ color, focused }) => {
         const map: Record<string, string> = {
           Ana: 'AN',
+          Plan: 'PL',
           Müfredat: 'MF',
           Odak: 'OD',
           İstatistik: 'İS',
@@ -127,6 +129,7 @@ const MainTabs = () => (
     })}
   >
     <Tab.Screen name="Ana" component={DashboardScreen} />
+    <Tab.Screen name="Plan" component={PlanScreen} />
     <Tab.Screen name="Müfredat" component={CurriculumStack} />
     <Tab.Screen name="Odak" component={FocusScreen} />
     <Tab.Screen name="İstatistik" component={StatsScreen} />

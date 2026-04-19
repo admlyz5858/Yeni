@@ -11,7 +11,8 @@ import { colors } from '../theme/colors';
 import { radius, spacing } from '../theme/spacing';
 import { computeAllStats, todayStudySeconds, totalStreak } from '../utils/stats';
 import { formatDuration } from '../utils/format';
-import { getSectionsForTrack } from '../data/curriculum';
+import { getSectionsForTrack, getTopicById } from '../data/curriculum';
+import { todayKey } from '../lib/planner';
 
 interface Props {
   navigation: any;
@@ -26,7 +27,7 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
     () => computeAllStats(state, settings.track),
     [state, settings.track],
   );
-  const today = todayStudySeconds(state);
+  const todaySeconds = todayStudySeconds(state);
   const streak = totalStreak(state);
   const sectionsForTrack = useMemo(
     () => getSectionsForTrack(settings.track),
@@ -34,7 +35,7 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
   );
 
   const trackLabel = trackLabels[settings.track];
-  const todayMinutes = Math.floor(today / 60);
+  const todayMinutes = Math.floor(todaySeconds / 60);
   const goalMinutes = settings.dailyGoalMinutes;
   const examDaysLeft = useMemo(() => {
     if (!state.profile.examDate) return null;
@@ -45,6 +46,15 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
     return diff;
   }, [state.profile.examDate]);
   const greetingName = state.profile.firstName ?? null;
+  const today = todayKey();
+  const todayTasks = useMemo(
+    () =>
+      state.dailyTasks
+        .filter((t) => t.date === today)
+        .sort((a, b) => a.sortIndex - b.sortIndex),
+    [state.dailyTasks, today],
+  );
+  const doneTasks = todayTasks.filter((t) => t.status === 'done').length;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
@@ -143,7 +153,13 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
 
         <View style={styles.actionsRow}>
           <Button
-            title="Odaklan"
+            title="Plan"
+            onPress={() => navigation.navigate('Plan')}
+            style={{ flex: 1 }}
+          />
+          <Button
+            title="Odak"
+            variant="secondary"
             onPress={() => navigation.navigate('Odak')}
             style={{ flex: 1 }}
           />
@@ -154,6 +170,64 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
             style={{ flex: 1 }}
           />
         </View>
+
+        {todayTasks.length > 0 && (
+          <Card>
+            <View style={styles.rowBetween}>
+              <Text style={styles.cardLabel}>Bugünün Görevleri</Text>
+              <Text style={styles.muted}>
+                {doneTasks}/{todayTasks.length} tamam
+              </Text>
+            </View>
+            <View style={{ gap: 6 }}>
+              {todayTasks.slice(0, 4).map((task) => {
+                const topic = getTopicById(task.topicId);
+                const done = task.status === 'done';
+                return (
+                  <View key={task.id} style={styles.taskMini}>
+                    <View
+                      style={[
+                        styles.taskDot,
+                        {
+                          backgroundColor: done
+                            ? colors.success
+                            : colors.bgSoft,
+                          borderColor: done ? colors.success : colors.border,
+                        },
+                      ]}
+                    >
+                      {done && <Text style={styles.taskCheck}>✓</Text>}
+                    </View>
+                    <Text
+                      style={[
+                        styles.taskText,
+                        done && {
+                          color: colors.textMuted,
+                          textDecorationLine: 'line-through',
+                        },
+                      ]}
+                      numberOfLines={1}
+                    >
+                      {topic?.topic.title ?? task.topicId}
+                    </Text>
+                    <Text style={styles.taskMin}>{task.targetMinutes}dk</Text>
+                  </View>
+                );
+              })}
+              {todayTasks.length > 4 && (
+                <Text style={styles.muted}>
+                  +{todayTasks.length - 4} görev daha
+                </Text>
+              )}
+            </View>
+            <View style={{ height: spacing.sm }} />
+            <Button
+              title="Tüm Planı Aç"
+              variant="secondary"
+              onPress={() => navigation.navigate('Plan')}
+            />
+          </Card>
+        )}
 
         <Text style={styles.sectionHeading}>Bölümler</Text>
         {sectionsForTrack.map((section) => {
@@ -319,4 +393,33 @@ const styles = StyleSheet.create({
     fontSize: 13,
     fontWeight: '600',
   },
+  rowBetween: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: spacing.sm,
+  },
+  muted: { color: colors.textMuted, fontSize: 12 },
+  taskMini: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    gap: spacing.sm,
+    backgroundColor: colors.bgSoft,
+    borderRadius: radius.sm,
+    paddingVertical: 6,
+    paddingHorizontal: spacing.sm,
+    borderWidth: 1,
+    borderColor: colors.border,
+  },
+  taskDot: {
+    width: 18,
+    height: 18,
+    borderRadius: 9,
+    borderWidth: 2,
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  taskCheck: { color: colors.white, fontSize: 10, fontWeight: '800' },
+  taskText: { flex: 1, color: colors.text, fontSize: 13, fontWeight: '500' },
+  taskMin: { color: colors.textMuted, fontSize: 11 },
 });

@@ -1,4 +1,5 @@
 import { KpssTrack } from '../data/curriculum';
+import type { DailyTask } from '../lib/planner';
 
 export type TopicStatus = 'not_started' | 'in_progress' | 'completed' | 'review';
 
@@ -41,6 +42,8 @@ export interface AppState {
   progress: Record<string, TopicProgress>;
   sessions: StudySession[];
   profile: Profile;
+  dailyTasks: DailyTask[];
+  plannerGeneratedFor: string | null;
 }
 
 export const defaultSettings: AppSettings = {
@@ -72,4 +75,6 @@ export const defaultState: AppState = {
   progress: {},
   sessions: [],
   profile: defaultProfile,
+  dailyTasks: [],
+  plannerGeneratedFor: null,
 };

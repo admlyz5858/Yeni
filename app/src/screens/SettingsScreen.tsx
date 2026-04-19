@@ -31,7 +31,7 @@ const goalOptions = [30, 60, 90, 120, 180, 240];
 
 export const SettingsScreen: React.FC = () => {
   const { state, updateSettings, resetAll } = useApp();
-  const { user, signOut } = useAuth();
+  const { user, isGuest, signOut, exitGuest } = useAuth();
   const { settings } = state;
 
   const confirmSignOut = () => {
@@ -39,6 +39,17 @@ export const SettingsScreen: React.FC = () => {
       { text: 'İptal', style: 'cancel' },
       { text: 'Çıkış Yap', style: 'destructive', onPress: () => signOut() },
     ]);
+  };
+
+  const confirmExitGuest = () => {
+    Alert.alert(
+      'Demo Modundan Çık',
+      'Hesap oluşturmak veya giriş yapmak için demo modundan çıkmak istiyor musun? Bu cihazdaki veriler korunur.',
+      [
+        { text: 'İptal', style: 'cancel' },
+        { text: 'Devam Et', onPress: () => exitGuest() },
+      ],
+    );
   };
 
   const confirmReset = () => {
@@ -62,13 +73,30 @@ export const SettingsScreen: React.FC = () => {
       <ScrollView contentContainerStyle={styles.content}>
         <Card>
           <Text style={styles.cardLabel}>Hesap</Text>
-          <Text style={styles.accountEmail}>{user?.email ?? '—'}</Text>
-          <View style={{ height: spacing.sm }} />
-          <Button
-            title="Çıkış Yap"
-            variant="secondary"
-            onPress={confirmSignOut}
-          />
+          {isGuest ? (
+            <View>
+              <Text style={styles.accountEmail}>Demo Modu</Text>
+              <Text style={styles.muted}>
+                Verilerin sadece bu cihazda saklanıyor. Birden fazla cihazda
+                erişmek ve verilerini yedeklemek için bir hesap oluştur.
+              </Text>
+              <View style={{ height: spacing.sm }} />
+              <Button
+                title="Hesap Oluştur / Giriş Yap"
+                onPress={confirmExitGuest}
+              />
+            </View>
+          ) : (
+            <View>
+              <Text style={styles.accountEmail}>{user?.email ?? '—'}</Text>
+              <View style={{ height: spacing.sm }} />
+              <Button
+                title="Çıkış Yap"
+                variant="secondary"
+                onPress={confirmSignOut}
+              />
+            </View>
+          )}
         </Card>
 
         <Card>

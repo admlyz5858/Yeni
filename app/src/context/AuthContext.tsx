@@ -13,6 +13,7 @@ import * as WebBrowser from 'expo-web-browser';
 import * as AppleAuthentication from 'expo-apple-authentication';
 import * as Crypto from 'expo-crypto';
 import * as Linking from 'expo-linking';
+import AsyncStorage from '@react-native-async-storage/async-storage';
 import { supabase } from '../lib/supabase';
 import {
   googleAndroidClientId,
@@ -33,6 +34,8 @@ interface AuthContextValue {
   session: Session | null;
   user: User | null;
   loading: boolean;
+  isGuest: boolean;
+  isAuthenticated: boolean;
   googleAvailable: boolean;
   appleAvailable: boolean;
   signUpWithEmail: (p: SignUpParams) => Promise<{ error?: string; needsConfirmation?: boolean }>;
@@ -40,8 +43,12 @@ interface AuthContextValue {
   resetPassword: (email: string) => Promise<{ error?: string }>;
   signInWithGoogle: () => Promise<{ error?: string }>;
   signInWithApple: () => Promise<{ error?: string }>;
+  continueAsGuest: () => Promise<void>;
+  exitGuest: () => Promise<void>;
   signOut: () => Promise<void>;
 }
+
+const GUEST_FLAG_KEY = '@kpss_guest_mode_v1';
 
 const AuthContext = createContext<AuthContextValue | null>(null);
 
@@ -64,16 +71,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
   const [session, setSession] = useState<Session | null>(null);
   const [loading, setLoading] = useState(true);
   const [appleAvailable, setAppleAvailable] = useState(false);
+  const [isGuest, setIsGuest] = useState(false);
 
   useEffect(() => {
     let mounted = true;
-    supabase.auth.getSession().then(({ data }) => {
-      if (!mounted) return;
-      setSession(data.session);
-      setLoading(false);
-    });
+    Promise.all([
+      supabase.auth.getSession(),
+      AsyncStorage.getItem(GUEST_FLAG_KEY),
+    ])
+      .then(([sess, guestFlag]) => {
+        if (!mounted) return;
+        setSession(sess.data.session);
+        if (!sess.data.session && guestFlag === '1') setIsGuest(true);
+      })
+      .finally(() => {
+        if (mounted) setLoading(false);
+      });
     const { data: sub } = supabase.auth.onAuthStateChange((_event, s) => {
       setSession(s);
+      if (s) {
+        setIsGuest(false);
+        AsyncStorage.removeItem(GUEST_FLAG_KEY).catch(() => {});
+      }
     });
     return () => {
       mounted = false;
@@ -233,15 +252,31 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, []);
 
-  const signOut = useCallback(async () => {
-    await supabase.auth.signOut();
+  const continueAsGuest = useCallback(async () => {
+    await AsyncStorage.setItem(GUEST_FLAG_KEY, '1');
+    setIsGuest(true);
   }, []);
+
+  const exitGuest = useCallback(async () => {
+    await AsyncStorage.removeItem(GUEST_FLAG_KEY);
+    setIsGuest(false);
+  }, []);
+
+  const signOut = useCallback(async () => {
+    if (session) {
+      await supabase.auth.signOut();
+    }
+    await AsyncStorage.removeItem(GUEST_FLAG_KEY);
+    setIsGuest(false);
+  }, [session]);
 
   const value = useMemo<AuthContextValue>(
     () => ({
       session,
       user: session?.user ?? null,
       loading,
+      isGuest,
+      isAuthenticated: Boolean(session) || isGuest,
       googleAvailable: googleEnabled,
       appleAvailable,
       signUpWithEmail,
@@ -249,17 +284,22 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       resetPassword,
       signInWithGoogle,
       signInWithApple,
+      continueAsGuest,
+      exitGuest,
       signOut,
     }),
     [
       session,
       loading,
+      isGuest,
       appleAvailable,
       signUpWithEmail,
       signInWithEmail,
       resetPassword,
       signInWithGoogle,
       signInWithApple,
+      continueAsGuest,
+      exitGuest,
       signOut,
     ],
   );

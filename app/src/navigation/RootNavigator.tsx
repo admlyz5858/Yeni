@@ -141,7 +141,7 @@ const linking = {
 };
 
 export const RootNavigator: React.FC = () => {
-  const { session, loading } = useAuth();
+  const { isAuthenticated, loading } = useAuth();
 
   if (loading) {
     return (
@@ -153,7 +153,7 @@ export const RootNavigator: React.FC = () => {
 
   return (
     <NavigationContainer theme={navTheme} linking={linking as any}>
-      {session ? <MainTabs /> : <AuthStack />}
+      {isAuthenticated ? <MainTabs /> : <AuthStack />}
     </NavigationContainer>
   );
 };

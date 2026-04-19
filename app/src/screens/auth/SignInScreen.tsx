@@ -27,6 +27,7 @@ export const SignInScreen: React.FC<Props> = ({ navigation }) => {
     signInWithEmail,
     signInWithGoogle,
     signInWithApple,
+    continueAsGuest,
     appleAvailable,
     googleAvailable,
   } = useAuth();
@@ -61,6 +62,13 @@ export const SignInScreen: React.FC<Props> = ({ navigation }) => {
     const { error } = await signInWithApple();
     setLoading(false);
     if (error) setErrorMsg(error);
+  };
+
+  const onGuest = async () => {
+    setLoading(true);
+    setErrorMsg(null);
+    await continueAsGuest();
+    setLoading(false);
   };
 
   return (
@@ -166,6 +174,20 @@ export const SignInScreen: React.FC<Props> = ({ navigation }) => {
             />
           )}
 
+          <View style={styles.guestWrap}>
+            <Button
+              title="Hesapsız Dene (Demo)"
+              variant="ghost"
+              onPress={onGuest}
+              disabled={loading}
+              fullWidth
+            />
+            <Text style={styles.guestHint}>
+              Veriler sadece bu cihazda tutulur. İstediğinde hesap oluşturup
+              senkronize edebilirsin.
+            </Text>
+          </View>
+
           <View style={styles.footer}>
             <Text style={styles.footerText}>Hesabın yok mu?</Text>
             <Pressable onPress={() => navigation.navigate('SignUp')}>
@@ -234,6 +256,17 @@ const styles = StyleSheet.create({
   dividerLine: { flex: 1, height: 1, backgroundColor: colors.border },
   dividerText: { color: colors.textMuted, fontSize: 12 },
   appleButton: { width: '100%', height: 48 },
+  guestWrap: {
+    marginTop: spacing.sm,
+    alignItems: 'center',
+    gap: 4,
+  },
+  guestHint: {
+    color: colors.textDim,
+    fontSize: 11,
+    textAlign: 'center',
+    paddingHorizontal: spacing.lg,
+  },
   footer: {
     flexDirection: 'row',
     justifyContent: 'center',

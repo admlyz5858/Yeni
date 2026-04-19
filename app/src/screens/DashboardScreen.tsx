@@ -6,6 +6,7 @@ import { Header } from '../components/Header';
 import { ProgressBar } from '../components/ProgressBar';
 import { Button } from '../components/Button';
 import { useApp } from '../context/AppContext';
+import { useAuth } from '../context/AuthContext';
 import { colors } from '../theme/colors';
 import { radius, spacing } from '../theme/spacing';
 import { computeAllStats, todayStudySeconds, totalStreak } from '../utils/stats';
@@ -18,6 +19,7 @@ interface Props {
 
 export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
   const { state } = useApp();
+  const { isGuest } = useAuth();
   const { settings } = state;
 
   const { overall, bySection } = useMemo(
@@ -37,7 +39,17 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
-      <Header title="KPSS Planlayıcı" subtitle={trackLabel} />
+      <Header
+        title="KPSS Planlayıcı"
+        subtitle={trackLabel}
+        right={
+          isGuest ? (
+            <View style={styles.guestBadge}>
+              <Text style={styles.guestBadgeText}>DEMO</Text>
+            </View>
+          ) : null
+        }
+      />
       <ScrollView contentContainerStyle={styles.content}>
         <Card>
           <Text style={styles.cardLabel}>Genel İlerleme</Text>
@@ -231,4 +243,18 @@ const styles = StyleSheet.create({
   sectionTitle: { color: colors.text, fontSize: 16, fontWeight: '700' },
   sectionPercent: { color: colors.primary, fontSize: 14, fontWeight: '700' },
   sectionSub: { color: colors.textMuted, fontSize: 12, marginTop: 2 },
+  guestBadge: {
+    paddingHorizontal: 10,
+    paddingVertical: 4,
+    borderRadius: 999,
+    borderWidth: 1,
+    borderColor: colors.warning,
+    backgroundColor: colors.warning + '22',
+  },
+  guestBadgeText: {
+    color: colors.warning,
+    fontSize: 10,
+    fontWeight: '800',
+    letterSpacing: 1.5,
+  },
 });

@@ -128,8 +128,14 @@ export const CircularTimer: React.FC<Props> = ({
           <Circle
             cx={size / 2}
             cy={size / 2}
+            r={radius - strokeWidth / 2}
+            fill="rgba(10,15,30,0.28)"
+          />
+          <Circle
+            cx={size / 2}
+            cy={size / 2}
             r={radius}
-            stroke={colors.bgSoft}
+            stroke="rgba(255,255,255,0.12)"
             strokeWidth={strokeWidth}
             fill="none"
           />
@@ -182,19 +188,26 @@ const styles = StyleSheet.create({
     letterSpacing: 3,
     marginBottom: 6,
     textTransform: 'uppercase',
+    textShadowColor: 'rgba(0,0,0,0.55)',
+    textShadowRadius: 4,
   },
   timeText: {
-    color: colors.text,
+    color: colors.white,
     fontSize: 64,
     fontWeight: '800',
     fontVariant: ['tabular-nums'],
     letterSpacing: -2,
+    textShadowColor: 'rgba(0,0,0,0.7)',
+    textShadowRadius: 8,
   },
   subtitle: {
-    color: colors.textMuted,
+    color: colors.text,
     fontSize: 12,
     marginTop: 6,
     paddingHorizontal: 20,
     fontWeight: '500',
+    textAlign: 'center',
+    textShadowColor: 'rgba(0,0,0,0.7)',
+    textShadowRadius: 4,
   },
 });

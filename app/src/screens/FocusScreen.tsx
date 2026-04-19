@@ -389,7 +389,7 @@ export const FocusScreen: React.FC<Props> = ({ route, navigation }) => {
       <VideoBackground
         uri={videoUri}
         tint={colors.bg}
-        overlayOpacity={immersive ? 0.35 : 0.65}
+        overlayOpacity={immersive ? 0.15 : 0.4}
       />
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
         <ScrollView
@@ -885,8 +885,8 @@ const styles = StyleSheet.create({
   controls: { gap: spacing.sm, marginTop: spacing.xs },
   rowBtns: { flexDirection: 'row', gap: spacing.sm },
   glass: {
-    backgroundColor: 'rgba(10,15,30,0.55)',
-    borderColor: 'rgba(255,255,255,0.06)',
+    backgroundColor: 'rgba(10,15,30,0.32)',
+    borderColor: 'rgba(255,255,255,0.10)',
     borderWidth: 1,
     borderRadius: radius.lg,
     padding: spacing.lg,

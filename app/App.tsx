@@ -4,6 +4,7 @@ import { StyleSheet, View } from 'react-native';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { AuthProvider } from './src/context/AuthContext';
 import { AppProvider } from './src/context/AppContext';
+import { AmbianceProvider } from './src/context/AmbianceContext';
 import { RootNavigator } from './src/navigation/RootNavigator';
 import { colors } from './src/theme/colors';
 
@@ -12,10 +13,12 @@ export default function App() {
     <SafeAreaProvider>
       <AuthProvider>
         <AppProvider>
-          <View style={styles.root}>
-            <StatusBar style="light" />
-            <RootNavigator />
-          </View>
+          <AmbianceProvider>
+            <View style={styles.root}>
+              <StatusBar style="light" />
+              <RootNavigator />
+            </View>
+          </AmbianceProvider>
         </AppProvider>
       </AuthProvider>
     </SafeAreaProvider>

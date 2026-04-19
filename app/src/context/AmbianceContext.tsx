@@ -34,7 +34,7 @@ interface AmbianceContextValue extends AmbianceState {
 }
 
 const STORAGE_KEY = '@kpss_ambiance_v1';
-const DEFAULT_AMBIANCE_ID = 'forest-sunlight';
+const DEFAULT_AMBIANCE_ID = 'cafe-study';
 
 const AmbianceContext = createContext<AmbianceContextValue | null>(null);
 

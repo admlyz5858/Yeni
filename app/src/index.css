@@ -1,0 +1,138 @@
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  min-width: 320px;
+  min-height: 100vh;
+  font-family:
+    "Inter",
+    "Segoe UI",
+    Roboto,
+    Helvetica,
+    Arial,
+    sans-serif;
+  background: linear-gradient(135deg, #121f34 0%, #1c304f 45%, #284264 100%);
+  color: #f8fafc;
+}
+
+#root {
+  min-height: 100vh;
+}
+
+.page {
+  min-height: 100vh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+
+.pomodoro-card {
+  width: min(560px, 100%);
+  background: rgba(10, 20, 38, 0.88);
+  border: 1px solid rgba(148, 163, 184, 0.24);
+  border-radius: 24px;
+  padding: 30px;
+  box-shadow: 0 24px 48px rgba(0, 0, 0, 0.35);
+}
+
+.pomodoro-card h1 {
+  margin: 0;
+  text-align: center;
+  font-size: clamp(1.6rem, 5vw, 2.2rem);
+}
+
+.session-label {
+  margin: 10px 0 0;
+  text-align: center;
+  color: #dbeafe;
+  font-size: 1rem;
+}
+
+.timer {
+  margin: 22px 0 16px;
+  text-align: center;
+  font-size: clamp(3.2rem, 12vw, 5.4rem);
+  line-height: 1;
+  font-weight: 700;
+  letter-spacing: 0.04em;
+}
+
+.progress-track {
+  width: 100%;
+  height: 10px;
+  background: rgba(148, 163, 184, 0.25);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #34d399, #60a5fa);
+  transition: width 300ms ease;
+}
+
+.controls {
+  margin-top: 22px;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+
+.controls button,
+.session-switcher button {
+  border: none;
+  border-radius: 12px;
+  padding: 11px 12px;
+  font-size: 0.96rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: transform 120ms ease, opacity 120ms ease;
+}
+
+.controls button:hover,
+.session-switcher button:hover {
+  transform: translateY(-1px);
+}
+
+.controls button:active,
+.session-switcher button:active {
+  transform: translateY(0);
+}
+
+.controls button {
+  background: #34d399;
+  color: #052e16;
+}
+
+.controls .secondary {
+  background: #f59e0b;
+  color: #431407;
+}
+
+.session-switcher {
+  margin-top: 16px;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 10px;
+}
+
+.session-switcher button {
+  background: rgba(51, 65, 85, 0.78);
+  color: #e2e8f0;
+}
+
+.session-switcher button.active {
+  background: #f8fafc;
+  color: #0f172a;
+}
+
+.pomodoro-count {
+  margin: 16px 0 0;
+  text-align: center;
+  color: #dbeafe;
+}

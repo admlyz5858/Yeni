@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React, { useState } from 'react';
 import {
   Alert,
   KeyboardAvoidingView,
@@ -12,20 +12,12 @@ import {
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import * as AppleAuthentication from 'expo-apple-authentication';
-import * as Google from 'expo-auth-session/providers/google';
-import * as WebBrowser from 'expo-web-browser';
 import { Button } from '../../components/Button';
 import { Card } from '../../components/Card';
+import { GoogleSignInButton } from '../../components/GoogleSignInButton';
 import { useAuth } from '../../context/AuthContext';
-import {
-  googleAndroidClientId,
-  googleIosClientId,
-  googleWebClientId,
-} from '../../lib/googleConfig';
 import { colors } from '../../theme/colors';
 import { radius, spacing } from '../../theme/spacing';
-
-WebBrowser.maybeCompleteAuthSession();
 
 interface Props {
   navigation: any;
@@ -34,8 +26,6 @@ interface Props {
 export const SignInScreen: React.FC<Props> = ({ navigation }) => {
   const {
     signInWithEmail,
-    signInWithGoogle,
-    signInWithGoogleIdToken,
     signInWithApple,
     continueAsGuest,
     appleAvailable,
@@ -45,45 +35,6 @@ export const SignInScreen: React.FC<Props> = ({ navigation }) => {
   const [password, setPassword] = useState('');
   const [loading, setLoading] = useState(false);
   const [errorMsg, setErrorMsg] = useState<string | null>(null);
-
-  const [googleRequest, googleResponse, googlePromptAsync] =
-    Google.useIdTokenAuthRequest({
-      clientId: googleWebClientId || undefined,
-      iosClientId: googleIosClientId || undefined,
-      androidClientId: googleAndroidClientId || undefined,
-      webClientId: googleWebClientId || undefined,
-      scopes: ['openid', 'profile', 'email'],
-    });
-
-  useEffect(() => {
-    if (!googleResponse) return;
-    if (googleResponse.type === 'success') {
-      const idToken = (googleResponse.params as any)?.id_token as
-        | string
-        | undefined;
-      const nonce = (googleRequest as any)?.nonce as string | undefined;
-      if (!idToken) {
-        setErrorMsg('Google id_token alınamadı.');
-        setLoading(false);
-        return;
-      }
-      (async () => {
-        const { error } = await signInWithGoogleIdToken(idToken, nonce);
-        setLoading(false);
-        if (error) setErrorMsg(error);
-      })();
-    } else if (googleResponse.type === 'error') {
-      setErrorMsg(
-        googleResponse.error?.message ?? 'Google ile giriş başarısız.',
-      );
-      setLoading(false);
-    } else if (
-      googleResponse.type === 'dismiss' ||
-      googleResponse.type === 'cancel'
-    ) {
-      setLoading(false);
-    }
-  }, [googleResponse]);
 
   const onSubmit = async () => {
     if (!email.trim() || !password) {
@@ -95,28 +46,6 @@ export const SignInScreen: React.FC<Props> = ({ navigation }) => {
     const { error } = await signInWithEmail(email.trim(), password);
     setLoading(false);
     if (error) setErrorMsg(error);
-  };
-
-  const onGoogle = async () => {
-    setErrorMsg(null);
-    if (Platform.OS === 'web') {
-      setLoading(true);
-      const { error } = await signInWithGoogle();
-      setLoading(false);
-      if (error) setErrorMsg(error);
-      return;
-    }
-    if (!googleRequest) {
-      setErrorMsg('Google istemcisi hazırlanamadı.');
-      return;
-    }
-    setLoading(true);
-    try {
-      await googlePromptAsync();
-    } catch (e: any) {
-      setErrorMsg(e?.message ?? 'Google ile giriş başarısız.');
-      setLoading(false);
-    }
   };
 
   const onApple = async () => {
@@ -201,12 +130,14 @@ export const SignInScreen: React.FC<Props> = ({ navigation }) => {
           </View>
 
           {googleAvailable ? (
-            <Button
-              title="Google ile devam et"
-              variant="secondary"
-              onPress={onGoogle}
+            <GoogleSignInButton
               disabled={loading}
-              fullWidth
+              onStart={() => {
+                setLoading(true);
+                setErrorMsg(null);
+              }}
+              onFinish={() => setLoading(false)}
+              onError={(msg) => setErrorMsg(msg)}
             />
           ) : (
             <Button
@@ -215,7 +146,7 @@ export const SignInScreen: React.FC<Props> = ({ navigation }) => {
               onPress={() =>
                 Alert.alert(
                   'Google Giriş',
-                  'Lütfen Google OAuth istemci kimliklerinizi .env dosyasına ekleyin ve uygulamayı yeniden derleyin.',
+                  'Google OAuth istemci kimlikleri eklenmemiş. .env dosyasına kimlikleri yaz ve uygulamayı yeniden derle.',
                 )
               }
               disabled={loading}

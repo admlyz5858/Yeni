@@ -6,22 +6,25 @@ import { AuthProvider } from './src/context/AuthContext';
 import { AppProvider } from './src/context/AppContext';
 import { AmbianceProvider } from './src/context/AmbianceContext';
 import { RootNavigator } from './src/navigation/RootNavigator';
+import { ErrorBoundary } from './src/components/ErrorBoundary';
 import { colors } from './src/theme/colors';
 
 export default function App() {
   return (
-    <SafeAreaProvider>
-      <AuthProvider>
-        <AppProvider>
-          <AmbianceProvider>
-            <View style={styles.root}>
-              <StatusBar style="light" />
-              <RootNavigator />
-            </View>
-          </AmbianceProvider>
-        </AppProvider>
-      </AuthProvider>
-    </SafeAreaProvider>
+    <ErrorBoundary>
+      <SafeAreaProvider>
+        <AuthProvider>
+          <AppProvider>
+            <AmbianceProvider>
+              <View style={styles.root}>
+                <StatusBar style="light" />
+                <RootNavigator />
+              </View>
+            </AmbianceProvider>
+          </AppProvider>
+        </AuthProvider>
+      </SafeAreaProvider>
+    </ErrorBoundary>
   );
 }
 

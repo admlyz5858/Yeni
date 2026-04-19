@@ -54,6 +54,29 @@ const randomFood = (snake: Point[]): Point => {
   return freeCells[randomIndex];
 };
 
+const appendDebugLog = (
+  hypothesisId: string,
+  location: string,
+  message: string,
+  data: Record<string, unknown>,
+): void => {
+  const payload = { hypothesisId, location, message, data, timestamp: Date.now() };
+  try {
+    const dynamicRequire = (0, eval)('typeof require !== "undefined" ? require : null') as
+      | ((name: string) => { appendFileSync: (path: string, content: string) => void })
+      | null;
+    if (dynamicRequire) {
+      dynamicRequire('fs').appendFileSync('/opt/cursor/logs/debug.log', `${JSON.stringify(payload)}\n`);
+      return;
+    }
+  } catch {
+    // no-op fallback below
+  }
+  if (typeof console !== 'undefined') {
+    console.log('__AGENT_DEBUG__', JSON.stringify(payload));
+  }
+};
+
 export default function App() {
   const [snake, setSnake] = useState<Point[]>(getInitialSnake);
   const [direction, setDirection] = useState<Direction>('RIGHT');
@@ -67,13 +90,33 @@ export default function App() {
 
   const resetGame = useCallback(() => {
     const initialSnake = getInitialSnake();
+    if (intervalRef.current) {
+      clearInterval(intervalRef.current);
+      intervalRef.current = null;
+    }
+    // #region agent log
+    appendDebugLog('A', 'App.tsx:resetGame:start', 'Reset requested', {
+      isGameOver,
+      direction,
+      queuedDirection,
+      snakeHead: snake[0] ?? null,
+      intervalActive: Boolean(intervalRef.current),
+    });
+    // #endregion
     setSnake(initialSnake);
     setDirection('RIGHT');
     setQueuedDirection(null);
     setFood(randomFood(initialSnake));
     setIsGameOver(false);
     setScore(0);
-  }, []);
+    // #region agent log
+    appendDebugLog('A', 'App.tsx:resetGame:end', 'Reset state enqueued', {
+      nextDirection: 'RIGHT',
+      nextQueuedDirection: null,
+      nextSnakeHead: initialSnake[0] ?? null,
+    });
+    // #endregion
+  }, [direction, isGameOver, queuedDirection, snake]);
 
   const handleDirectionChange = useCallback(
     (nextDirection: Direction) => {
@@ -81,11 +124,30 @@ export default function App() {
         return;
       }
 
-      const effectiveDirection = queuedDirection ?? direction;
+      if (queuedDirection) {
+        // #region agent log
+        appendDebugLog('C', 'App.tsx:handleDirectionChange:blocked', 'Ignored extra queued direction', {
+          nextDirection,
+          effectiveDirection: direction,
+          queuedDirection,
+          isGameOver,
+        });
+        // #endregion
+        return;
+      }
+
+      const effectiveDirection = direction;
       if (
         nextDirection === effectiveDirection ||
         OPPOSITE_DIRECTION[effectiveDirection] === nextDirection
       ) {
+        // #region agent log
+        appendDebugLog('C', 'App.tsx:handleDirectionChange:blocked', 'Ignored direction change', {
+          nextDirection,
+          effectiveDirection,
+          isGameOver,
+        });
+        // #endregion
         return;
       }
 
@@ -99,9 +161,26 @@ export default function App() {
       return;
     }
 
+    // #region agent log
+    appendDebugLog('B', 'App.tsx:effect:setup', 'Creating movement interval', {
+      direction,
+      queuedDirection,
+      food,
+      intervalActiveBeforeSetup: Boolean(intervalRef.current),
+    });
+    // #endregion
     intervalRef.current = setInterval(() => {
       setSnake((previousSnake) => {
         const nextDirection = queuedDirection ?? direction;
+        // #region agent log
+        appendDebugLog('A', 'App.tsx:tick:start', 'Tick started', {
+          tickDirection: nextDirection,
+          closureDirection: direction,
+          closureQueuedDirection: queuedDirection,
+          head: previousSnake[0] ?? null,
+          length: previousSnake.length,
+        });
+        // #endregion
         if (queuedDirection) {
           setDirection(queuedDirection);
           setQueuedDirection(null);
@@ -124,6 +203,15 @@ export default function App() {
         );
 
         if (hitWall || hitSelf) {
+          // #region agent log
+          appendDebugLog('D', 'App.tsx:tick:collision', 'Collision detected', {
+            hitWall,
+            hitSelf,
+            newHead,
+            previousHead: previousSnake[0] ?? null,
+            tickDirection: nextDirection,
+          });
+          // #endregion
           setIsGameOver(true);
           return previousSnake;
         }
@@ -144,6 +232,14 @@ export default function App() {
 
     return () => {
       if (intervalRef.current) {
+        // #region agent log
+        appendDebugLog('B', 'App.tsx:effect:cleanup', 'Clearing movement interval', {
+          direction,
+          queuedDirection,
+          isGameOver,
+          food,
+        });
+        // #endregion
         clearInterval(intervalRef.current);
       }
     };

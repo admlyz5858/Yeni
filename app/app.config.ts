@@ -19,6 +19,16 @@ export default ({ config }: ConfigContext): ExpoConfig => {
       ...((base.plugins as any[]) ?? []),
       'expo-apple-authentication',
       'expo-web-browser',
+      '@react-native-community/datetimepicker',
+      [
+        'expo-image-picker',
+        {
+          photosPermission:
+            'Profil fotoğrafı yüklemek için fotoğraflarına erişim gerekiyor.',
+          cameraPermission:
+            'Profil fotoğrafı çekmek için kameraya erişim gerekiyor.',
+        },
+      ],
     ],
     extra: {
       ...(base.extra ?? {}),

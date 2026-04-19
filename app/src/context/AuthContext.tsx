@@ -237,12 +237,25 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
         return { error: 'Apple identityToken alınamadı.' };
       }
 
-      const { error } = await supabase.auth.signInWithIdToken({
+      const { data: authData, error } = await supabase.auth.signInWithIdToken({
         provider: 'apple',
         token: credential.identityToken,
         nonce,
       });
       if (error) return { error: error.message };
+
+      const givenName = credential.fullName?.givenName;
+      if (authData?.user && givenName) {
+        try {
+          await supabase
+            .from('profiles')
+            .update({ first_name: givenName })
+            .eq('id', authData.user.id)
+            .is('first_name', null);
+        } catch {
+          // non-fatal
+        }
+      }
       return {};
     } catch (e: any) {
       if (e?.code === 'ERR_REQUEST_CANCELED') {

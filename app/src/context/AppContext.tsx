@@ -10,6 +10,7 @@ import React, {
 import {
   AppSettings,
   AppState,
+  Profile,
   StudySession,
   TopicProgress,
   TopicStatus,
@@ -20,6 +21,7 @@ import { clearState, loadState, saveState } from '../storage/storage';
 import { useAuth } from './AuthContext';
 import {
   fetchRemoteState,
+  pushProfile,
   pushSession,
   pushSettings,
   pushTopicProgress,
@@ -29,6 +31,7 @@ import {
 type Action =
   | { type: 'HYDRATE'; payload: AppState }
   | { type: 'UPDATE_SETTINGS'; payload: Partial<AppSettings> }
+  | { type: 'UPDATE_PROFILE'; payload: Partial<Profile> }
   | { type: 'UPDATE_TOPIC'; topicId: string; payload: Partial<TopicProgress> }
   | { type: 'ADD_SESSION'; payload: StudySession }
   | { type: 'RESET' };
@@ -39,6 +42,8 @@ function reducer(state: AppState, action: Action): AppState {
       return action.payload;
     case 'UPDATE_SETTINGS':
       return { ...state, settings: { ...state.settings, ...action.payload } };
+    case 'UPDATE_PROFILE':
+      return { ...state, profile: { ...state.profile, ...action.payload } };
     case 'UPDATE_TOPIC': {
       const existing = state.progress[action.topicId] ?? defaultTopicProgress;
       return {
@@ -80,6 +85,7 @@ interface AppContextValue {
   hydrated: boolean;
   syncing: boolean;
   updateSettings: (payload: Partial<AppSettings>) => void;
+  updateProfile: (payload: Partial<Profile>) => Promise<void>;
   updateTopic: (topicId: string, payload: Partial<TopicProgress>) => void;
   setTopicStatus: (topicId: string, status: TopicStatus) => void;
   addSession: (session: StudySession) => void;
@@ -159,6 +165,22 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
     [user?.id, state.settings],
   );
 
+  const updateProfile = useCallback(
+    async (payload: Partial<Profile>) => {
+      dispatch({ type: 'UPDATE_PROFILE', payload });
+      const userId = user?.id;
+      if (userId) {
+        try {
+          await pushProfile(userId, payload);
+        } catch (e: any) {
+          console.warn('[sync] pushProfile failed', e?.message ?? e);
+          throw e;
+        }
+      }
+    },
+    [user?.id],
+  );
+
   const updateTopic = useCallback(
     (topicId: string, payload: Partial<TopicProgress>) => {
       dispatch({ type: 'UPDATE_TOPIC', topicId, payload });
@@ -233,6 +255,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
       hydrated,
       syncing,
       updateSettings,
+      updateProfile,
       updateTopic,
       setTopicStatus,
       addSession,
@@ -244,6 +267,7 @@ export const AppProvider: React.FC<{ children: React.ReactNode }> = ({
       hydrated,
       syncing,
       updateSettings,
+      updateProfile,
       updateTopic,
       setTopicStatus,
       addSession,

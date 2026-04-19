@@ -28,10 +28,19 @@ export interface AppSettings {
   hapticsEnabled: boolean;
 }
 
+export interface Profile {
+  firstName: string | null;
+  email: string | null;
+  examDate: string | null;
+  avatarUrl: string | null;
+  onboardingCompleted: boolean;
+}
+
 export interface AppState {
   settings: AppSettings;
   progress: Record<string, TopicProgress>;
   sessions: StudySession[];
+  profile: Profile;
 }
 
 export const defaultSettings: AppSettings = {
@@ -50,8 +59,17 @@ export const defaultTopicProgress: TopicProgress = {
   studySeconds: 0,
 };
 
+export const defaultProfile: Profile = {
+  firstName: null,
+  email: null,
+  examDate: null,
+  avatarUrl: null,
+  onboardingCompleted: false,
+};
+
 export const defaultState: AppState = {
   settings: defaultSettings,
   progress: {},
   sessions: [],
+  profile: defaultProfile,
 };

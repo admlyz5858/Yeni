@@ -12,6 +12,7 @@ export async function loadState(): Promise<AppState> {
       settings: { ...defaultState.settings, ...parsed.settings },
       progress: parsed.progress ?? {},
       sessions: parsed.sessions ?? [],
+      profile: { ...defaultState.profile, ...(parsed.profile ?? {}) },
     };
   } catch (e) {
     return defaultState;

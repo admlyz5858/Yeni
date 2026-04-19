@@ -29,10 +29,14 @@ const focusOptions = [15, 20, 25, 30, 45, 50, 60];
 const breakOptions = [5, 10, 15, 20];
 const goalOptions = [30, 60, 90, 120, 180, 240];
 
-export const SettingsScreen: React.FC = () => {
+interface SettingsProps {
+  navigation?: any;
+}
+
+export const SettingsScreen: React.FC<SettingsProps> = ({ navigation }) => {
   const { state, updateSettings, resetAll } = useApp();
   const { user, isGuest, signOut, exitGuest } = useAuth();
-  const { settings } = state;
+  const { settings, profile } = state;
 
   const confirmSignOut = () => {
     Alert.alert('Çıkış Yap', 'Hesabından çıkış yapmak istiyor musun?', [
@@ -85,16 +89,38 @@ export const SettingsScreen: React.FC = () => {
                 title="Hesap Oluştur / Giriş Yap"
                 onPress={confirmExitGuest}
               />
+              <View style={{ height: spacing.xs }} />
+              <Button
+                title="Profilimi Düzenle"
+                variant="secondary"
+                onPress={() => navigation?.navigate('EditProfile')}
+              />
             </View>
           ) : (
             <View>
-              <Text style={styles.accountEmail}>{user?.email ?? '—'}</Text>
+              <Text style={styles.accountEmail}>
+                {profile.firstName ?? user?.email ?? '—'}
+              </Text>
+              {profile.firstName && user?.email && (
+                <Text style={styles.muted}>{user.email}</Text>
+              )}
               <View style={{ height: spacing.sm }} />
-              <Button
-                title="Çıkış Yap"
-                variant="secondary"
-                onPress={confirmSignOut}
-              />
+              <View style={{ gap: spacing.xs }}>
+                <Button
+                  title="Profilimi Düzenle"
+                  onPress={() => navigation?.navigate('EditProfile')}
+                />
+                <Button
+                  title="Şifre Değiştir"
+                  variant="secondary"
+                  onPress={() => navigation?.navigate('ChangePassword')}
+                />
+                <Button
+                  title="Çıkış Yap"
+                  variant="ghost"
+                  onPress={confirmSignOut}
+                />
+              </View>
             </View>
           )}
         </Card>

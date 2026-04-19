@@ -250,16 +250,17 @@ npm run build:apk
 - [x] Apple ile giriş (iOS)
 - [x] Offline-first sync (AsyncStorage ↔ Supabase)
 
-### 🟡 Faz 1 — Kimlik & Onboarding Cilalama
-- [ ] 3–4 adımlık onboarding ekranları (KPSS türü, hedef, süreler)
-- [ ] `profiles.onboarding_completed` akışı
-- [ ] Profil düzenleme ekranı (`first_name`, hedef sınav tarihi, avatar)
-- [ ] Supabase Storage `avatars` bucket + RLS
-- [ ] Şifre değiştirme ekranı
-- [ ] E-posta doğrulama deep link geri dönüş
-- [ ] "Yeni Şifre Belirle" deep link ekranı (`kpssplanlayici://reset`)
-- [ ] Supabase e-posta şablonları TR
-- [ ] Leaked password protection aç (Supabase advisor)
+### ✅ Faz 1 — Kimlik & Onboarding Cilalama
+- [x] 5 adımlık onboarding ekranı (ad, KPSS türü, sınav tarihi, günlük hedef, odak/mola)
+- [x] `profiles.onboarding_completed` akışı (RootNavigator yönlendirme)
+- [x] Profil düzenleme ekranı (`first_name`, hedef sınav tarihi, avatar)
+- [x] Supabase Storage `avatars` bucket + RLS (sahip bazlı klasör)
+- [x] Şifre değiştirme ekranı (mevcut şifre doğrulama)
+- [x] "Yeni Şifre Belirle" deep link ekranı (`kpssplanlayici://reset`)
+- [x] Apple ilk girişinde `fullName` profile yazılır
+- [ ] E-posta doğrulama sonrası otomatik oturum açma (Supabase default akışı kullanılıyor)
+- [ ] Supabase e-posta şablonları TR (Dashboard'dan manuel yapılacak)
+- [ ] Leaked password protection aç (Supabase advisor, Dashboard'dan manuel)
 
 ### 🟡 Faz 2 — Müfredat & Plan Motoru
 - [ ] Konulara meta veri (`estimatedMinutes`, `difficulty`, `examWeight`, `prerequisites`)

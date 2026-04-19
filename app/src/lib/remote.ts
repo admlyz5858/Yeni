@@ -2,8 +2,10 @@ import { supabase } from './supabase';
 import {
   AppSettings,
   AppState,
+  Profile,
   StudySession,
   TopicProgress,
+  defaultProfile,
   defaultSettings,
   defaultTopicProgress,
 } from '../storage/types';
@@ -18,6 +20,8 @@ interface RemoteProfile {
   haptics_enabled: boolean;
   daily_goal_minutes: number | null;
   onboarding_completed: boolean | null;
+  exam_date: string | null;
+  avatar_url: string | null;
   updated_at: string | null;
 }
 
@@ -93,6 +97,15 @@ export async function fetchRemoteState(userId: string): Promise<AppState> {
       profile?.daily_goal_minutes ?? defaultSettings.dailyGoalMinutes,
   };
 
+  const profileState: Profile = {
+    ...defaultProfile,
+    firstName: profile?.first_name ?? null,
+    email: profile?.email ?? null,
+    examDate: profile?.exam_date ?? null,
+    avatarUrl: profile?.avatar_url ?? null,
+    onboardingCompleted: profile?.onboarding_completed ?? false,
+  };
+
   const progress: Record<string, TopicProgress> = {};
   for (const row of progressRows) {
     progress[row.topic_id] = {
@@ -119,7 +132,7 @@ export async function fetchRemoteState(userId: string): Promise<AppState> {
       : new Date(row.created_at).getTime(),
   }));
 
-  return { settings, progress, sessions };
+  return { settings, progress, sessions, profile: profileState };
 }
 
 export async function pushSettings(
@@ -136,6 +149,25 @@ export async function pushSettings(
       daily_goal_minutes: settings.dailyGoalMinutes,
       updated_at: new Date().toISOString(),
     })
+    .eq('id', userId);
+  if (error) throw error;
+}
+
+export async function pushProfile(
+  userId: string,
+  profile: Partial<Profile>,
+): Promise<void> {
+  const update: Record<string, any> = {
+    updated_at: new Date().toISOString(),
+  };
+  if (profile.firstName !== undefined) update.first_name = profile.firstName;
+  if (profile.examDate !== undefined) update.exam_date = profile.examDate;
+  if (profile.avatarUrl !== undefined) update.avatar_url = profile.avatarUrl;
+  if (profile.onboardingCompleted !== undefined)
+    update.onboarding_completed = profile.onboardingCompleted;
+  const { error } = await supabase
+    .from('profiles')
+    .update(update)
     .eq('id', userId);
   if (error) throw error;
 }

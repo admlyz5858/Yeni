@@ -36,11 +36,20 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
   const trackLabel = trackLabels[settings.track];
   const todayMinutes = Math.floor(today / 60);
   const goalMinutes = settings.dailyGoalMinutes;
+  const examDaysLeft = useMemo(() => {
+    if (!state.profile.examDate) return null;
+    const exam = new Date(state.profile.examDate);
+    const diff = Math.ceil(
+      (exam.getTime() - Date.now()) / (1000 * 60 * 60 * 24),
+    );
+    return diff;
+  }, [state.profile.examDate]);
+  const greetingName = state.profile.firstName ?? null;
 
   return (
     <SafeAreaView style={styles.safe} edges={['top']}>
       <Header
-        title="KPSS Planlayıcı"
+        title={greetingName ? `Merhaba, ${greetingName}` : 'KPSS Planlayıcı'}
         subtitle={trackLabel}
         right={
           isGuest ? (
@@ -51,6 +60,31 @@ export const DashboardScreen: React.FC<Props> = ({ navigation }) => {
         }
       />
       <ScrollView contentContainerStyle={styles.content}>
+        {examDaysLeft !== null && (
+          <Card>
+            <View style={styles.examRow}>
+              <View>
+                <Text style={styles.cardLabel}>Sınava Kalan</Text>
+                <Text
+                  style={[
+                    styles.examDays,
+                    examDaysLeft < 0 && { color: colors.danger },
+                  ]}
+                >
+                  {examDaysLeft >= 0 ? `${examDaysLeft}` : `${-examDaysLeft}`}
+                  <Text style={styles.examDaysSuffix}>
+                    {' '}
+                    {examDaysLeft < 0 ? 'gün önce' : 'gün'}
+                  </Text>
+                </Text>
+              </View>
+              <Text style={styles.examDate}>
+                {formatExamDate(state.profile.examDate!)}
+              </Text>
+            </View>
+          </Card>
+        )}
+
         <Card>
           <Text style={styles.cardLabel}>Genel İlerleme</Text>
           <View style={styles.progressRow}>
@@ -166,6 +200,13 @@ const trackLabels: Record<string, string> = {
   egitim: 'Eğitim Bilimleri (Öğretmenlik)',
 };
 
+function formatExamDate(iso: string): string {
+  const d = new Date(iso);
+  const day = d.getDate().toString().padStart(2, '0');
+  const month = (d.getMonth() + 1).toString().padStart(2, '0');
+  return `${day}.${month}.${d.getFullYear()}`;
+}
+
 const Legend: React.FC<{ color: string; label: string }> = ({ color, label }) => (
   <View style={styles.legendItem}>
     <View style={[styles.legendDot, { backgroundColor: color }]} />
@@ -256,5 +297,26 @@ const styles = StyleSheet.create({
     fontSize: 10,
     fontWeight: '800',
     letterSpacing: 1.5,
+  },
+  examRow: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'flex-end',
+  },
+  examDays: {
+    color: colors.primary,
+    fontSize: 32,
+    fontWeight: '800',
+    marginTop: 2,
+  },
+  examDaysSuffix: {
+    color: colors.textMuted,
+    fontSize: 14,
+    fontWeight: '500',
+  },
+  examDate: {
+    color: colors.textMuted,
+    fontSize: 13,
+    fontWeight: '600',
   },
 });

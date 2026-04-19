@@ -61,35 +61,13 @@ const randomFood = (snake: Point[]): Point => {
   return freeCells[randomIndex];
 };
 
-const appendDebugLog = (
-  hypothesisId: string,
-  location: string,
-  message: string,
-  data: Record<string, unknown>,
-): void => {
-  const payload = { hypothesisId, location, message, data, timestamp: Date.now() };
-  try {
-    const dynamicRequire = (0, eval)('typeof require !== "undefined" ? require : null') as
-      | ((name: string) => { appendFileSync: (path: string, content: string) => void })
-      | null;
-    if (dynamicRequire) {
-      dynamicRequire('fs').appendFileSync('/opt/cursor/logs/debug.log', `${JSON.stringify(payload)}\n`);
-      return;
-    }
-  } catch {
-    // no-op fallback below
-  }
-  if (typeof console !== 'undefined') {
-    console.log('__AGENT_DEBUG__', JSON.stringify(payload));
-  }
-};
-
 type GameState = {
   snake: Point[];
   direction: Direction;
   queuedDirection: Direction | null;
   food: Point;
   isGameOver: boolean;
+  isRunning: boolean;
   score: number;
 };
 
@@ -106,59 +84,41 @@ const createInitialState = (): GameState => {
     queuedDirection: null,
     food: randomFood(snake),
     isGameOver: false,
+    isRunning: false,
     score: 0,
   };
 };
 
 const gameReducer = (state: GameState, action: GameAction): GameState => {
-  // #region agent log
-  appendDebugLog('H1', 'App.tsx:reducer:entry', 'Reducer action received', {
-    action: action.type,
-    isGameOver: state.isGameOver,
-    direction: state.direction,
-    queuedDirection: state.queuedDirection,
-    head: state.snake[0] ?? null,
-    length: state.snake.length,
-    score: state.score,
-  });
-  // #endregion
   if (action.type === 'RESET') {
-    const next = createInitialState();
-    // #region agent log
-    appendDebugLog('H2', 'App.tsx:reducer:reset', 'RESET produced initial state', {
-      nextIsGameOver: next.isGameOver,
-      nextDirection: next.direction,
-      nextQueuedDirection: next.queuedDirection,
-      nextHead: next.snake[0] ?? null,
-    });
-    // #endregion
-    return next;
+    return createInitialState();
   }
 
   if (action.type === 'TURN') {
-    if (state.isGameOver || state.queuedDirection) {
-      // #region agent log
-      appendDebugLog('H3', 'App.tsx:reducer:turn:blocked', 'TURN blocked by state guard', {
-        requested: action.direction,
-        isGameOver: state.isGameOver,
-        queuedDirection: state.queuedDirection,
-        direction: state.direction,
-      });
-      // #endregion
+    if (state.isGameOver) {
       return state;
     }
 
     const nextDirection = action.direction;
+
+    if (!state.isRunning) {
+      const isBlockedStartDirection = OPPOSITE_DIRECTION[state.direction] === nextDirection;
+      const isSameDirection = nextDirection === state.direction;
+      return {
+        ...state,
+        isRunning: true,
+        queuedDirection: isBlockedStartDirection || isSameDirection ? null : nextDirection,
+      };
+    }
+
+    if (state.queuedDirection) {
+      return state;
+    }
+
     if (
       nextDirection === state.direction ||
       OPPOSITE_DIRECTION[state.direction] === nextDirection
     ) {
-      // #region agent log
-      appendDebugLog('H3', 'App.tsx:reducer:turn:blocked', 'TURN blocked by direction rule', {
-        requested: nextDirection,
-        direction: state.direction,
-      });
-      // #endregion
       return state;
     }
 
@@ -168,7 +128,7 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     };
   }
 
-  if (state.isGameOver) {
+  if (state.isGameOver || !state.isRunning) {
     return state;
   }
 
@@ -179,16 +139,6 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     x: head.x + delta.x,
     y: head.y + delta.y,
   };
-  // #region agent log
-  appendDebugLog('H1', 'App.tsx:reducer:tick:start', 'TICK computed next head', {
-    moveDirection,
-    direction: state.direction,
-    queuedDirection: state.queuedDirection,
-    head,
-    newHead,
-  });
-  // #endregion
-
   const hitWall =
     newHead.x < 0 ||
     newHead.x >= BOARD_SIZE ||
@@ -199,19 +149,10 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
   );
 
   if (hitWall || hitSelf) {
-    // #region agent log
-    appendDebugLog('H4', 'App.tsx:reducer:tick:collision', 'TICK set game over', {
-      hitWall,
-      hitSelf,
-      newHead,
-      head,
-      moveDirection,
-      snake: state.snake,
-    });
-    // #endregion
     return {
       ...state,
       isGameOver: true,
+      isRunning: false,
     };
   }
 
@@ -228,40 +169,29 @@ const gameReducer = (state: GameState, action: GameAction): GameState => {
     queuedDirection: null,
     food: hasEatenFood ? randomFood(nextSnake) : state.food,
     isGameOver: false,
+    isRunning: true,
     score: hasEatenFood ? state.score + 1 : state.score,
   };
 };
 
 export default function App() {
   const [state, dispatch] = useReducer(gameReducer, undefined, createInitialState);
-  const { snake, food, isGameOver, score } = state;
+  const { snake, food, isGameOver, isRunning, score } = state;
 
   const snakeSet = useMemo(() => new Set(snake.map(pointKey)), [snake]);
 
   useEffect(() => {
-    if (isGameOver) {
+    if (isGameOver || !isRunning) {
       return;
     }
-
-    // #region agent log
-    appendDebugLog('H5', 'App.tsx:effect:setup', 'Setting TICK interval', {
-      isGameOver,
-      tickMs: TICK_MS,
-    });
-    // #endregion
     const intervalId = setInterval(() => {
       dispatch({ type: 'TICK' });
     }, TICK_MS);
 
     return () => {
-      // #region agent log
-      appendDebugLog('H5', 'App.tsx:effect:cleanup', 'Clearing TICK interval', {
-        isGameOver,
-      });
-      // #endregion
       clearInterval(intervalId);
     };
-  }, [isGameOver]);
+  }, [isGameOver, isRunning]);
 
   useEffect(() => {
     if (typeof window === 'undefined') {
@@ -274,12 +204,6 @@ export default function App() {
         return;
       }
       event.preventDefault();
-      // #region agent log
-      appendDebugLog('H6', 'App.tsx:keyboard:keydown', 'Keyboard direction dispatched', {
-        key: event.key,
-        direction,
-      });
-      // #endregion
       dispatch({ type: 'TURN', direction });
     };
 
@@ -322,6 +246,8 @@ export default function App() {
             <Text style={styles.restartButtonText}>Yeniden Başlat</Text>
           </Pressable>
         </View>
+      ) : !isRunning ? (
+        <Text style={styles.helpText}>Oyunu başlatmak için yön butonuna basın.</Text>
       ) : (
         <Text style={styles.helpText}>
           Yön tuşları yerine aşağıdaki butonlarla oynayabilirsiniz.

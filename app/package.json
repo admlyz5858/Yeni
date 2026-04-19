@@ -24,6 +24,7 @@
     "expo-haptics": "^55.0.14",
     "expo-image-manipulator": "~55.0.15",
     "expo-image-picker": "~55.0.18",
+    "expo-keep-awake": "^55.0.6",
     "expo-linking": "^55.0.13",
     "expo-status-bar": "~55.0.4",
     "expo-web-browser": "^55.0.14",
@@ -32,6 +33,7 @@
     "react-native": "0.83.2",
     "react-native-safe-area-context": "^5.7.0",
     "react-native-screens": "^4.24.0",
+    "react-native-svg": "15.15.3",
     "react-native-url-polyfill": "^3.0.0",
     "react-native-web": "^0.21.0"
   },

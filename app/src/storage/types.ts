@@ -21,12 +21,21 @@ export interface StudySession {
   endedAt: number;
 }
 
+export type FocusPresetId = 'classic' | 'long' | 'deep' | 'short' | 'custom';
+
 export interface AppSettings {
   track: KpssTrack;
   dailyGoalMinutes: number;
   focusMinutes: number;
   breakMinutes: number;
+  longBreakMinutes: number;
+  pomodorosUntilLongBreak: number;
+  autoStartBreaks: boolean;
+  autoStartNextFocus: boolean;
+  deepFocusEnabled: boolean;
+  keepScreenOn: boolean;
   hapticsEnabled: boolean;
+  focusPresetId: FocusPresetId;
 }
 
 export interface Profile {
@@ -51,7 +60,14 @@ export const defaultSettings: AppSettings = {
   dailyGoalMinutes: 120,
   focusMinutes: 25,
   breakMinutes: 5,
+  longBreakMinutes: 15,
+  pomodorosUntilLongBreak: 4,
+  autoStartBreaks: true,
+  autoStartNextFocus: false,
+  deepFocusEnabled: false,
+  keepScreenOn: true,
   hapticsEnabled: true,
+  focusPresetId: 'classic',
 };
 
 export const defaultTopicProgress: TopicProgress = {

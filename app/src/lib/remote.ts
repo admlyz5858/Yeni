@@ -18,6 +18,13 @@ interface RemoteProfile {
   track: string;
   focus_minutes: number;
   break_minutes: number;
+  long_break_minutes: number | null;
+  pomodoros_until_long_break: number | null;
+  auto_start_breaks: boolean | null;
+  auto_start_next_focus: boolean | null;
+  deep_focus_enabled: boolean | null;
+  keep_screen_on: boolean | null;
+  focus_preset_id: string | null;
   haptics_enabled: boolean;
   daily_goal_minutes: number | null;
   onboarding_completed: boolean | null;
@@ -121,11 +128,36 @@ export async function fetchRemoteState(userId: string): Promise<AppState> {
   const sessionRows = (sessionsRes.data as RemoteSession[] | null) ?? [];
   const taskRows = (tasksRes.data as RemoteDailyTask[] | null) ?? [];
 
+  const validPresets: AppSettings['focusPresetId'][] = [
+    'classic',
+    'long',
+    'deep',
+    'short',
+    'custom',
+  ];
   const settings: AppSettings = {
     ...defaultSettings,
     track: profile ? sanitizeTrack(profile.track) : defaultSettings.track,
     focusMinutes: profile?.focus_minutes ?? defaultSettings.focusMinutes,
     breakMinutes: profile?.break_minutes ?? defaultSettings.breakMinutes,
+    longBreakMinutes:
+      profile?.long_break_minutes ?? defaultSettings.longBreakMinutes,
+    pomodorosUntilLongBreak:
+      profile?.pomodoros_until_long_break ??
+      defaultSettings.pomodorosUntilLongBreak,
+    autoStartBreaks:
+      profile?.auto_start_breaks ?? defaultSettings.autoStartBreaks,
+    autoStartNextFocus:
+      profile?.auto_start_next_focus ?? defaultSettings.autoStartNextFocus,
+    deepFocusEnabled:
+      profile?.deep_focus_enabled ?? defaultSettings.deepFocusEnabled,
+    keepScreenOn:
+      profile?.keep_screen_on ?? defaultSettings.keepScreenOn,
+    focusPresetId:
+      (profile?.focus_preset_id as AppSettings['focusPresetId']) &&
+      validPresets.includes(profile!.focus_preset_id as any)
+        ? (profile!.focus_preset_id as AppSettings['focusPresetId'])
+        : defaultSettings.focusPresetId,
     hapticsEnabled:
       profile?.haptics_enabled ?? defaultSettings.hapticsEnabled,
     dailyGoalMinutes:
@@ -200,6 +232,13 @@ export async function pushSettings(
       track: settings.track,
       focus_minutes: settings.focusMinutes,
       break_minutes: settings.breakMinutes,
+      long_break_minutes: settings.longBreakMinutes,
+      pomodoros_until_long_break: settings.pomodorosUntilLongBreak,
+      auto_start_breaks: settings.autoStartBreaks,
+      auto_start_next_focus: settings.autoStartNextFocus,
+      deep_focus_enabled: settings.deepFocusEnabled,
+      keep_screen_on: settings.keepScreenOn,
+      focus_preset_id: settings.focusPresetId,
       haptics_enabled: settings.hapticsEnabled,
       daily_goal_minutes: settings.dailyGoalMinutes,
       updated_at: new Date().toISOString(),

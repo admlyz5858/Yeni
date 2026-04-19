@@ -1,43 +1,40 @@
-# Yeni Mobil Uygulama
+# Pomodoro Uygulamasi
 
-Expo (React Native) ile oluşturulmuş cross-platform mobil uygulama. iOS ve Android'de çalışır.
+Vite + React + TypeScript ile gelistirilmis modern bir Pomodoro web uygulamasi.
 
-## Başlangıç
-
-```bash
-cd app
-npm start
-```
-
-Ardından:
-- **Android:** `a` tuşuna basın veya `npm run android`
-- **iOS:** `i` tuşuna basın veya `npm run ios` (macOS gerekir)
-- **Web:** `w` tuşuna basın veya `npm run web`
-
-## Gereksinimler
-
-- Node.js 18+
-- Android Studio (Android emulator için) veya fiziksel cihaz
-- Expo Go uygulaması (fiziksel cihazda test için)
-
-## APK Derleme
+## Baslangic
 
 ```bash
 cd app
-npm run build:apk
+npm install
+npm run dev
 ```
 
-APK dosyası: `app/android/app/build/outputs/apk/release/app-release.apk`
+Uygulama varsayilan olarak `http://localhost:5173` adresinde calisir.
 
-**Gereksinimler:** Android SDK (ANDROID_HOME) ve Java 17+
+## Komutlar
 
-## Proje Yapısı
+- `npm run dev`: Gelistirme sunucusunu baslatir
+- `npm run build`: TypeScript kontrolu yapar ve production build olusturur
+- `npm run preview`: Production build'i yerelde onizler
+
+## Pomodoro Ozellikleri
+
+- 25 dk odak, 5 dk kisa mola, 15 dk uzun mola
+- Baslat / durdur ve sifirlama kontrolleri
+- Modlar arasi manuel gecis (odak, kisa mola, uzun mola)
+- Tamamlanan pomodoro sayisi takibi
+- Her 4 odaktan sonra otomatik uzun mola gecisi
+
+## Proje Yapisi
 
 ```
 app/
-├── App.tsx      # Ana uygulama bileşeni
-├── app.json     # Expo yapılandırması
-├── assets/      # Görseller ve ikonlar
-├── eas.json     # EAS Build yapılandırması (eas build için)
+├── index.html
+├── src/
+│   ├── App.tsx
+│   ├── index.css
+│   └── main.tsx
+├── vite.config.ts
 └── package.json
 ```

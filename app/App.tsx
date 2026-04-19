@@ -1,5 +1,5 @@
 import { StatusBar } from 'expo-status-bar';
-import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { useEffect, useMemo, useReducer } from 'react';
 import { Pressable, StyleSheet, Text, View } from 'react-native';
 
 type Direction = 'UP' | 'DOWN' | 'LEFT' | 'RIGHT';
@@ -24,6 +24,13 @@ const DIRECTION_DELTA: Record<Direction, Point> = {
   DOWN: { x: 0, y: 1 },
   LEFT: { x: -1, y: 0 },
   RIGHT: { x: 1, y: 0 },
+};
+
+const KEY_TO_DIRECTION: Record<string, Direction> = {
+  ArrowUp: 'UP',
+  ArrowDown: 'DOWN',
+  ArrowLeft: 'LEFT',
+  ArrowRight: 'RIGHT',
 };
 
 const getInitialSnake = (): Point[] => [
@@ -77,84 +84,159 @@ const appendDebugLog = (
   }
 };
 
+type GameState = {
+  snake: Point[];
+  direction: Direction;
+  queuedDirection: Direction | null;
+  food: Point;
+  isGameOver: boolean;
+  score: number;
+};
+
+type GameAction =
+  | { type: 'TURN'; direction: Direction }
+  | { type: 'TICK' }
+  | { type: 'RESET' };
+
+const createInitialState = (): GameState => {
+  const snake = getInitialSnake();
+  return {
+    snake,
+    direction: 'RIGHT',
+    queuedDirection: null,
+    food: randomFood(snake),
+    isGameOver: false,
+    score: 0,
+  };
+};
+
+const gameReducer = (state: GameState, action: GameAction): GameState => {
+  // #region agent log
+  appendDebugLog('H1', 'App.tsx:reducer:entry', 'Reducer action received', {
+    action: action.type,
+    isGameOver: state.isGameOver,
+    direction: state.direction,
+    queuedDirection: state.queuedDirection,
+    head: state.snake[0] ?? null,
+    length: state.snake.length,
+    score: state.score,
+  });
+  // #endregion
+  if (action.type === 'RESET') {
+    const next = createInitialState();
+    // #region agent log
+    appendDebugLog('H2', 'App.tsx:reducer:reset', 'RESET produced initial state', {
+      nextIsGameOver: next.isGameOver,
+      nextDirection: next.direction,
+      nextQueuedDirection: next.queuedDirection,
+      nextHead: next.snake[0] ?? null,
+    });
+    // #endregion
+    return next;
+  }
+
+  if (action.type === 'TURN') {
+    if (state.isGameOver || state.queuedDirection) {
+      // #region agent log
+      appendDebugLog('H3', 'App.tsx:reducer:turn:blocked', 'TURN blocked by state guard', {
+        requested: action.direction,
+        isGameOver: state.isGameOver,
+        queuedDirection: state.queuedDirection,
+        direction: state.direction,
+      });
+      // #endregion
+      return state;
+    }
+
+    const nextDirection = action.direction;
+    if (
+      nextDirection === state.direction ||
+      OPPOSITE_DIRECTION[state.direction] === nextDirection
+    ) {
+      // #region agent log
+      appendDebugLog('H3', 'App.tsx:reducer:turn:blocked', 'TURN blocked by direction rule', {
+        requested: nextDirection,
+        direction: state.direction,
+      });
+      // #endregion
+      return state;
+    }
+
+    return {
+      ...state,
+      queuedDirection: nextDirection,
+    };
+  }
+
+  if (state.isGameOver) {
+    return state;
+  }
+
+  const moveDirection = state.queuedDirection ?? state.direction;
+  const head = state.snake[0];
+  const delta = DIRECTION_DELTA[moveDirection];
+  const newHead: Point = {
+    x: head.x + delta.x,
+    y: head.y + delta.y,
+  };
+  // #region agent log
+  appendDebugLog('H1', 'App.tsx:reducer:tick:start', 'TICK computed next head', {
+    moveDirection,
+    direction: state.direction,
+    queuedDirection: state.queuedDirection,
+    head,
+    newHead,
+  });
+  // #endregion
+
+  const hitWall =
+    newHead.x < 0 ||
+    newHead.x >= BOARD_SIZE ||
+    newHead.y < 0 ||
+    newHead.y >= BOARD_SIZE;
+  const hitSelf = state.snake.some(
+    (segment) => segment.x === newHead.x && segment.y === newHead.y,
+  );
+
+  if (hitWall || hitSelf) {
+    // #region agent log
+    appendDebugLog('H4', 'App.tsx:reducer:tick:collision', 'TICK set game over', {
+      hitWall,
+      hitSelf,
+      newHead,
+      head,
+      moveDirection,
+      snake: state.snake,
+    });
+    // #endregion
+    return {
+      ...state,
+      isGameOver: true,
+    };
+  }
+
+  const hasEatenFood = newHead.x === state.food.x && newHead.y === state.food.y;
+  const nextSnake = [newHead, ...state.snake];
+
+  if (!hasEatenFood) {
+    nextSnake.pop();
+  }
+
+  return {
+    snake: nextSnake,
+    direction: moveDirection,
+    queuedDirection: null,
+    food: hasEatenFood ? randomFood(nextSnake) : state.food,
+    isGameOver: false,
+    score: hasEatenFood ? state.score + 1 : state.score,
+  };
+};
+
 export default function App() {
-  const [snake, setSnake] = useState<Point[]>(getInitialSnake);
-  const [direction, setDirection] = useState<Direction>('RIGHT');
-  const [queuedDirection, setQueuedDirection] = useState<Direction | null>(null);
-  const [food, setFood] = useState<Point>(() => randomFood(getInitialSnake()));
-  const [isGameOver, setIsGameOver] = useState(false);
-  const [score, setScore] = useState(0);
-  const intervalRef = useRef<NodeJS.Timeout | null>(null);
+  const [state, dispatch] = useReducer(gameReducer, undefined, createInitialState);
+  const { snake, food, isGameOver, score } = state;
 
   const snakeSet = useMemo(() => new Set(snake.map(pointKey)), [snake]);
-
-  const resetGame = useCallback(() => {
-    const initialSnake = getInitialSnake();
-    if (intervalRef.current) {
-      clearInterval(intervalRef.current);
-      intervalRef.current = null;
-    }
-    // #region agent log
-    appendDebugLog('A', 'App.tsx:resetGame:start', 'Reset requested', {
-      isGameOver,
-      direction,
-      queuedDirection,
-      snakeHead: snake[0] ?? null,
-      intervalActive: Boolean(intervalRef.current),
-    });
-    // #endregion
-    setSnake(initialSnake);
-    setDirection('RIGHT');
-    setQueuedDirection(null);
-    setFood(randomFood(initialSnake));
-    setIsGameOver(false);
-    setScore(0);
-    // #region agent log
-    appendDebugLog('A', 'App.tsx:resetGame:end', 'Reset state enqueued', {
-      nextDirection: 'RIGHT',
-      nextQueuedDirection: null,
-      nextSnakeHead: initialSnake[0] ?? null,
-    });
-    // #endregion
-  }, [direction, isGameOver, queuedDirection, snake]);
-
-  const handleDirectionChange = useCallback(
-    (nextDirection: Direction) => {
-      if (isGameOver) {
-        return;
-      }
-
-      if (queuedDirection) {
-        // #region agent log
-        appendDebugLog('C', 'App.tsx:handleDirectionChange:blocked', 'Ignored extra queued direction', {
-          nextDirection,
-          effectiveDirection: direction,
-          queuedDirection,
-          isGameOver,
-        });
-        // #endregion
-        return;
-      }
-
-      const effectiveDirection = direction;
-      if (
-        nextDirection === effectiveDirection ||
-        OPPOSITE_DIRECTION[effectiveDirection] === nextDirection
-      ) {
-        // #region agent log
-        appendDebugLog('C', 'App.tsx:handleDirectionChange:blocked', 'Ignored direction change', {
-          nextDirection,
-          effectiveDirection,
-          isGameOver,
-        });
-        // #endregion
-        return;
-      }
-
-      setQueuedDirection(nextDirection);
-    },
-    [direction, isGameOver, queuedDirection],
-  );
 
   useEffect(() => {
     if (isGameOver) {
@@ -162,88 +244,50 @@ export default function App() {
     }
 
     // #region agent log
-    appendDebugLog('B', 'App.tsx:effect:setup', 'Creating movement interval', {
-      direction,
-      queuedDirection,
-      food,
-      intervalActiveBeforeSetup: Boolean(intervalRef.current),
+    appendDebugLog('H5', 'App.tsx:effect:setup', 'Setting TICK interval', {
+      isGameOver,
+      tickMs: TICK_MS,
     });
     // #endregion
-    intervalRef.current = setInterval(() => {
-      setSnake((previousSnake) => {
-        const nextDirection = queuedDirection ?? direction;
-        // #region agent log
-        appendDebugLog('A', 'App.tsx:tick:start', 'Tick started', {
-          tickDirection: nextDirection,
-          closureDirection: direction,
-          closureQueuedDirection: queuedDirection,
-          head: previousSnake[0] ?? null,
-          length: previousSnake.length,
-        });
-        // #endregion
-        if (queuedDirection) {
-          setDirection(queuedDirection);
-          setQueuedDirection(null);
-        }
-
-        const head = previousSnake[0];
-        const delta = DIRECTION_DELTA[nextDirection];
-        const newHead: Point = {
-          x: head.x + delta.x,
-          y: head.y + delta.y,
-        };
-
-        const hitWall =
-          newHead.x < 0 ||
-          newHead.x >= BOARD_SIZE ||
-          newHead.y < 0 ||
-          newHead.y >= BOARD_SIZE;
-        const hitSelf = previousSnake.some(
-          (segment) => segment.x === newHead.x && segment.y === newHead.y,
-        );
-
-        if (hitWall || hitSelf) {
-          // #region agent log
-          appendDebugLog('D', 'App.tsx:tick:collision', 'Collision detected', {
-            hitWall,
-            hitSelf,
-            newHead,
-            previousHead: previousSnake[0] ?? null,
-            tickDirection: nextDirection,
-          });
-          // #endregion
-          setIsGameOver(true);
-          return previousSnake;
-        }
-
-        const hasEatenFood = newHead.x === food.x && newHead.y === food.y;
-        const nextSnake = [newHead, ...previousSnake];
-
-        if (hasEatenFood) {
-          setScore((previousScore) => previousScore + 1);
-          setFood(randomFood(nextSnake));
-          return nextSnake;
-        }
-
-        nextSnake.pop();
-        return nextSnake;
-      });
+    const intervalId = setInterval(() => {
+      dispatch({ type: 'TICK' });
     }, TICK_MS);
 
     return () => {
-      if (intervalRef.current) {
-        // #region agent log
-        appendDebugLog('B', 'App.tsx:effect:cleanup', 'Clearing movement interval', {
-          direction,
-          queuedDirection,
-          isGameOver,
-          food,
-        });
-        // #endregion
-        clearInterval(intervalRef.current);
-      }
+      // #region agent log
+      appendDebugLog('H5', 'App.tsx:effect:cleanup', 'Clearing TICK interval', {
+        isGameOver,
+      });
+      // #endregion
+      clearInterval(intervalId);
     };
-  }, [direction, food.x, food.y, isGameOver, queuedDirection]);
+  }, [isGameOver]);
+
+  useEffect(() => {
+    if (typeof window === 'undefined') {
+      return;
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      const direction = KEY_TO_DIRECTION[event.key];
+      if (!direction) {
+        return;
+      }
+      event.preventDefault();
+      // #region agent log
+      appendDebugLog('H6', 'App.tsx:keyboard:keydown', 'Keyboard direction dispatched', {
+        key: event.key,
+        direction,
+      });
+      // #endregion
+      dispatch({ type: 'TURN', direction });
+    };
+
+    window.addEventListener('keydown', handleKeyDown);
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown);
+    };
+  }, []);
 
   return (
     <View style={styles.container}>
@@ -274,7 +318,7 @@ export default function App() {
       {isGameOver ? (
         <View style={styles.gameOverWrapper}>
           <Text style={styles.gameOverText}>Oyun Bitti</Text>
-          <Pressable style={styles.restartButton} onPress={resetGame}>
+          <Pressable style={styles.restartButton} onPress={() => dispatch({ type: 'RESET' })}>
             <Text style={styles.restartButtonText}>Yeniden Başlat</Text>
           </Pressable>
         </View>
@@ -285,17 +329,17 @@ export default function App() {
       )}
 
       <View style={styles.controls}>
-        <Pressable style={styles.controlButton} onPress={() => handleDirectionChange('UP')}>
+        <Pressable style={styles.controlButton} onPress={() => dispatch({ type: 'TURN', direction: 'UP' })}>
           <Text style={styles.controlText}>↑</Text>
         </Pressable>
         <View style={styles.horizontalControls}>
-          <Pressable style={styles.controlButton} onPress={() => handleDirectionChange('LEFT')}>
+          <Pressable style={styles.controlButton} onPress={() => dispatch({ type: 'TURN', direction: 'LEFT' })}>
             <Text style={styles.controlText}>←</Text>
           </Pressable>
-          <Pressable style={styles.controlButton} onPress={() => handleDirectionChange('DOWN')}>
+          <Pressable style={styles.controlButton} onPress={() => dispatch({ type: 'TURN', direction: 'DOWN' })}>
             <Text style={styles.controlText}>↓</Text>
           </Pressable>
-          <Pressable style={styles.controlButton} onPress={() => handleDirectionChange('RIGHT')}>
+          <Pressable style={styles.controlButton} onPress={() => dispatch({ type: 'TURN', direction: 'RIGHT' })}>
             <Text style={styles.controlText}>→</Text>
           </Pressable>
         </View>

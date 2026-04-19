@@ -42,6 +42,10 @@ interface AuthContextValue {
   signInWithEmail: (email: string, password: string) => Promise<{ error?: string }>;
   resetPassword: (email: string) => Promise<{ error?: string }>;
   signInWithGoogle: () => Promise<{ error?: string }>;
+  signInWithGoogleIdToken: (
+    idToken: string,
+    nonce?: string,
+  ) => Promise<{ error?: string }>;
   signInWithApple: () => Promise<{ error?: string }>;
   continueAsGuest: () => Promise<void>;
   exitGuest: () => Promise<void>;
@@ -211,6 +215,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
     }
   }, []);
 
+  const signInWithGoogleIdToken = useCallback(
+    async (idToken: string, nonce?: string) => {
+      try {
+        const { error } = await supabase.auth.signInWithIdToken({
+          provider: 'google',
+          token: idToken,
+          nonce,
+        });
+        if (error) return { error: error.message };
+        return {};
+      } catch (e: any) {
+        return { error: e?.message ?? 'Google ile giriş başarısız.' };
+      }
+    },
+    [],
+  );
+
   const signInWithApple = useCallback(async () => {
     try {
       if (Platform.OS !== 'ios') {
@@ -296,6 +317,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       signInWithEmail,
       resetPassword,
       signInWithGoogle,
+      signInWithGoogleIdToken,
       signInWithApple,
       continueAsGuest,
       exitGuest,
@@ -310,6 +332,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({
       signInWithEmail,
       resetPassword,
       signInWithGoogle,
+      signInWithGoogleIdToken,
       signInWithApple,
       continueAsGuest,
       exitGuest,

@@ -1,13 +1,6 @@
 import { StatusBar } from 'expo-status-bar';
-import { useMemo, useState } from 'react';
-import {
-  Pressable,
-  ScrollView,
-  StyleSheet,
-  Text,
-  useColorScheme,
-  View,
-} from 'react-native';
+import { useEffect, useMemo, useState } from 'react';
+import { Pressable, ScrollView, StyleSheet, Text, useColorScheme, View } from 'react-native';
 
 type Option = {
   key: string;
@@ -20,6 +13,15 @@ type Shape = {
   key: string;
   name: string;
   details: string;
+};
+
+type AgencySkill = {
+  key: string;
+  name: string;
+  category: string;
+  source: string;
+  objective: string;
+  runbook: string[];
 };
 
 const options: Option[] = [
@@ -39,7 +41,7 @@ const options: Option[] = [
     key: 'mixed',
     letter: 'C',
     title: 'Karma Sunum',
-    description: 'Secenek + sekil kartlarini birlestiren duzen.',
+    description: 'Secenek + sekil kartlari + skill runner.',
   },
 ];
 
@@ -48,6 +50,48 @@ const shapes: Shape[] = [
   { key: 'square', name: 'Kare', details: 'Keskin koselerle guclu gorunum.' },
   { key: 'diamond', name: 'Elmas', details: '45 derece donuk modern form.' },
   { key: 'triangle', name: 'Ucgen', details: 'Yonlendirme hissi veren ikon.' },
+];
+
+const agencySkills: AgencySkill[] = [
+  {
+    key: 'mobile-builder',
+    name: 'Mobile App Builder',
+    category: 'engineering',
+    source: 'engineering/engineering-mobile-app-builder.md',
+    objective: 'Native/cross-platform mobil uygulama stratejisi ve offline-first akis.',
+    runbook: [
+      'Platform gereksinimlerini cikar',
+      'Mimariyi sec (native/cross-platform)',
+      'Offline veri akislarini tanimla',
+      'Performans hedeflerini dogrula',
+    ],
+  },
+  {
+    key: 'ui-designer',
+    name: 'UI Designer',
+    category: 'design',
+    source: 'design/design-ui-designer.md',
+    objective: 'Design token, component library ve erisilebilir arayuz sistemi kur.',
+    runbook: [
+      'Renk ve tipografi tokenlarini olustur',
+      'Temel component varyasyonlarini olustur',
+      'Responsive davranislari haritala',
+      'WCAG AA uygunlugunu kontrol et',
+    ],
+  },
+  {
+    key: 'reality-checker',
+    name: 'TestingRealityChecker',
+    category: 'testing',
+    source: 'testing/testing-reality-checker.md',
+    objective: 'Kanita dayali kalite degerlendirmesi ve release kontrolu yap.',
+    runbook: [
+      'Gercek durum kontrol komutlarini calistir',
+      'E2E akis ve bulgulari capraz dogrula',
+      'Spec ve implementasyonu karsilastir',
+      'Durumu READY/NEEDS WORK olarak sinifla',
+    ],
+  },
 ];
 
 export default function App() {
@@ -70,6 +114,52 @@ export default function App() {
 
   const [selectedOption, setSelectedOption] = useState(options[0].key);
   const [selectedShape, setSelectedShape] = useState(shapes[0].key);
+  const [selectedSkill, setSelectedSkill] = useState(agencySkills[0].key);
+  const [runState, setRunState] = useState<'idle' | 'running' | 'done'>('idle');
+  const [completedSteps, setCompletedSteps] = useState<string[]>([]);
+  const [runToken, setRunToken] = useState(0);
+
+  const activeSkill = useMemo(
+    () => agencySkills.find((skill) => skill.key === selectedSkill) ?? agencySkills[0],
+    [selectedSkill]
+  );
+
+  useEffect(() => {
+    setRunState('idle');
+    setCompletedSteps([]);
+  }, [selectedSkill]);
+
+  useEffect(() => {
+    if (runToken === 0) {
+      return;
+    }
+
+    const timers: Array<ReturnType<typeof setTimeout>> = [];
+    setRunState('running');
+    setCompletedSteps([]);
+
+    activeSkill.runbook.forEach((step, index) => {
+      const timer = setTimeout(() => {
+        setCompletedSteps((prev) => [...prev, step]);
+        if (index === activeSkill.runbook.length - 1) {
+          setRunState('done');
+        }
+      }, (index + 1) * 650);
+      timers.push(timer);
+    });
+
+    return () => timers.forEach(clearTimeout);
+  }, [runToken, activeSkill]);
+
+  function startSkillRun() {
+    if (runState === 'running') {
+      return;
+    }
+    setRunToken((value) => value + 1);
+  }
+
+  const selectedShapeName = shapes.find((shape) => shape.key === selectedShape)?.name;
+  const selectedOptionLetter = selectedOption.toUpperCase();
 
   return (
     <View style={[styles.container, { backgroundColor: palette.bgPrimary }]}>
@@ -83,7 +173,7 @@ export default function App() {
         ]}
       >
         <Text style={[styles.headerTitle, { color: palette.textSecondary }]}>
-          Superpowers Skill Stili
+          Superpowers + Agency Skills
         </Text>
         <View style={styles.statusRow}>
           <View style={[styles.statusDot, { backgroundColor: palette.success }]} />
@@ -92,10 +182,10 @@ export default function App() {
       </View>
 
       <ScrollView style={styles.main} contentContainerStyle={styles.mainContent}>
-        <Text style={[styles.title, { color: palette.textPrimary }]}>Sekil Galerisi</Text>
+        <Text style={[styles.title, { color: palette.textPrimary }]}>Sekil Galerisi + Skill Runner</Text>
         <Text style={[styles.subtitle, { color: palette.textSecondary }]}>
-          Referans skill tasarimindaki secenek kartlari ve gosterge yapisi mobil arayuze
-          uyarlandi.
+          `agency-agents` deposundaki skill rollerini secip uygulama icinde adim adim calistiran
+          bir demo akis eklendi.
         </Text>
 
         <Text style={[styles.label, { color: palette.textSecondary }]}>Secenekler</Text>
@@ -167,6 +257,93 @@ export default function App() {
             );
           })}
         </View>
+
+        <Text style={[styles.label, { color: palette.textSecondary, marginTop: 18 }]}>Agency Skills</Text>
+        <View style={styles.skillTabs}>
+          {agencySkills.map((skill) => {
+            const isSelected = skill.key === selectedSkill;
+            return (
+              <Pressable
+                key={skill.key}
+                onPress={() => setSelectedSkill(skill.key)}
+                style={[
+                  styles.skillTab,
+                  {
+                    backgroundColor: isSelected ? palette.selectedBg : palette.bgSecondary,
+                    borderColor: isSelected ? palette.accent : palette.border,
+                  },
+                ]}
+              >
+                <Text style={[styles.skillTabTitle, { color: palette.textPrimary }]}>{skill.name}</Text>
+                <Text style={[styles.skillTabMeta, { color: palette.textSecondary }]}>{skill.category}</Text>
+              </Pressable>
+            );
+          })}
+        </View>
+
+        <View
+          style={[
+            styles.runnerCard,
+            {
+              backgroundColor: palette.bgSecondary,
+              borderColor: palette.border,
+            },
+          ]}
+        >
+          <View style={styles.runnerHeader}>
+            <View style={styles.runnerHeaderTextWrap}>
+              <Text style={[styles.runnerTitle, { color: palette.textPrimary }]}>{activeSkill.name}</Text>
+              <Text style={[styles.runnerMeta, { color: palette.textSecondary }]}>
+                Kaynak: {activeSkill.source}
+              </Text>
+            </View>
+            <Pressable
+              onPress={startSkillRun}
+              style={[
+                styles.runButton,
+                {
+                  backgroundColor: runState === 'running' ? palette.bgTertiary : palette.accent,
+                },
+              ]}
+            >
+              <Text style={[styles.runButtonText, { color: runState === 'running' ? palette.textSecondary : '#fff' }]}>
+                {runState === 'running' ? 'Calisiyor' : 'Skilli Calistir'}
+              </Text>
+            </Pressable>
+          </View>
+
+          <Text style={[styles.objectiveText, { color: palette.textSecondary }]}>{activeSkill.objective}</Text>
+
+          <View style={styles.runbookList}>
+            {activeSkill.runbook.map((step, index) => {
+              const isComplete = completedSteps.includes(step);
+              return (
+                <View key={step} style={styles.runbookRow}>
+                  <View
+                    style={[
+                      styles.runbookBullet,
+                      {
+                        borderColor: isComplete ? palette.success : palette.border,
+                        backgroundColor: isComplete ? palette.success : 'transparent',
+                      },
+                    ]}
+                  />
+                  <Text style={[styles.runbookText, { color: palette.textPrimary }]}>
+                    {index + 1}. {step}
+                  </Text>
+                </View>
+              );
+            })}
+          </View>
+
+          <Text style={[styles.runnerState, { color: runState === 'done' ? palette.success : palette.textSecondary }]}>
+            {runState === 'idle'
+              ? 'Durum: Hazir'
+              : runState === 'running'
+                ? 'Durum: Skill adimlari calisiyor...'
+                : 'Durum: Skill akis tamamlandi'}
+          </Text>
+        </View>
       </ScrollView>
 
       <View
@@ -181,8 +358,7 @@ export default function App() {
         <Text style={[styles.indicatorText, { color: palette.textSecondary }]}>
           Aktif secim:{' '}
           <Text style={[styles.indicatorSelected, { color: palette.accent }]}>
-            {selectedOption.toUpperCase()} /{' '}
-            {shapes.find((shape) => shape.key === selectedShape)?.name}
+            {selectedOptionLetter} / {selectedShapeName} / {activeSkill.name}
           </Text>
         </Text>
       </View>
@@ -201,16 +377,7 @@ function ShapePreview({ shape, color }: { shape: string; color: string }) {
   if (shape === 'diamond') {
     return <View style={[styles.diamondShape, { borderColor: color }]} />;
   }
-  return (
-    <View
-      style={[
-        styles.triangleShape,
-        {
-          borderBottomColor: color,
-        },
-      ]}
-    />
-  );
+  return <View style={[styles.triangleShape, { borderBottomColor: color }]} />;
 }
 
 const styles = StyleSheet.create({
@@ -248,7 +415,7 @@ const styles = StyleSheet.create({
   },
   mainContent: {
     padding: 20,
-    paddingBottom: 36,
+    paddingBottom: 42,
   },
   title: {
     fontSize: 28,
@@ -329,6 +496,86 @@ const styles = StyleSheet.create({
   cardDetails: {
     fontSize: 12,
     lineHeight: 17,
+  },
+  skillTabs: {
+    gap: 10,
+  },
+  skillTab: {
+    borderWidth: 1.5,
+    borderRadius: 10,
+    paddingHorizontal: 12,
+    paddingVertical: 10,
+  },
+  skillTabTitle: {
+    fontSize: 14,
+    fontWeight: '600',
+  },
+  skillTabMeta: {
+    marginTop: 2,
+    fontSize: 12,
+    textTransform: 'uppercase',
+    letterSpacing: 0.5,
+  },
+  runnerCard: {
+    marginTop: 12,
+    borderWidth: 1,
+    borderRadius: 14,
+    padding: 14,
+    gap: 12,
+  },
+  runnerHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    gap: 12,
+  },
+  runnerHeaderTextWrap: {
+    flex: 1,
+    minWidth: 0,
+  },
+  runnerTitle: {
+    fontSize: 17,
+    fontWeight: '700',
+  },
+  runnerMeta: {
+    marginTop: 2,
+    fontSize: 12,
+  },
+  runButton: {
+    borderRadius: 8,
+    paddingHorizontal: 12,
+    paddingVertical: 8,
+  },
+  runButtonText: {
+    fontSize: 12,
+    fontWeight: '700',
+    textTransform: 'uppercase',
+  },
+  objectiveText: {
+    fontSize: 13,
+    lineHeight: 18,
+  },
+  runbookList: {
+    gap: 8,
+  },
+  runbookRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  runbookBullet: {
+    width: 10,
+    height: 10,
+    borderRadius: 5,
+    borderWidth: 1.5,
+    marginRight: 8,
+  },
+  runbookText: {
+    flex: 1,
+    fontSize: 13,
+  },
+  runnerState: {
+    fontSize: 12,
+    fontWeight: '600',
   },
   indicatorBar: {
     borderTopWidth: 1,

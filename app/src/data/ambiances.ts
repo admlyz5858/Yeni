@@ -1,34 +1,45 @@
 /**
- * Ambiance sahneleri. Tüm video ve ses varlıkları Mixkit'ten (Mixkit License —
- * ticari kullanım serbest, atıf gerektirmez).
+ * Ambiance sahneleri. Her sahne bir veya birkaç animasyon katmanı
+ * (gradyan arka plan + yumuşak parçacıklar) ile oluşturulur. Video yok:
+ * animasyonlar yerel, GPU üzerinde çalışan React Native Animated ve SVG
+ * ile render edilir. Böylece kesintisiz ve offline bir deneyim sağlanır.
  *
- * Video URL şablonu: https://assets.mixkit.co/videos/{id}/{id}-720.mp4
- * Ses URL şablonu:   https://assets.mixkit.co/active_storage/sfx/{id}/{id}-preview.mp3
+ * Ses varlıkları Mixkit'ten (ticari kullanım serbest).
  */
+
+export type SceneType =
+  | 'sunny_forest'
+  | 'rainy_forest'
+  | 'forest_stream'
+  | 'waterfall'
+  | 'river_raft'
+  | 'sea_waves'
+  | 'sunset_beach'
+  | 'sea_cove'
+  | 'fireplace'
+  | 'snow_forest'
+  | 'snow_mountain'
+  | 'misty_rain'
+  | 'pier'
+  | 'coast'
+  | 'sunset_field'
+  | 'silent_night';
 
 export interface Ambiance {
   id: string;
   title: string;
   subtitle: string;
-  category:
-    | 'nature'
-    | 'water'
-    | 'weather'
-    | 'urban'
-    | 'cozy'
-    | 'abstract';
+  category: 'nature' | 'water' | 'weather' | 'urban' | 'cozy' | 'abstract';
   emoji: string;
   accent: string;
-  videoId: number;
-  /** 0 = sessiz, 1 = yüksek */
+  scene: SceneType;
+  /** Üst-alt degrade (background gradient). */
+  gradient: [string, string, ...string[]];
+  /** Opsiyonel ufuk silueti: dağ/tepe/orman */
+  horizon?: 'trees' | 'mountains' | 'hills' | 'waves' | 'dunes' | 'none';
+  horizonColor?: string;
   defaultVolume: number;
-  /** Birden fazla ses kullanılıyorsa (örn. yağmur + gök gürültüsü) */
   audioIds: number[];
-  poster?: string;
-}
-
-function videoUrl(id: number): string {
-  return `https://assets.mixkit.co/videos/${id}/${id}-720.mp4`;
 }
 
 function audioUrl(id: number): string {
@@ -39,55 +50,70 @@ export const ambiances: Ambiance[] = [
   {
     id: 'forest-sunlight',
     title: 'Güneşli Orman',
-    subtitle: 'Ağaç yaprakları ve kuş sesleri',
+    subtitle: 'Işık hüzmeleri, uçuşan yapraklar',
     category: 'nature',
     emoji: '🌳',
-    accent: '#10b981',
-    videoId: 50847,
+    accent: '#34d399',
+    scene: 'sunny_forest',
+    gradient: ['#13351f', '#1f5a3a', '#3d8f5b'],
+    horizon: 'trees',
+    horizonColor: '#0d2317',
     defaultVolume: 0.45,
     audioIds: [1213, 1210],
   },
   {
     id: 'forest-rain',
     title: 'Yağmurlu Orman',
-    subtitle: 'Yapraklara vuran damlalar',
+    subtitle: 'Yumuşak yağmur damlaları',
     category: 'weather',
     emoji: '🌧️',
-    accent: '#22c55e',
-    videoId: 22728,
+    accent: '#4ade80',
+    scene: 'rainy_forest',
+    gradient: ['#0f1f22', '#1f3a3d', '#355d57'],
+    horizon: 'trees',
+    horizonColor: '#081619',
     defaultVolume: 0.6,
     audioIds: [1242, 1260],
   },
   {
     id: 'forest-stream',
     title: 'Orman Deresi',
-    subtitle: 'Akan su ve ağaçlar arasında',
+    subtitle: 'Akan sular, gölgelik ağaçlar',
     category: 'water',
     emoji: '🍃',
     accent: '#14b8a6',
-    videoId: 529,
+    scene: 'forest_stream',
+    gradient: ['#0b2723', '#174a41', '#2e8277'],
+    horizon: 'trees',
+    horizonColor: '#061b18',
     defaultVolume: 0.55,
     audioIds: [2450, 1216],
   },
   {
     id: 'waterfall',
     title: 'Orman Şelalesi',
-    subtitle: 'Derin su akışı',
+    subtitle: 'Aşağı akan beyaz perde',
     category: 'water',
     emoji: '💧',
-    accent: '#0ea5e9',
-    videoId: 2213,
+    accent: '#38bdf8',
+    scene: 'waterfall',
+    gradient: ['#0b1c3a', '#17406c', '#5394c7'],
+    horizon: 'hills',
+    horizonColor: '#091a30',
     defaultVolume: 0.55,
     audioIds: [2456, 2450],
   },
   {
     id: 'river-raft',
     title: 'Dere Kenarı',
-    subtitle: 'Yavaşça akan sular',
+    subtitle: 'Serin esinti, hafif akıntı',
     category: 'water',
     emoji: '🛶',
-    accent: '#06b6d4',
-    videoId: 1218,
+    accent: '#22d3ee',
+    scene: 'river_raft',
+    gradient: ['#0a2a33', '#154a57', '#2a8ba1'],
+    horizon: 'trees',
+    horizonColor: '#061a20',
     defaultVolume: 0.5,
     audioIds: [1216, 2450],
   },
@@ -97,118 +123,149 @@ export const ambiances: Ambiance[] = [
     subtitle: 'Kıyıya vuran dalgalar',
     category: 'water',
     emoji: '🌊',
-    accent: '#3b82f6',
-    videoId: 5016,
+    accent: '#60a5fa',
+    scene: 'sea_waves',
+    gradient: ['#082045', '#144079', '#3a7ac0'],
+    horizon: 'waves',
+    horizonColor: '#051632',
     defaultVolume: 0.55,
     audioIds: [1189, 1194],
   },
   {
     id: 'sea-sunset',
     title: 'Gün Batımı Sahili',
-    subtitle: 'Sakin dalgalar, turuncu gökyüzü',
+    subtitle: 'Turuncu gökyüzü, yavaş dalga',
     category: 'water',
     emoji: '🏝️',
-    accent: '#f97316',
-    videoId: 2168,
+    accent: '#fb923c',
+    scene: 'sunset_beach',
+    gradient: ['#3c1a3a', '#a0445a', '#f59e63', '#fbd08b'],
+    horizon: 'waves',
+    horizonColor: '#1a0d21',
     defaultVolume: 0.5,
     audioIds: [1194, 1262],
   },
   {
     id: 'sea-cove',
     title: 'Koyda Sabah',
-    subtitle: 'Yüksekten küçük bir koy',
+    subtitle: 'Tepelerle çevrili koy',
     category: 'water',
     emoji: '⛰️',
-    accent: '#0891b2',
-    videoId: 1954,
+    accent: '#22d3ee',
+    scene: 'sea_cove',
+    gradient: ['#0d3043', '#1f607a', '#4aa5c2', '#a6dff3'],
+    horizon: 'mountains',
+    horizonColor: '#061a25',
     defaultVolume: 0.5,
     audioIds: [1194, 69],
   },
   {
     id: 'fireplace',
     title: 'Şömine',
-    subtitle: 'Çıtırdayan odun, sıcak alev',
+    subtitle: 'Çıtırdayan odun, dans eden alev',
     category: 'cozy',
     emoji: '🔥',
     accent: '#f59e0b',
-    videoId: 1243,
+    scene: 'fireplace',
+    gradient: ['#140704', '#3b160a', '#863413'],
+    horizon: 'none',
     defaultVolume: 0.5,
     audioIds: [1330, 1329],
   },
   {
     id: 'snow-forest',
     title: 'Karlı Orman',
-    subtitle: 'Pembe gökyüzü ve ay',
+    subtitle: 'Yumuşak kar yağışı',
     category: 'weather',
     emoji: '❄️',
-    accent: '#93c5fd',
-    videoId: 3350,
+    accent: '#bfdbfe',
+    scene: 'snow_forest',
+    gradient: ['#0f1d34', '#2a3b63', '#6c86b8'],
+    horizon: 'trees',
+    horizonColor: '#0a132a',
     defaultVolume: 0.45,
     audioIds: [1162, 1267],
   },
   {
     id: 'snow-mountain',
     title: 'Karlı Dağlar',
-    subtitle: 'Yumuşak bulutlar arasında',
+    subtitle: 'Bulutların arasında zirveler',
     category: 'weather',
     emoji: '🏔️',
-    accent: '#bfdbfe',
-    videoId: 3371,
+    accent: '#e0f2fe',
+    scene: 'snow_mountain',
+    gradient: ['#132640', '#3a5377', '#a6b7d4', '#e6eef8'],
+    horizon: 'mountains',
+    horizonColor: '#9fb0ce',
     defaultVolume: 0.4,
     audioIds: [1162, 1275],
   },
   {
     id: 'rainy-forest',
     title: 'Sisli Yağmur',
-    subtitle: 'Kasvetli ama huzurlu',
+    subtitle: 'Puslu havada sakin yağmur',
     category: 'weather',
     emoji: '☁️',
     accent: '#94a3b8',
-    videoId: 22729,
+    scene: 'misty_rain',
+    gradient: ['#1a2230', '#2c3a4d', '#546578'],
+    horizon: 'trees',
+    horizonColor: '#0e1420',
     defaultVolume: 0.6,
     audioIds: [1242, 1248],
   },
   {
     id: 'pier',
     title: 'Ahşap İskele',
-    subtitle: 'Martılar ve hafif dalga',
+    subtitle: 'Martı sesleri, yavaş dalga',
     category: 'water',
     emoji: '🚤',
     accent: '#38bdf8',
-    videoId: 1197,
+    scene: 'pier',
+    gradient: ['#0b2540', '#1e5282', '#5ba0cc'],
+    horizon: 'waves',
+    horizonColor: '#05162a',
     defaultVolume: 0.45,
     audioIds: [1194, 69],
   },
   {
     id: 'coast-aerial',
     title: 'Kıyı Manzarası',
-    subtitle: 'Yukarıdan kumsal',
+    subtitle: 'Dağların kıyıya uzandığı koy',
     category: 'water',
     emoji: '🏖️',
     accent: '#2dd4bf',
-    videoId: 1082,
+    scene: 'coast',
+    gradient: ['#093a3a', '#117373', '#3dbfb7', '#9fecec'],
+    horizon: 'dunes',
+    horizonColor: '#062a2a',
     defaultVolume: 0.5,
     audioIds: [1194, 1195],
   },
   {
     id: 'sunset-field',
     title: 'Kırlarda Gün Batımı',
-    subtitle: 'Rüzgarda sallanan otlar',
+    subtitle: 'Rüzgarda salınan otlar',
     category: 'nature',
     emoji: '🌾',
-    accent: '#eab308',
-    videoId: 42864,
+    accent: '#fbbf24',
+    scene: 'sunset_field',
+    gradient: ['#3a1d34', '#8a3f3d', '#d97c3e', '#fbd679'],
+    horizon: 'hills',
+    horizonColor: '#2a1428',
     defaultVolume: 0.4,
     audioIds: [1200, 1234],
   },
   {
     id: 'silent',
-    title: 'Sessiz Mod',
-    subtitle: 'Video ve ses kapalı',
+    title: 'Sessiz Gece',
+    subtitle: 'Yıldızlarla dolu gökyüzü',
     category: 'abstract',
     emoji: '🌙',
-    accent: '#6366f1',
-    videoId: 0,
+    accent: '#a5b4fc',
+    scene: 'silent_night',
+    gradient: ['#03061a', '#0a1030', '#18244e'],
+    horizon: 'none',
     defaultVolume: 0,
     audioIds: [],
   },
@@ -216,11 +273,6 @@ export const ambiances: Ambiance[] = [
 
 export function getAmbianceById(id: string): Ambiance | null {
   return ambiances.find((a) => a.id === id) ?? null;
-}
-
-export function getVideoUrl(a: Ambiance): string | null {
-  if (!a.videoId) return null;
-  return videoUrl(a.videoId);
 }
 
 export function getAudioUrls(a: Ambiance): string[] {

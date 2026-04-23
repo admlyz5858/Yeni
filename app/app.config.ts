@@ -29,13 +29,6 @@ export default ({ config }: ConfigContext): ExpoConfig => {
             'Profil fotoğrafı çekmek için kameraya erişim gerekiyor.',
         },
       ],
-      [
-        'expo-video',
-        {
-          supportsBackgroundPlayback: false,
-          supportsPictureInPicture: false,
-        },
-      ],
     ],
     extra: {
       ...(base.extra ?? {}),

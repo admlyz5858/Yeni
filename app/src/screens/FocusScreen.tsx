@@ -25,14 +25,13 @@ import { Card } from '../components/Card';
 import { Button } from '../components/Button';
 import { CircularTimer } from '../components/CircularTimer';
 import { PomodoroChain } from '../components/PomodoroChain';
-import { VideoBackground } from '../components/VideoBackground';
+import { SceneBackground } from '../components/SceneBackground';
 import { AmbiancePicker } from '../components/AmbiancePicker';
 import { useApp } from '../context/AppContext';
 import { useAmbiance } from '../context/AmbianceContext';
 import { colors } from '../theme/colors';
 import { radius, spacing } from '../theme/spacing';
 import { getTopicById, getSectionsForTrack } from '../data/curriculum';
-import { getVideoUrl } from '../data/ambiances';
 import { FocusPresetId } from '../storage/types';
 import {
   breakStartMessages,
@@ -382,14 +381,24 @@ export const FocusScreen: React.FC<Props> = ({ route, navigation }) => {
       : 'Molanı değerlendir';
 
   const running = timerState === 'running';
-  const videoUri = getVideoUrl(ambiance);
+  const { width: windowW, height: windowH } = Dimensions.get('window');
 
   return (
     <View style={styles.safe}>
-      <VideoBackground
-        uri={videoUri}
-        tint={colors.bg}
-        overlayOpacity={immersive ? 0.15 : 0.4}
+      <SceneBackground
+        ambiance={ambiance}
+        width={windowW}
+        height={windowH}
+      />
+      <View
+        pointerEvents="none"
+        style={[
+          StyleSheet.absoluteFill,
+          {
+            backgroundColor: '#000',
+            opacity: immersive ? 0.1 : 0.22,
+          },
+        ]}
       />
       <SafeAreaView style={{ flex: 1 }} edges={['top']}>
         <ScrollView

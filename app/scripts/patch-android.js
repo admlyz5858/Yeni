@@ -61,4 +61,33 @@ replaceInFile(rootBuildGradle, (src) => {
   return src.slice(0, idx) + injection + src.slice(idx + marker.length);
 });
 
+const gradleProps = path.join(androidRoot, 'gradle.properties');
+replaceInFile(gradleProps, (src) => {
+  let next = src.replace(
+    /org\.gradle\.jvmargs=.*/,
+    'org.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m -Dfile.encoding=UTF-8',
+  );
+  if (!/org\.gradle\.jvmargs=/.test(next)) {
+    next +=
+      '\norg.gradle.jvmargs=-Xmx4096m -XX:MaxMetaspaceSize=1024m -Dfile.encoding=UTF-8\n';
+  }
+  if (!/^android\.lintOptions/.test(next)) {
+    next += '\nandroid.enableJetifier=false\n';
+  }
+  return next;
+});
+
+const appBuildGradle = path.join(androidRoot, 'app', 'build.gradle');
+replaceInFile(appBuildGradle, (src) => {
+  if (src.includes('lintOptions { checkReleaseBuilds false }')) return src;
+  const marker = 'android {';
+  const inject = `android {
+    lintOptions { checkReleaseBuilds false; abortOnError false }
+    lint { checkReleaseBuilds = false; abortOnError = false }
+`;
+  const idx = src.indexOf(marker);
+  if (idx === -1) return src;
+  return src.slice(0, idx) + inject + src.slice(idx + marker.length);
+});
+
 console.log('[patch-android] tamam');
